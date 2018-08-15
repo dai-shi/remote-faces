@@ -65,6 +65,8 @@ const receiver = async data => {
   }
 };
 
+const forceArray = x => x ? (Array.isArray(x) ? x : [x]) : [];
+
 const main = async () => {
   const me = params.namespace + '_' + params.me;
   const peer = new Peer(me);
@@ -75,7 +77,7 @@ const main = async () => {
     location.reload();
   });
   const connMap = {};
-  params.friends.forEach(x => {
+  forceArray(params.friends).forEach(x => {
     const friend = params.namespace + '_' + x;
     const conn = peer.connect(friend);
     connMap[conn.peer] = conn;
