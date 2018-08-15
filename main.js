@@ -70,7 +70,8 @@ const forceArray = x => x ? (Array.isArray(x) ? x : [x]) : [];
 const main = async () => {
   const me = params.namespace + '_' + params.me;
   const peer = new Peer(me, {
-    host: params.server,
+    host: 'peerjs.axlight.com',
+    port: location.protocol === 'https:' ? 443 : 80,
     secure: location.protocol === 'https:',
   });
   peer.on('error', async err => {
