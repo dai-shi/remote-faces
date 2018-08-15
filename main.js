@@ -73,10 +73,11 @@ const main = async () => {
     host: params.server,
     secure: location.protocol === 'https:',
   });
-  peer.on('error', err => {
+  peer.on('error', async err => {
     if (err.type === 'peer-unavailable') return;
     console.error('main', err.type, err);
     alert('Fatal Error [100], force reloading.');
+    await sleep(1000);
     location.reload();
   });
   const connMap = {};
@@ -90,6 +91,7 @@ const main = async () => {
     connMap[conn.peer] = conn;
     conn.on('data', receiver);
   });
+  await sleep(1000);
   loop(connMap);
 };
 
