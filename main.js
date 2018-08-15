@@ -61,7 +61,7 @@ const receiver = async data => {
 
 const main = async () => {
   const me = params.namespace + '_' + params.me;
-  const peer = new Peer(me);
+  const peer = new Peer(me, { secure: true });
   peer.on('error', err => {
     if (err.type === 'peer-unavailable') return;
     console.error('main', err.type, err);
