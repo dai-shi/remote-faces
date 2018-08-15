@@ -69,7 +69,10 @@ const forceArray = x => x ? (Array.isArray(x) ? x : [x]) : [];
 
 const main = async () => {
   const me = params.namespace + '_' + params.me;
-  const peer = new Peer(me, { secure: location.protocol === 'https:' });
+  const peer = new Peer(me, {
+    host: params.server,
+    secure: location.protocol === 'https:',
+  });
   peer.on('error', err => {
     if (err.type === 'peer-unavailable') return;
     console.error('main', err.type, err);
