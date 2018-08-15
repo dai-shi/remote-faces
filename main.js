@@ -23,22 +23,28 @@ const takePhoto = async () => {
 };
 
 const loop = async (connMap) => {
-  const dataUrl = await takePhoto();
-  const json = {
-    id: params.me,
-    name: params.me,
-    img: dataUrl,
-  };
-  const data = JSON.stringify(json);
-  Object.keys(connMap).forEach(key => {
-    const conn = connMap[key];
-    if (conn.open) {
-      conn.send(data);
-    }
-  });
-  document.getElementById('myself').src = dataUrl;
-  await sleep(2 * 60 * 1000);
-  loop(connMap);
+  try {
+    const dataUrl = await takePhoto();
+    const json = {
+      id: params.me,
+      name: params.me,
+      img: dataUrl,
+    };
+    const data = JSON.stringify(json);
+    Object.keys(connMap).forEach(key => {
+      const conn = connMap[key];
+      if (conn.open) {
+        conn.send(data);
+      }
+    });
+    document.getElementById('myself').src = dataUrl;
+    await sleep(2 * 60 * 1000);
+    loop(connMap);
+  } catch (e) {
+    console.error('loop', e);
+    alert('Fatal Error [200], force reloading.');
+    location.reload();
+  }
 };
 
 const getImageEle = id => {
@@ -65,7 +71,7 @@ const main = async () => {
   peer.on('error', err => {
     if (err.type === 'peer-unavailable') return;
     console.error('main', err.type, err);
-    alert('Fatal Error');
+    alert('Fatal Error [100], force reloading.');
     location.reload();
   });
   const connMap = {};
