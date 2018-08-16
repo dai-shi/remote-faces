@@ -8,10 +8,10 @@ const takePhoto = async () => {
   const ctx = canvas.getContext('2d');
   const track = stream.getVideoTracks()[0];
   imageCapture = new ImageCapture(track);
-  await sleep(500);
+  await sleep(2000);
   const bitmap = await imageCapture.grabFrame()
   track.stop();
-  canvas.width = 48;
+  canvas.width = 64;
   canvas.height = 64;
   const ratio  = Math.max(canvas.width / bitmap.width, canvas.height / bitmap.height);
   const width = Math.min(bitmap.width, canvas.width / ratio);
@@ -41,8 +41,7 @@ const loop = async (connMap) => {
     await sleep(2 * 60 * 1000);
     loop(connMap);
   } catch (e) {
-    console.error('loop', e);
-    alert('Fatal Error [200], force reloading.');
+    alert('Unable to capture webcam, force reloading.');
     location.reload();
   }
 };
@@ -76,10 +75,9 @@ const main = async () => {
   });
   peer.on('error', async err => {
     if (err.type === 'peer-unavailable') return;
-    console.error('main', err.type, err);
-    alert('Fatal Error [100], force reloading.');
-    await sleep(1000);
-    location.reload();
+    console.error('main', err.type, err, peer);
+    peer.destroy();
+    alert('Fatal Error: check console and contact admin, then reload to start over.');
   });
   const connMap = {};
   forceArray(params.friends).forEach(x => {
