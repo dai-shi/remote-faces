@@ -76,20 +76,25 @@ const loop = async (connMap) => {
         conn.send(data);
       }
     });
-    document.getElementById('myself').src = dataUrl;
+    const ele = document.getElementById('base');
+    ele.querySelector('img').src = dataUrl;
+    ele.querySelector('.name').innerHTML = params.myself;
+    ele.dataset.modified = Date.now();
+    ele.style.opacity = 1.0;
     await sleep(2 * 60 * 1000);
     loop(connMap);
   } catch (e) {
+    console.error('loop', e);
     alert('Unable to capture webcam, force reloading.');
     window.location.reload();
   }
 };
 
 const getImageEle = (id) => {
-  const ele = document.getElementById('img-' + id);
+  const ele = document.getElementById(id);
   if (ele) return ele;
-  const newEle = document.createElement('img');
-  newEle.id = 'img-' + id;
+  const newEle = document.getElementById('base').cloneNode(true);
+  newEle.id = id;
   document.getElementById('app').appendChild(newEle);
   return newEle;
 };
@@ -97,7 +102,11 @@ const getImageEle = (id) => {
 const receiver = (conn, connectMembers) => async (data) => {
   try {
     const json = JSON.parse(data);
-    getImageEle(conn.peer).src = json.img;
+    const ele = getImageEle(conn.peer);
+    ele.querySelector('img').src = json.img;
+    ele.querySelector('.name').innerHTML = json.myself;
+    ele.dataset.modified = Date.now();
+    ele.style.opacity = 1.0;
     if (Array.isArray(params.members) && Array.isArray(json.members)) {
       let memberUpdated = false;
       json.members.forEach((member) => {
@@ -114,6 +123,20 @@ const receiver = (conn, connectMembers) => async (data) => {
   } catch (e) {
     console.log('receiver', e);
   }
+};
+
+const check = async () => {
+  document.getElementById('app').childNodes.forEach((ele) => {
+    const { modified } = ele.dataset || {};
+    if (modified) {
+      const t = new Date(Number(modified));
+      if (t < Date.now() - 2 * 60 * 1000) {
+        ele.style.opacity = 0.2;
+      }
+    }
+  });
+  await sleep(5000);
+  check();
 };
 
 const main = async () => {
@@ -149,6 +172,7 @@ const main = async () => {
   });
   await sleep(1000);
   loop(connMap);
+  check();
 };
 
 window.onload = main;

@@ -27,7 +27,8 @@
     "rules": {
       "no-alert": 0,
       "no-console": 0,
-      "prefer-template": 0
+      "prefer-template": 0,
+      "no-param-reassign": 0
     }
   }
 }

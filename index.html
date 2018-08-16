@@ -8,9 +8,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/0.3.14/peer.min.js"></script>
     <script src="main.js"></script>
   </head>
-  <body>
+  <body style="margin: 0">
     <div id="app">
-      <img id="myself" />
+      <div id="base" style="float: left; margin: 0 2px 2px 0; position: relative">
+        <img style="display: block" />
+        <div class="name" style="position: absolute; bottom: 3px; right: 3px; color: white; font-size: 9px; line-height: 9px"></div>
+      </div>
     </div>
     <canvas style="display: none"></canvas>
   </body>
