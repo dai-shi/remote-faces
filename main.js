@@ -37,8 +37,6 @@ const getMembers = () => {
   return params.members.map(hash);
 };
 
-// let myid = params.myid;
-
 // ---------------------------
 
 const takePhoto = async () => {
@@ -139,6 +137,12 @@ const check = async () => {
   check();
 };
 
+const heartbeat = async (peer) => {
+  await sleep(5 * 60 * 1000);
+  peer.socket.send({ type: 'HEARTBEAT' });
+  heartbeat(peer);
+};
+
 const main = async () => {
   const roomid = getRoomid();
   const myself = getMyself();
@@ -149,6 +153,10 @@ const main = async () => {
   });
   peer.on('error', async (err) => {
     if (err.type === 'peer-unavailable') return;
+    if (err.type === 'network') {
+      alert('Network is closed, force reloading');
+      window.location.reload();
+    }
     console.error('main', err.type, err, peer);
     peer.destroy();
     alert('Fatal Error: check console and contact admin, then reload to start over.');
@@ -173,6 +181,7 @@ const main = async () => {
   await sleep(1000);
   loop(connMap);
   check();
+  heartbeat(peer);
 };
 
 window.onload = main;
