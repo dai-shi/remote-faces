@@ -196,11 +196,14 @@ const connectRoomPeer = () => {
       port: window.location.protocol === 'https:' ? 443 : 80,
       secure: window.location.protocol === 'https:',
     });
-    roomPeer.on('error', () => {
+    roomPeer.on('error', (err) => {
       // already created
       if (roomPeer) {
         roomPeer.destroy();
         roomPeer = null;
+        if (err.type !== 'unavailable-id') {
+          connectRoomPeer();
+        }
       }
     });
     roomPeer.on('connection', (conn) => {
