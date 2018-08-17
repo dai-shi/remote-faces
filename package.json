@@ -24,5 +24,8 @@
       "prefer-template": 0,
       "import/no-extraneous-dependencies": 0
     }
+  },
+  "dependencies": {
+    "electron-store": "^2.0.0"
   }
 }
