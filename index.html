@@ -9,7 +9,7 @@
     <script src="main.js"></script>
   </head>
   <body style="margin: 0">
-    <div id="error" style="display: none; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background-color: red">
+    <div id="error" style="display: none; position: absolute; z-index: 9999; top: 0; right: 0; bottom: 0; left: 0; background-color: red">
       Error occured, please reload
     </div>
     <form id="init" style="display: none">
@@ -19,8 +19,8 @@
     </form>
     <div id="app" style="display: none">
       <div id="base" style="float: left; margin: 0 2px 2px 0; position: relative">
-        <img style="display: block" />
-        <div class="name" style="position: absolute; bottom: 3px; right: 3px; color: white; font-size: 9px; line-height: 9px"></div>
+        <img style="display: block; width: 36px; height: 36px" />
+        <div class="name" style="position: absolute; bottom: 2px; right: 2px; color: white; font-size: 8px; line-height: 8px"></div>
       </div>
     </div>
     <canvas style="display: none"></canvas>

@@ -48,8 +48,8 @@ const takePhoto = async () => {
   await sleep(2000);
   const bitmap = await imageCapture.grabFrame();
   track.stop();
-  canvas.width = 64;
-  canvas.height = 64;
+  canvas.width = 72;
+  canvas.height = 72;
   const ratio = Math.max(canvas.width / bitmap.width, canvas.height / bitmap.height);
   const width = Math.min(bitmap.width, canvas.width / ratio);
   const height = Math.min(bitmap.height, canvas.height / ratio);
