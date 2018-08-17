@@ -28,7 +28,7 @@ const createWindow = () => {
       x: pos[0],
       y: pos[1],
       width: size[0],
-      height: size[2],
+      height: size[1],
       url,
     });
   });
