@@ -16,10 +16,12 @@ const createWindow = () => {
     width: store.get('width', 400),
     height: store.get('height', 300),
     alwaysOnTop: true,
+    frame: false,
   });
-  win.loadURL(store.get('url', 'https://dai-shi.github.io/remote-faces/'));
-  // win.loadFile('index.html');
   // win.webContents.openDevTools();
+  win.loadURL(store.get('url', 'https://dai-shi.github.io/remote-faces/'));
+  win.webContents.reloadIgnoringCache();
+  // win.loadFile('index.html');
   win.on('close', () => {
     const pos = win.getPosition();
     const size = win.getSize();
@@ -89,6 +91,7 @@ const setupAppMenu = () => {
     ],
   }, {
     role: 'help',
+    submenu: [],
   }];
   if (process.platform === 'darwin') {
     template.unshift({
@@ -115,7 +118,7 @@ const setupAppMenu = () => {
         ],
       },
     );
-    template[3].submenu = [
+    template[4].submenu = [
       { role: 'close' },
       { role: 'minimize' },
       { role: 'zoom' },
