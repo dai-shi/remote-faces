@@ -1,43 +1,43 @@
-// utils ---------------------
+// utils ---------------------------
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const hash = x => x && CryptoJS.MD5(x).toString().slice(0, 16);
 
-// params --------------------
+// params --------------------------
 
 const params = Qs.parse(window.location.hash.slice(1));
 const updateParams = () => {
   window.location.hash = '#' + Qs.stringify(params);
 };
 
-const getRoomid = () => {
-  while (!params.roomid) {
-    params.roomid = prompt('Enter Room ID');
-    if (params.roomid) updateParams();
-  }
-  return hash(params.roomid);
+const updateRoomid = (roomid) => {
+  params.roomid = roomid;
+  updateParams();
 };
 
-const getMyself = () => {
-  while (!params.myself) {
-    params.myself = prompt('Enter your name');
-    if (params.myself) updateParams();
-  }
-  return hash(params.myself);
+const updateMyself = (myself) => {
+  params.myself = myself;
+  updateParams();
 };
 
-const getMembers = () => {
-  while (!Array.isArray(params.members)) {
-    const result = prompt('Enter friend names (comma separated)');
-    if (result) {
-      params.members = result.split(',');
-      updateParams();
-    }
+const mergeMembers = (members) => {
+  if (!Array.isArray(params.members)) {
+    params.members = [];
   }
-  return params.members.map(hash);
+  let updated = false;
+  members.forEach((member) => {
+    if (member === params.myself) return;
+    if (params.members.includes(member)) return;
+    params.members.push(member);
+    updated = true;
+  });
+  if (updated) {
+    updateParams();
+  }
+  return updated;
 };
 
-// ---------------------------
+// photo ---------------------------
 
 const takePhoto = async () => {
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -59,35 +59,6 @@ const takePhoto = async () => {
   return canvas.toDataURL('image/png');
 };
 
-const loop = async (connMap) => {
-  try {
-    const dataUrl = await takePhoto();
-    const json = {
-      myself: params.myself,
-      members: params.members,
-      img: dataUrl,
-    };
-    const data = JSON.stringify(json);
-    Object.keys(connMap).forEach((key) => {
-      const conn = connMap[key];
-      if (conn.open) {
-        conn.send(data);
-      }
-    });
-    const ele = document.getElementById('base');
-    ele.querySelector('img').src = dataUrl;
-    ele.querySelector('.name').innerHTML = params.myself;
-    ele.dataset.modified = Date.now();
-    ele.style.opacity = 1.0;
-    await sleep(2 * 60 * 1000);
-    loop(connMap);
-  } catch (e) {
-    console.error('loop', e);
-    alert('Unable to capture webcam, force reloading.');
-    window.location.reload();
-  }
-};
-
 const getImageEle = (id) => {
   const ele = document.getElementById(id);
   if (ele) return ele;
@@ -97,33 +68,15 @@ const getImageEle = (id) => {
   return newEle;
 };
 
-const receiver = (conn, connectMembers) => async (data) => {
-  try {
-    const json = JSON.parse(data);
-    const ele = getImageEle(conn.peer);
-    ele.querySelector('img').src = json.img;
-    ele.querySelector('.name').innerHTML = json.myself;
-    ele.dataset.modified = Date.now();
-    ele.style.opacity = 1.0;
-    if (Array.isArray(params.members) && Array.isArray(json.members)) {
-      let memberUpdated = false;
-      json.members.forEach((member) => {
-        if (!params.members.includes(member)) {
-          params.members.push(member);
-          memberUpdated = true;
-        }
-      });
-      if (memberUpdated) {
-        updateParams();
-        connectMembers();
-      }
-    }
-  } catch (e) {
-    console.log('receiver', e);
-  }
+const updateImage = (id, name, img) => {
+  const ele = getImageEle(id);
+  ele.querySelector('img').src = img;
+  ele.querySelector('.name').innerHTML = name;
+  ele.dataset.modified = Date.now();
+  ele.style.opacity = 1.0;
 };
 
-const check = async () => {
+const checkObsoletedImage = async () => {
   document.getElementById('app').childNodes.forEach((ele) => {
     const { modified } = ele.dataset || {};
     if (modified) {
@@ -134,54 +87,159 @@ const check = async () => {
     }
   });
   await sleep(5000);
-  check();
+  checkObsoletedImage();
 };
 
-const heartbeat = async (peer) => {
+// peers ---------------------------
+
+let myPeer;
+let roomPeer;
+let lastData;
+
+const sendPhoto = async () => {
+  try {
+    const dataUrl = await takePhoto();
+    const json = {
+      myself: params.myself,
+      members: [params.myself, ...(params.members || [])],
+      img: dataUrl,
+    };
+    lastData = JSON.stringify(json);
+    const { connMap } = myPeer || {};
+    Object.keys(connMap || {}).forEach((key) => {
+      const conn = connMap[key];
+      if (conn.open) conn.send(lastData);
+    });
+    document.getElementById('app').style.display = 'block';
+    updateImage('base', params.myself, dataUrl);
+    await sleep(2 * 60 * 1000);
+    lastData = null;
+    sendPhoto();
+  } catch (e) {
+    console.error('sendPhoto', e);
+    document.getElementById('error').style.display = 'block';
+  }
+};
+
+const receivePhoto = conn => async (data) => {
+  try {
+    const json = JSON.parse(data);
+    if (conn && json.myself && json.img) {
+      updateImage(conn.peer, json.myself, json.img);
+    }
+    if (mergeMembers(json.members || [])) {
+      connectMembers(); // eslint-disable-line no-use-before-define
+    }
+  } catch (e) {
+    console.log('receivePhoto', e);
+  }
+};
+
+const connectMembers = () => {
+  if (!myPeer || !myPeer.connMap) return;
+  (params.members || []).forEach((member) => {
+    const id = hash(params.roomid) + '_' + hash(member);
+    if (myPeer.connMap[id]) return;
+    const conn = myPeer.connect(id);
+    myPeer.connMap[id] = conn;
+    conn.on('data', receivePhoto(conn));
+  });
+};
+
+const heartbeat = async () => {
   await sleep(5 * 60 * 1000);
-  peer.socket.send({ type: 'HEARTBEAT' });
-  heartbeat(peer);
+  [myPeer, roomPeer].forEach((peer) => {
+    if (peer) peer.socket.send({ type: 'HEARTBEAT' });
+  });
+  heartbeat();
 };
 
-const main = async () => {
-  const roomid = getRoomid();
-  const myself = getMyself();
-  const peer = new Peer(roomid + '_' + myself, {
+const createMyPeer = () => {
+  const id = hash(params.roomid) + '_' + hash(params.myself);
+  myPeer = new Peer(id, {
     host: 'peerjs.axlight.com',
     port: window.location.protocol === 'https:' ? 443 : 80,
     secure: window.location.protocol === 'https:',
   });
-  peer.on('error', async (err) => {
+  myPeer.on('error', async (err) => {
     if (err.type === 'peer-unavailable') return;
     if (err.type === 'network') {
-      alert('Network is closed, force reloading');
+      await sleep(3000);
       window.location.reload();
     }
-    console.error('main', err.type, err, peer);
-    peer.destroy();
-    alert('Fatal Error: check console and contact admin, then reload to start over.');
+    console.error('main', err.type, err);
+    document.getElementById('error').style.display = 'block';
+    myPeer.destroy();
   });
-  const connMap = {};
-  const connectMembers = () => {
-    const members = getMembers();
-    members.forEach((member) => {
-      if (member === myself) return;
-      const id = roomid + '_' + member;
-      if (connMap[id]) return;
-      const conn = peer.connect(id);
-      connMap[id] = conn;
-      conn.on('data', receiver(conn, connectMembers));
-    });
-  };
+  myPeer.connMap = {};
   connectMembers();
-  peer.on('connection', (conn) => {
-    connMap[conn.peer] = conn;
-    conn.on('data', receiver(conn, connectMembers));
+  myPeer.on('connection', (conn) => {
+    myPeer.connMap[conn.peer] = conn;
+    conn.on('data', receivePhoto(conn));
+    conn.on('open', () => {
+      if (lastData) conn.send(lastData);
+    });
   });
-  await sleep(1000);
-  loop(connMap);
-  check();
-  heartbeat(peer);
+};
+
+const connectRoomPeer = () => {
+  const id = hash(params.roomid);
+  if (myPeer) {
+    const conn = myPeer.connect(id);
+    conn.on('data', receivePhoto(null)); // just for "members"
+    conn.on('close', connectRoomPeer);
+  }
+  // create for others
+  if (!roomPeer) {
+    roomPeer = new Peer(id, {
+      host: 'peerjs.axlight.com',
+      port: window.location.protocol === 'https:' ? 443 : 80,
+      secure: window.location.protocol === 'https:',
+    });
+    roomPeer.on('error', () => {
+      // already created
+      if (roomPeer) {
+        roomPeer.destroy();
+        roomPeer = null;
+      }
+    });
+    roomPeer.on('connection', (conn) => {
+      conn.on('open', () => {
+        const json = {
+          members: [params.myself, ...(params.members || [])],
+        };
+        const data = JSON.stringify(json);
+        conn.send(data);
+      });
+    });
+  }
+};
+
+const initParams = () => new Promise((resolve) => {
+  const callback = (e) => {
+    e.preventDefault();
+    const roomid = document.getElementById('param-roomid').value;
+    const myself = document.getElementById('param-myself').value;
+    if (roomid && myself) {
+      updateRoomid(roomid);
+      updateMyself(myself);
+      document.getElementById('init').style.display = 'none';
+      resolve();
+    }
+  };
+  document.getElementById('init').onsubmit = callback;
+  document.getElementById('init').style.display = 'block';
+});
+
+const main = async () => {
+  if (!params.roomid || !params.myself) {
+    await initParams();
+  }
+  createMyPeer();
+  connectRoomPeer();
+  sendPhoto();
+  checkObsoletedImage();
+  heartbeat();
 };
 
 window.onload = main;
