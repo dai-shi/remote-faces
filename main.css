@@ -1,0 +1,50 @@
+body {
+  margin: 0;
+  -webkit-app-region: drag
+}
+
+#error {
+  display: none;
+  position: absolute;
+  z-index: 9999;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: red;
+}
+
+#init {
+  display: none;
+  -webkit-app-region: no-drag
+}
+
+#app {
+  display: none;
+}
+
+.card {
+  float: left;
+  margin: 0 2px 2px 0;
+  position: relative;
+}
+
+.photo {
+  display: block;
+  width: 36px;
+  height: 36px;
+}
+
+.name {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  color: white;
+  font-size: 8px;
+  line-height: 8px;
+  font-family: sans-serif;
+}
+
+canvas {
+  display: none;
+}

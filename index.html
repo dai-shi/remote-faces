@@ -3,28 +3,29 @@
   <head>
     <meta charset="utf-8" />
     <title>Remote Faces</title>
+    <link rel="stylesheet" href="main.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.5.2/qs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/0.3.14/peer.min.js"></script>
     <script src="main.js"></script>
   </head>
-  <body style="margin: 0">
-    <div id="error" style="display: none; position: absolute; z-index: 9999; top: 0; right: 0; bottom: 0; left: 0; background-color: red">
+  <body>
+    <div id="error">
       Error occured, please reload
     </div>
-    <form id="init" style="display: none">
+    <form id="init">
       <table>
         <tr><td>Room ID:</td><td><input id="param-roomid" /></td></tr>
         <tr><td>Your Name:</td><td><input id="param-myself" /></td></tr>
         <tr><td></td><td><input type="submit" value="OK" /></td></tr>
       </table>
     </form>
-    <div id="app" style="display: none">
-      <div id="base" style="float: left; margin: 0 2px 2px 0; position: relative">
-        <img style="display: block; width: 36px; height: 36px" />
-        <div class="name" style="position: absolute; bottom: 2px; right: 2px; color: white; font-size: 8px; line-height: 8px"></div>
+    <div id="app">
+      <div id="base" class="card">
+        <img class="photo" alt="photo" />
+        <div class="name"></div>
       </div>
     </div>
-    <canvas style="display: none"></canvas>
+    <canvas></canvas>
   </body>
 </html>

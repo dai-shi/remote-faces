@@ -6,6 +6,8 @@ const hash = x => x && CryptoJS.MD5(x).toString().slice(0, 16);
 // params --------------------------
 
 const params = Qs.parse(window.location.hash.slice(1));
+if (!Array.isArray(params.members)) params.members = [];
+
 const updateParams = () => {
   window.location.hash = '#' + Qs.stringify(params);
 };
@@ -21,9 +23,6 @@ const updateMyself = (myself) => {
 };
 
 const mergeMembers = (members) => {
-  if (!Array.isArray(params.members)) {
-    params.members = [];
-  }
   let updated = false;
   members.forEach((member) => {
     if (member === params.myself) return;
@@ -101,7 +100,7 @@ const sendPhoto = async () => {
     const dataUrl = await takePhoto();
     const json = {
       myself: params.myself,
-      members: [params.myself, ...(params.members || [])],
+      members: [params.myself, ...params.members],
       img: dataUrl,
     };
     lastData = JSON.stringify(json);
@@ -128,7 +127,7 @@ const receivePhoto = conn => async (data) => {
       updateImage(conn.peer, json.myself, json.img);
     }
     if (mergeMembers(json.members || [])) {
-      connectMembers(); // eslint-disable-line no-use-before-define
+      connectMembers();
     }
   } catch (e) {
     console.log('receivePhoto', e);
@@ -137,7 +136,7 @@ const receivePhoto = conn => async (data) => {
 
 const connectMembers = () => {
   if (!myPeer || !myPeer.connMap) return;
-  (params.members || []).forEach((member) => {
+  params.members.forEach((member) => {
     const id = hash(params.roomid) + '_' + hash(member);
     if (myPeer.connMap[id]) return;
     const conn = myPeer.connect(id);
@@ -182,40 +181,46 @@ const createMyPeer = () => {
   });
 };
 
-const connectRoomPeer = () => {
+const connectRoomPeer = async () => {
+  if (!myPeer) {
+    await sleep(1000);
+    connectRoomPeer();
+    return;
+  }
   const id = hash(params.roomid);
-  if (myPeer) {
-    const conn = myPeer.connect(id);
-    conn.on('data', receivePhoto(null)); // just for "members"
-    conn.on('close', connectRoomPeer);
-  }
+  const conn = myPeer.connect(id);
+  conn.on('data', receivePhoto(null)); // just for "members"
+  conn.on('close', connectRoomPeer);
+  createRoomPeer();
+};
+
+const createRoomPeer = () => {
   // create for others
-  if (!roomPeer) {
-    roomPeer = new Peer(id, {
-      host: 'peerjs.axlight.com',
-      port: window.location.protocol === 'https:' ? 443 : 80,
-      secure: window.location.protocol === 'https:',
-    });
-    roomPeer.on('error', (err) => {
-      // already created
-      if (roomPeer) {
-        roomPeer.destroy();
-        roomPeer = null;
-        if (err.type !== 'unavailable-id') {
-          connectRoomPeer();
-        }
+  const id = hash(params.roomid);
+  roomPeer = new Peer(id, {
+    host: 'peerjs.axlight.com',
+    port: window.location.protocol === 'https:' ? 443 : 80,
+    secure: window.location.protocol === 'https:',
+  });
+  roomPeer.on('error', (err) => {
+    // already created
+    if (roomPeer) {
+      roomPeer.destroy();
+      roomPeer = null;
+      if (err.type !== 'unavailable-id') {
+        connectRoomPeer();
       }
+    }
+  });
+  roomPeer.on('connection', (conn) => {
+    conn.on('open', () => {
+      const json = {
+        members: [params.myself, ...params.members],
+      };
+      const data = JSON.stringify(json);
+      conn.send(data);
     });
-    roomPeer.on('connection', (conn) => {
-      conn.on('open', () => {
-        const json = {
-          members: [params.myself, ...(params.members || [])],
-        };
-        const data = JSON.stringify(json);
-        conn.send(data);
-      });
-    });
-  }
+  });
 };
 
 const initParams = () => new Promise((resolve) => {
