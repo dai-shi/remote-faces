@@ -1,6 +1,7 @@
 {
   "name": "remote-faces",
   "private": true,
+  "version": "0.1.0",
   "scripts": {
     "start": "electron .",
     "test": "npm run eslint",
