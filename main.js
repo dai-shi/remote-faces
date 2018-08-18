@@ -41,21 +41,35 @@ const mergeMembers = (members) => {
 const takePhoto = async () => {
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
   const track = stream.getVideoTracks()[0];
-  const video = document.querySelector('video');
-  video.srcObject = stream;
-  await sleep(2000);
   const canvas = document.querySelector('canvas');
   const ctx = canvas.getContext('2d');
-  const srcW = video.videoWidth;
-  const srcH = video.videoHeight;
   const dstW = canvas.width = 72;
   const dstH = canvas.height = 72;
+  let srcImg;
+  let srcW;
+  let srcH;
+  if (typeof ImageCapture !== 'undefined') {
+    const imageCapture = new ImageCapture(track);
+    await sleep(2000);
+    const blob = await imageCapture.takePhoto();
+    srcImg = await createImageBitmap(blob);
+    srcW = srcImg.width;
+    srcH = srcImg.height;
+  } else {
+    const video = document.querySelector('video');
+    video.style.display = 'block';
+    video.srcObject = stream;
+    await sleep(2000);
+    srcImg = video;
+    srcW = video.videoWidth;
+    srcH = video.videoHeight;
+  }
   const ratio = Math.max(dstW / srcW, dstH / srcH);
   const width = Math.min(srcW, dstW / ratio);
   const height = Math.min(srcH, dstH / ratio);
   const x = (srcW - width) / 2;
   const y = (srcH - height) / 2;
-  ctx.drawImage(video, x, y, width, height, 0, 0, dstW, dstH);
+  ctx.drawImage(srcImg, x, y, width, height, 0, 0, dstW, dstH);
   track.stop();
   return canvas.toDataURL('image/png');
 };

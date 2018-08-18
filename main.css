@@ -55,6 +55,7 @@ canvas {
 }
 
 video {
-  width: 0;
-  height: 0;
+  display: none;
+  width: 1px;
+  height: 1px;
 }
