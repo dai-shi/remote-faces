@@ -44,12 +44,11 @@ const takePhoto = async () => {
   const stream = await navigator.mediaDevices.getUserMedia({ video: { width, height } });
   const track = stream.getVideoTracks()[0];
   const video = document.querySelector('video');
-  const canvas = document.querySelector('canvas');
-  const ctx = canvas.getContext('2d');
   video.srcObject = stream;
-  video.play();
   await sleep(2000);
   track.stop();
+  const canvas = document.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
   canvas.width = width;
   canvas.height = height;
   ctx.drawImage(video, 0, 0);
