@@ -39,22 +39,20 @@ const mergeMembers = (members) => {
 // photo ---------------------------
 
 const takePhoto = async () => {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  const width = 72;
+  const height = 72;
+  const stream = await navigator.mediaDevices.getUserMedia({ video: { width, height } });
+  const track = stream.getVideoTracks()[0];
+  const video = document.querySelector('video');
   const canvas = document.querySelector('canvas');
   const ctx = canvas.getContext('2d');
-  const track = stream.getVideoTracks()[0];
-  const imageCapture = new ImageCapture(track);
+  video.srcObject = stream;
+  video.play();
   await sleep(2000);
-  const bitmap = await imageCapture.grabFrame();
   track.stop();
-  canvas.width = 72;
-  canvas.height = 72;
-  const ratio = Math.max(canvas.width / bitmap.width, canvas.height / bitmap.height);
-  const width = Math.min(bitmap.width, canvas.width / ratio);
-  const height = Math.min(bitmap.height, canvas.height / ratio);
-  const x = (bitmap.width - width) / 2;
-  const y = (bitmap.height - height) / 2;
-  ctx.drawImage(bitmap, x, y, width, height, 0, 0, canvas.width, canvas.height);
+  canvas.width = width;
+  canvas.height = height;
+  ctx.drawImage(video, 0, 0);
   return canvas.toDataURL('image/png');
 };
 
