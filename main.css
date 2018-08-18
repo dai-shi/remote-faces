@@ -54,6 +54,8 @@ canvas {
   display: none;
 }
 
-video {
-  display: none;
+.video-holder {
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
