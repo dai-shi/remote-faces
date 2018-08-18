@@ -240,6 +240,8 @@ const createRoomPeer = () => {
 };
 
 const initParams = () => new Promise((resolve) => {
+  document.getElementById('param-roomid').value = params.roomid || '';
+  document.getElementById('param-myself').value = params.myself || '';
   const callback = (e) => {
     e.preventDefault();
     const roomid = document.getElementById('param-roomid').value;
