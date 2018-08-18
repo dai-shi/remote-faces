@@ -136,7 +136,7 @@ const connectMembers = () => {
   params.members.forEach((member) => {
     const id = hash(params.roomid) + '_' + hash(member);
     if (myPeer.connMap[id]) return;
-    const conn = myPeer.connect(id);
+    const conn = myPeer.connect(id, { serialization: 'json' });
     myPeer.connMap[id] = conn;
     conn.on('data', receivePhoto(conn));
   });
@@ -185,7 +185,7 @@ const connectRoomPeer = async () => {
     return;
   }
   const id = hash(params.roomid);
-  const conn = myPeer.connect(id);
+  const conn = myPeer.connect(id, { serialization: 'json' });
   conn.on('data', receivePhoto(null)); // just for "members"
   conn.on('close', connectRoomPeer);
   createRoomPeer();
