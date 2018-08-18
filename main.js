@@ -46,12 +46,12 @@ const takePhoto = async () => {
   const video = document.querySelector('video');
   video.srcObject = stream;
   await sleep(2000);
-  track.stop();
   const canvas = document.querySelector('canvas');
   const ctx = canvas.getContext('2d');
   canvas.width = width;
   canvas.height = height;
   ctx.drawImage(video, 0, 0);
+  track.stop();
   return canvas.toDataURL('image/png');
 };
 
