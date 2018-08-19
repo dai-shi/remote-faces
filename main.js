@@ -194,6 +194,7 @@ const createMyPeer = () => {
     port: window.location.protocol === 'https:' ? 443 : 80,
     secure: window.location.protocol === 'https:',
   });
+  myPeer.on('open', sendPhoto);
   myPeer.on('error', async (err) => {
     if (err.type === 'peer-unavailable') return;
     myPeer.destroy();
@@ -296,7 +297,6 @@ const main = async () => {
   }
   createMyPeer();
   connectRoomPeer();
-  sendPhoto();
   checkObsoletedImage();
   heartbeat();
 };
