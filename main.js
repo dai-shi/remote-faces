@@ -150,6 +150,9 @@ const sendPhoto = async () => {
 
 const receivePhoto = conn => async (data) => {
   try {
+    if (conn) {
+      conn.lastReceived = Date.now();
+    }
     if (conn && data.myself && data.img) {
       updateImage(conn.peer, data.myself, data.img);
     }
