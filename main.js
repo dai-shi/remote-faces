@@ -164,11 +164,15 @@ const receivePhoto = conn => async (data) => {
   }
 };
 
-const connectMembers = () => {
+const connectMembers = (force) => {
   if (!myPeer || !myPeer.connMap) return;
   params.members.forEach((member) => {
     const id = hash(params.roomid) + '_' + hash(member);
-    if (myPeer.connMap[id]) return;
+    const oldConn = myPeer.connMap[id];
+    if (oldConn) {
+      if (oldConn.open) return;
+      if (!force) return;
+    }
     const conn = myPeer.connect(id, { serialization: 'json' });
     myPeer.connMap[id] = conn;
     conn.on('data', receivePhoto(conn));
@@ -232,9 +236,16 @@ const connectRoomPeer = async () => {
   }
   const id = hash(params.roomid);
   const conn = myPeer.connect(id, { serialization: 'json' });
-  conn.on('data', receivePhoto(null)); // just for "members"
+  conn.on('data', (data) => {
+    try {
+      if (mergeMembers(data.members || [])) {
+        connectMembers(true);
+      }
+    } catch (e) {
+      console.log('roomPeer on data', e);
+    }
+  });
   conn.on('close', connectRoomPeer);
-  conn.on('error', connectRoomPeer);
   createRoomPeer();
 };
 
