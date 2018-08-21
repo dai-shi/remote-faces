@@ -145,7 +145,9 @@ const sendPhoto = async () => {
     sendPhoto();
   } catch (e) {
     console.error('sendPhoto', e);
-    showError('error while taking photo.', 'pink');
+    showError('error while taking photo, reloading.', 'pink');
+    await sleep(10 * 1000);
+    window.location.reload();
   }
 };
 
@@ -171,6 +173,10 @@ const connectPeer = (id, conn) => {
   conn.on('data', receivePhoto(conn));
   conn.on('close', async () => {
     if (conn.lastReceived) {
+      if (conn.peerConnection.signalingState !== 'closed') {
+        // strangely the peerConnection is not closed.
+        conn.peerConnection.close();
+      }
       await sleep(5000);
       connectPeer(id);
     }
@@ -228,7 +234,9 @@ const createMyPeer = () => {
       window.location.reload();
     }
     console.error('main', err.type, err);
-    showError('Error occured, please reload.', 'red');
+    showError('Unknown error occured, reloading.', 'red');
+    await sleep(60 * 1000);
+    window.location.reload();
   });
   myPeer.connMap = {};
   connectMembers();
@@ -293,6 +301,10 @@ const connectRoomPeer = async () => {
   });
   conn.on('close', () => {
     console.log('connectRoomPeer close');
+    if (conn.peerConnection.signalingState !== 'closed') {
+      // strangely the peerConnection is not closed.
+      conn.peerConnection.close();
+    }
     connectRoomPeer();
   });
   conn.on('error', (err) => {
