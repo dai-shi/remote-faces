@@ -169,14 +169,12 @@ const receivePhoto = conn => async (data) => {
 
 const connectPeer = (id, conn) => {
   if (!conn) conn = myPeer.connect(id, { serialization: 'json' });
+  if (myPeer.connMap[id]) myPeer.connMap[id].close();
   myPeer.connMap[id] = conn;
   conn.on('data', receivePhoto(conn));
   conn.on('close', async () => {
     if (conn.lastReceived) {
-      if (conn.peerConnection.signalingState !== 'closed') {
-        // strangely the peerConnection is not closed.
-        conn.peerConnection.close();
-      }
+      console.log('dataConnection closed');
       await sleep(5000);
       connectPeer(id);
     }
@@ -195,10 +193,7 @@ const connectMembers = (force) => {
   params.members.forEach((member) => {
     const id = hash(params.roomid) + '_' + hash(member);
     const oldConn = myPeer.connMap[id];
-    if (oldConn) {
-      if (oldConn.open) return;
-      if (!force) return;
-    }
+    if (oldConn && (oldConn.open || !force)) return;
     connectPeer(id);
   });
 };
@@ -301,10 +296,6 @@ const connectRoomPeer = async () => {
   });
   conn.on('close', () => {
     console.log('connectRoomPeer close');
-    if (conn.peerConnection.signalingState !== 'closed') {
-      // strangely the peerConnection is not closed.
-      conn.peerConnection.close();
-    }
     connectRoomPeer();
   });
   conn.on('error', (err) => {
