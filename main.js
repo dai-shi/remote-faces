@@ -171,19 +171,24 @@ const receivePhoto = conn => async (data) => {
 };
 
 const connectPeer = (id, conn) => {
-  if (!conn) conn = myPeer.connect(id, { serialization: 'json' });
+  if (!conn) {
+    conn = myPeer.connect(id, { serialization: 'json' });
+    conn.connectByMyself = true;
+  }
   myPeer.connMap[id] = conn;
   conn.on('data', receivePhoto(conn));
-  conn.on('close', () => {
+  conn.on('close', async () => {
     console.log('dataConnection closed', conn);
+    if (conn.connectByMyself) {
+      await sleep(5000);
+      connectPeer(id);
+    }
   });
   conn.on('open', () => {
     if (lastData) conn.send(lastData);
   });
   conn.on('error', async (err) => {
     console.log('dataConnection error', err.type, err);
-    await sleep(5000);
-    connectPeer(id);
   });
 };
 
@@ -292,8 +297,9 @@ const connectRoomPeer = async () => {
       console.log('roomPeer on data', e);
     }
   });
-  conn.on('close', () => {
+  conn.on('close', async () => {
     console.log('connectRoomPeer close');
+    await sleep(5000);
     connectRoomPeer();
   });
   conn.on('error', (err) => {
