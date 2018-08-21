@@ -172,19 +172,19 @@ const connectPeer = (id, conn) => {
   if (myPeer.connMap[id]) myPeer.connMap[id].close();
   myPeer.connMap[id] = conn;
   conn.on('data', receivePhoto(conn));
-  conn.on('close', async () => {
-    if (conn.lastReceived) {
-      console.log('dataConnection closed');
-      await sleep(5000);
-      connectPeer(id);
-    }
+  conn.on('close', () => {
+    console.log('dataConnection closed');
   });
   conn.on('open', () => {
     conn.lastReceived = Date.now();
     if (lastData) conn.send(lastData);
   });
-  conn.on('error', (err) => {
+  conn.on('error', async (err) => {
     console.log('dataConnection error', err.type, err);
+    if (conn.lastReceived) {
+      await sleep(5000);
+      connectPeer(id);
+    }
   });
 };
 
