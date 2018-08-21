@@ -132,7 +132,7 @@ const sendPhoto = async () => {
       const conn = connMap[key];
       if (conn.open) {
         const data = Object.assign({}, lastData); // shallow copy
-        const last = lastReceived[conn.metadata.name];
+        const last = conn.remoteName && lastReceived[conn.remoteName];
         if (last && last < Date.now() - 5 * 60 * 1000) {
           // the conn may be stalled, so not sending img.
           delete data.img;
@@ -156,7 +156,8 @@ const sendPhoto = async () => {
 const receivePhoto = conn => async (data) => {
   try {
     if (data.myself) {
-      lastReceived[conn.metadata.name] = Date.now();
+      conn.remoteName = data.myself;
+      lastReceived[conn.remoteName] = Date.now();
     }
     if (data.myself && data.img) {
       updateImage(conn.peer, data.myself, data.img);
@@ -170,16 +171,11 @@ const receivePhoto = conn => async (data) => {
 };
 
 const connectPeer = (id, conn) => {
-  if (!conn) {
-    conn = myPeer.connect(id, {
-      serialization: 'json',
-      metadata: { name: params.myself },
-    });
-  }
+  if (!conn) conn = myPeer.connect(id, { serialization: 'json' });
   myPeer.connMap[id] = conn;
   conn.on('data', receivePhoto(conn));
   conn.on('close', () => {
-    console.log('dataConnection closed', conn.metadata);
+    console.log('dataConnection closed');
   });
   conn.on('open', () => {
     if (lastData) conn.send(lastData);
@@ -286,10 +282,7 @@ const connectRoomPeer = async () => {
     return;
   }
   const id = hash(params.roomid);
-  const conn = myPeer.connect(id, {
-    serialization: 'json',
-    metadata: { name: params.myself },
-  });
+  const conn = myPeer.connect(id, { serialization: 'json' });
   conn.on('data', (data) => {
     try {
       if (mergeMembers(data.members || [])) {
