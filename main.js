@@ -188,12 +188,11 @@ const connectPeer = (id, conn) => {
   });
 };
 
-const connectMembers = (force) => {
+const connectMembers = () => {
   if (!myPeer || !myPeer.connMap) return;
   params.members.forEach((member) => {
     const id = hash(params.roomid) + '_' + hash(member);
-    const oldConn = myPeer.connMap[id];
-    if (oldConn && (oldConn.open || !force)) return;
+    if (myPeer.connMap[id]) return;
     connectPeer(id);
   });
 };
@@ -288,7 +287,7 @@ const connectRoomPeer = async () => {
   conn.on('data', (data) => {
     try {
       if (mergeMembers(data.members || [])) {
-        connectMembers(true);
+        connectMembers();
       }
     } catch (e) {
       console.log('roomPeer on data', e);
