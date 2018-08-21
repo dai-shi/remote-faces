@@ -175,7 +175,7 @@ const connectPeer = (id, conn) => {
   myPeer.connMap[id] = conn;
   conn.on('data', receivePhoto(conn));
   conn.on('close', () => {
-    console.log('dataConnection closed');
+    console.log('dataConnection closed', conn);
   });
   conn.on('open', () => {
     if (lastData) conn.send(lastData);
