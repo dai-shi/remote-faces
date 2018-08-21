@@ -176,6 +176,12 @@ const connectMembers = (force) => {
     const conn = myPeer.connect(id, { serialization: 'json' });
     myPeer.connMap[id] = conn;
     conn.on('data', receivePhoto(conn));
+    conn.on('close', () => {
+      if (conn.lastReceived) {
+        delete myPeer.connMap[id];
+        connectMembers();
+      }
+    });
     conn.on('open', () => {
       conn.lastReceived = Date.now();
       if (lastData) conn.send(lastData);
