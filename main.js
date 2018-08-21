@@ -3,9 +3,10 @@
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const hash = x => x && CryptoJS.MD5(x).toString().slice(0, 16);
 
-const showError = (mesg) => {
+const showError = (mesg, color = 'red') => {
   const ele = document.getElementById('error');
   ele.innerHTML = mesg;
+  ele.style.backgroundColor = color;
   ele.style.display = 'block';
 };
 
@@ -144,7 +145,7 @@ const sendPhoto = async () => {
     sendPhoto();
   } catch (e) {
     console.error('sendPhoto', e);
-    document.getElementById('error').style.display = 'block';
+    showError('error while taking photo.', 'pink');
   }
 };
 
@@ -164,6 +165,25 @@ const receivePhoto = conn => async (data) => {
   }
 };
 
+const connectPeer = (id, conn) => {
+  if (!conn) conn = myPeer.connect(id, { serialization: 'json' });
+  myPeer.connMap[id] = conn;
+  conn.on('data', receivePhoto(conn));
+  conn.on('close', async () => {
+    if (conn.lastReceived) {
+      await sleep(5000);
+      connectPeer(id);
+    }
+  });
+  conn.on('open', () => {
+    conn.lastReceived = Date.now();
+    if (lastData) conn.send(lastData);
+  });
+  conn.on('error', (err) => {
+    console.log('dataConnection error', err.type, err);
+  });
+};
+
 const connectMembers = (force) => {
   if (!myPeer || !myPeer.connMap) return;
   params.members.forEach((member) => {
@@ -173,26 +193,14 @@ const connectMembers = (force) => {
       if (oldConn.open) return;
       if (!force) return;
     }
-    const conn = myPeer.connect(id, { serialization: 'json' });
-    myPeer.connMap[id] = conn;
-    conn.on('data', receivePhoto(conn));
-    conn.on('close', () => {
-      if (conn.lastReceived) {
-        delete myPeer.connMap[id];
-        connectMembers();
-      }
-    });
-    conn.on('open', () => {
-      conn.lastReceived = Date.now();
-      if (lastData) conn.send(lastData);
-    });
+    connectPeer(id);
   });
 };
 
 const heartbeat = async () => {
   await sleep(5 * 60 * 1000);
   [myPeer, roomPeer].forEach((peer) => {
-    if (peer) peer.socket.send({ type: 'HEARTBEAT' });
+    if (peer && peer.open) peer.socket.send({ type: 'HEARTBEAT' });
   });
   heartbeat();
 };
@@ -210,33 +218,65 @@ const createMyPeer = () => {
     myPeer.destroy();
     myPeer = null;
     if (err.type === 'network') {
-      showError('The network is down, reloading.');
+      showError('The network is down, reloading.', 'orange');
       await sleep(5000);
       window.location.reload();
     }
     if (err.type === 'unavailable-id') {
-      showError('The name is not available, reloading.');
+      showError('The name is not available, reloading.', 'green');
       await sleep(30 * 1000);
       window.location.reload();
     }
     console.error('main', err.type, err);
-    showError('Error occured, please reload.');
+    showError('Error occured, please reload.', 'red');
   });
   myPeer.connMap = {};
   connectMembers();
   myPeer.on('connection', (conn) => {
-    myPeer.connMap[conn.peer] = conn;
-    conn.on('data', receivePhoto(conn));
+    connectPeer(conn.peer, conn);
+  });
+};
+
+const createRoomPeer = () => {
+  if (roomPeer) return;
+  // create for others
+  const id = hash(params.roomid);
+  roomPeer = new Peer(id, {
+    host: 'peerjs.axlight.com',
+    port: window.location.protocol === 'https:' ? 443 : 80,
+    secure: window.location.protocol === 'https:',
+  });
+  roomPeer.on('error', async (err) => {
+    console.log('roomPeer error', err.type, err);
+    if (roomPeer && roomPeer.destroyed) {
+      roomPeer = null;
+    }
+    if (err.type === 'unavailable-id') {
+      // already created by others
+      await sleep(3 * 60 * 1000);
+    } else {
+      // retry
+      await sleep(5000);
+    }
+    if (roomPeer) {
+      if (roomPeer.disconnected) roomPeer.reconnect();
+    } else {
+      createRoomPeer();
+    }
+  });
+  roomPeer.on('connection', (conn) => {
     conn.on('open', () => {
-      conn.lastReceived = Date.now();
-      if (lastData) conn.send(lastData);
+      const data = {
+        members: [params.myself, ...params.members],
+      };
+      conn.send(data);
     });
   });
 };
 
 const connectRoomPeer = async () => {
-  await sleep(1000);
   if (!myPeer) {
+    await sleep(1000);
     connectRoomPeer();
     return;
   }
@@ -251,42 +291,12 @@ const connectRoomPeer = async () => {
       console.log('roomPeer on data', e);
     }
   });
-  conn.on('close', connectRoomPeer);
-  createRoomPeer();
-};
-
-const createRoomPeer = () => {
-  if (roomPeer) return;
-  // create for others
-  const id = hash(params.roomid);
-  roomPeer = new Peer(id, {
-    host: 'peerjs.axlight.com',
-    port: window.location.protocol === 'https:' ? 443 : 80,
-    secure: window.location.protocol === 'https:',
+  conn.on('close', () => {
+    console.log('connectRoomPeer close');
+    connectRoomPeer();
   });
-  roomPeer.on('error', async (err) => {
-    if (roomPeer) {
-      roomPeer.destroy();
-      roomPeer = null;
-      if (err.type === 'unavailable-id') {
-        // already created by others
-        // retry just in case
-        await sleep(3 * 60 * 1000);
-        connectRoomPeer();
-      } else {
-        // retry
-        await sleep(5000);
-        connectRoomPeer();
-      }
-    }
-  });
-  roomPeer.on('connection', (conn) => {
-    conn.on('open', () => {
-      const data = {
-        members: [params.myself, ...params.members],
-      };
-      conn.send(data);
-    });
+  conn.on('error', (err) => {
+    console.log('connectRoomPeer error', err.type, err);
   });
 };
 
@@ -313,6 +323,7 @@ const main = async () => {
     await initParams();
   }
   createMyPeer();
+  createRoomPeer();
   connectRoomPeer();
   checkObsoletedImage();
   heartbeat();
