@@ -179,7 +179,6 @@ const connectPeer = (id, conn) => {
   conn.on('data', receivePhoto(conn));
   conn.on('close', async () => {
     console.log('dataConnection closed', conn);
-    if (conn.pc === null) conn.peerConnection = null;
     if (conn.connectByMyself) {
       await sleep(5000);
       connectPeer(id);
