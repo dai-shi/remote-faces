@@ -117,6 +117,7 @@ const checkObsoletedImage = async () => {
 let myPeer;
 let roomPeer;
 let lastData;
+const lastReceived = {};
 
 const sendPhoto = async () => {
   try {
@@ -131,7 +132,8 @@ const sendPhoto = async () => {
       const conn = connMap[key];
       if (conn.open) {
         const data = Object.assign({}, lastData); // shallow copy
-        if (conn.lastReceived < Date.now() - 5 * 60 * 1000) {
+        const last = lastReceived[conn.metadata.name];
+        if (last && last < Date.now() - 5 * 60 * 1000) {
           // the conn may be stalled, so not sending img.
           delete data.img;
         }
@@ -145,7 +147,7 @@ const sendPhoto = async () => {
     sendPhoto();
   } catch (e) {
     console.error('sendPhoto', e);
-    showError('error while taking photo, reloading.', 'pink');
+    showError('error while sending photo, reloading.', 'pink');
     await sleep(10 * 1000);
     window.location.reload();
   }
@@ -153,10 +155,10 @@ const sendPhoto = async () => {
 
 const receivePhoto = conn => async (data) => {
   try {
-    if (conn) {
-      conn.lastReceived = Date.now();
+    if (data.myself) {
+      lastReceived[conn.metadata.name] = Date.now();
     }
-    if (conn && data.myself && data.img) {
+    if (data.myself && data.img) {
       updateImage(conn.peer, data.myself, data.img);
     }
     if (mergeMembers(data.members || [])) {
@@ -168,23 +170,24 @@ const receivePhoto = conn => async (data) => {
 };
 
 const connectPeer = (id, conn) => {
-  if (!conn) conn = myPeer.connect(id, { serialization: 'json' });
-  if (myPeer.connMap[id]) myPeer.connMap[id].close();
+  if (!conn) {
+    conn = myPeer.connect(id, {
+      serialization: 'json',
+      metadata: { name: params.myself },
+    });
+  }
   myPeer.connMap[id] = conn;
   conn.on('data', receivePhoto(conn));
   conn.on('close', () => {
     console.log('dataConnection closed');
   });
   conn.on('open', () => {
-    conn.lastReceived = Date.now();
     if (lastData) conn.send(lastData);
   });
   conn.on('error', async (err) => {
     console.log('dataConnection error', err.type, err);
-    if (conn.lastReceived) {
-      await sleep(5000);
-      connectPeer(id);
-    }
+    await sleep(5000);
+    connectPeer(id);
   });
 };
 
@@ -283,7 +286,10 @@ const connectRoomPeer = async () => {
     return;
   }
   const id = hash(params.roomid);
-  const conn = myPeer.connect(id, { serialization: 'json' });
+  const conn = myPeer.connect(id, {
+    serialization: 'json',
+    metadata: { name: params.myself },
+  });
   conn.on('data', (data) => {
     try {
       if (mergeMembers(data.members || [])) {
