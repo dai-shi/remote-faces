@@ -2,6 +2,7 @@ const {
   app,
   BrowserWindow,
   Menu,
+  dialog,
 } = require('electron');
 const Store = require('electron-store');
 
@@ -22,9 +23,6 @@ const createWindow = () => {
   win.loadURL(store.get('url', 'https://dai-shi.github.io/remote-faces/'));
   win.webContents.reloadIgnoringCache();
   // win.loadFile('index.html');
-  win.on('page-title-updated', (event, title) => {
-    app.setName(title);
-  });
   win.on('close', () => {
     const pos = win.getPosition();
     const size = win.getSize();
@@ -57,6 +55,15 @@ const setupAppMenu = () => {
       click: () => {
         if (!win) return;
         win.setSize(36, win.getSize()[1]);
+      },
+    }, {
+      label: 'Show title (revision)',
+      click: () => {
+        if (!win) return;
+        dialog.showMessageBox({
+          type: 'info',
+          message: win.getTitle(),
+        });
       },
     }],
   };
