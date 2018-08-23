@@ -22,6 +22,9 @@ const createWindow = () => {
   win.loadURL(store.get('url', 'https://dai-shi.github.io/remote-faces/'));
   win.webContents.reloadIgnoringCache();
   // win.loadFile('index.html');
+  win.on('page-title-updated', (event, title) => {
+    app.setName(title);
+  });
   win.on('close', () => {
     const pos = win.getPosition();
     const size = win.getSize();
