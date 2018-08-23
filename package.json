@@ -2,12 +2,13 @@
   "name": "remote-faces",
   "productName": "Remote Faces",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "scripts": {
     "start": "electron .",
     "test": "npm run eslint",
     "eslint": "eslint src"
   },
+  "author": "Daishi Kato",
   "main": "src/main.js",
   "devDependencies": {
     "electron": "^2.0.7",
