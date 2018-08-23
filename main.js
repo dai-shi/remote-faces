@@ -117,7 +117,6 @@ const checkObsoletedImage = async () => {
 let myPeer;
 let roomPeer;
 let lastData;
-const lastReceived = {};
 
 const sendPhoto = async () => {
   try {
@@ -132,7 +131,7 @@ const sendPhoto = async () => {
       const conn = connMap[key];
       if (conn.open) {
         const data = Object.assign({}, lastData); // shallow copy
-        const last = conn.remoteName && lastReceived[conn.remoteName];
+        const last = conn.lastReceived;
         if (last && last < Date.now() - 5 * 60 * 1000) {
           // the conn may be stalled, so not sending img.
           delete data.img;
@@ -155,10 +154,8 @@ const sendPhoto = async () => {
 
 const receivePhoto = conn => async (data) => {
   try {
-    if (data.myself) {
-      conn.remoteName = data.myself;
-      lastReceived[conn.remoteName] = Date.now();
-    }
+    conn.lastReceived = Date.now();
+    myPeer.connMap[conn.peer] = conn;
     if (data.myself && data.img) {
       updateImage(conn.peer, data.myself, data.img);
     }
@@ -179,7 +176,7 @@ const connectPeer = (id, conn) => {
   conn.on('data', receivePhoto(conn));
   conn.on('close', async () => {
     console.log('dataConnection closed', conn);
-    if (conn.connectByMyself) {
+    if (conn.connectByMyself && !myPeer.connMap[id].open) {
       await sleep(5000);
       connectPeer(id);
     }
@@ -187,7 +184,7 @@ const connectPeer = (id, conn) => {
   conn.on('open', () => {
     if (lastData) conn.send(lastData);
   });
-  conn.on('error', async (err) => {
+  conn.on('error', (err) => {
     console.log('dataConnection error', err.type, err);
   });
 };
@@ -294,7 +291,7 @@ const connectRoomPeer = async () => {
         connectMembers();
       }
     } catch (e) {
-      console.log('roomPeer on data', e);
+      console.log('connectRoomPeer on data', e);
     }
   });
   conn.on('close', async () => {
