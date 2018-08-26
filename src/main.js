@@ -4,8 +4,10 @@ const {
   Menu,
   dialog,
 } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const Store = require('electron-store');
 
+autoUpdater.checkForUpdatesAndNotify();
 const store = new Store();
 
 let win;

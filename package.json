@@ -3,17 +3,19 @@
   "productName": "Remote Faces",
   "description": "A small app to share webcam still images periodically",
   "private": true,
-  "version": "0.4.0",
+  "version": "1.0.0",
   "scripts": {
     "start": "electron .",
     "test": "npm run eslint",
     "eslint": "eslint src",
-    "dist": "electron-builder --mac --win"
+    "dist": "electron-builder --mac --win",
+    "publish": "electron-builder --mac --win --publish always"
   },
   "author": "Daishi Kato",
   "main": "src/main.js",
   "dependencies": {
-    "electron-store": "^2.0.0"
+    "electron-store": "^2.0.0",
+    "electron-updater": "^3.1.1"
   },
   "devDependencies": {
     "electron": "^2.0.8",
@@ -36,6 +38,7 @@
   },
   "build": {
     "appId": "com.axlight.remote-faces",
+    "publish": [{ "provider": "github" }],
     "mac": {
       "category": "public.app-category.productivity",
       "target": "dmg"
