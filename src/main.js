@@ -23,6 +23,14 @@ const createWindow = () => {
   win.loadURL(store.get('url', 'https://dai-shi.github.io/remote-faces/'));
   win.webContents.reloadIgnoringCache();
   // win.loadFile('index.html');
+  win.on('page-title-updated', (event, title) => {
+    const revision = title.replace(app.getName(), '').replace(/^\s*\(*|\)*\s*$/g, '');
+    if (revision && process.platform === 'darwin') {
+      app.setAboutPanelOptions({
+        version: revision,
+      });
+    }
+  });
   win.on('close', () => {
     const pos = win.getPosition();
     const size = win.getSize();
@@ -57,7 +65,7 @@ const setupAppMenu = () => {
         win.setSize(36, win.getSize()[1]);
       },
     }, {
-      label: 'Show title (revision)',
+      label: 'Show Window Title',
       click: () => {
         if (!win) return;
         dialog.showMessageBox({
