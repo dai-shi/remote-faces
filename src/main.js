@@ -12,6 +12,12 @@ const store = new Store();
 
 let win;
 
+const loadURL = () => {
+  if (!win) return;
+  win.loadURL(store.get('url', 'https://dai-shi.github.io/remote-faces/'));
+  // win.loadFile('index.html');
+};
+
 const createWindow = () => {
   win = new BrowserWindow({
     x: store.get('x', 0),
@@ -22,9 +28,11 @@ const createWindow = () => {
     frame: false,
   });
   // win.webContents.openDevTools();
-  win.loadURL(store.get('url', 'https://dai-shi.github.io/remote-faces/'));
+  loadURL();
   win.webContents.reloadIgnoringCache();
-  // win.loadFile('index.html');
+  win.webContents.on('did-fail-load', () => {
+    setTimeout(loadURL, 3000);
+  });
   win.on('page-title-updated', (event, title) => {
     const revision = title.replace(app.getName(), '').replace(/^\s*\(*|\)*\s*$/g, '');
     if (revision && process.platform === 'darwin') {
