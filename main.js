@@ -177,7 +177,8 @@ const connectPeer = (id, conn) => {
   conn.on('data', receivePhoto(conn));
   conn.on('close', async () => {
     console.log('dataConnection closed', conn);
-    if (conn.connectByMyself) {
+    if (conn.connectByMyself && !conn.retrying) {
+      conn.retrying = true;
       await sleep(5000);
       connectPeer(id);
     }
@@ -187,7 +188,9 @@ const connectPeer = (id, conn) => {
   });
   conn.on('error', async (err) => {
     console.log('dataConnection error', err.type, err);
-    if (conn.connectByMyself) {
+    conn.close();
+    if (conn.connectByMyself && !conn.retrying) {
+      conn.retrying = true;
       await sleep(4 * 60 * 1000);
       connectPeer(id);
     }
@@ -288,6 +291,11 @@ const connectRoomPeer = async () => {
     connectRoomPeer();
     return;
   }
+  if (roomPeer && roomPeer.open) {
+    await sleep(30 * 60 * 1000);
+    connectRoomPeer();
+    return;
+  }
   const id = hash(params.roomid);
   const conns = myPeer.connections[id];
   if (conns && conns.find(c => c.open)) return;
@@ -303,13 +311,20 @@ const connectRoomPeer = async () => {
   });
   conn.on('close', async () => {
     console.log('connectRoomPeer close');
-    await sleep(5000);
-    connectRoomPeer();
+    if (!conn.retrying) {
+      conn.retrying = true;
+      await sleep(5000);
+      connectRoomPeer();
+    }
   });
   conn.on('error', async (err) => {
     console.log('connectRoomPeer error', err.type, err);
-    await sleep(4 * 60 * 1000);
-    connectRoomPeer();
+    conn.close();
+    if (!conn.retrying) {
+      conn.retrying = true;
+      await sleep(60 * 1000);
+      connectRoomPeer();
+    }
   });
 };
 
@@ -343,4 +358,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r52)';
+document.title = 'Remote Faces (r53)';
