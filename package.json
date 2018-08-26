@@ -9,7 +9,7 @@
     "test": "npm run eslint",
     "eslint": "eslint src",
     "dist": "electron-builder --mac --win",
-    "publish": "electron-builder --mac --win --publish always"
+    "release": "electron-builder --mac --win --publish always"
   },
   "author": "Daishi Kato",
   "main": "src/main.js",
