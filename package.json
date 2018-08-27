@@ -7,9 +7,10 @@
   "scripts": {
     "start": "electron .",
     "test": "npm run eslint",
-    "eslint": "eslint src",
+    "eslint": "eslint src public",
     "dist": "electron-builder --mac --win",
-    "release": "electron-builder --mac --win --publish always"
+    "release": "electron-builder --mac --win --publish always",
+    "deploy": "gh-pages -d public"
   },
   "author": "Daishi Kato",
   "main": "src/main.js",
@@ -24,7 +25,8 @@
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jsx-a11y": "^6.1.1",
-    "eslint-plugin-react": "^7.11.1"
+    "eslint-plugin-react": "^7.11.1",
+    "gh-pages": "^1.2.0"
   },
   "eslintConfig": {
     "extends": [
@@ -34,11 +36,35 @@
       "no-console": 0,
       "prefer-template": 0,
       "import/no-extraneous-dependencies": 0
-    }
+    },
+    "overrides": [
+      {
+        "files": [
+          "public/**/*.js"
+        ],
+        "env": {
+          "browser": true
+        },
+        "globals": {
+          "Qs": true,
+          "CryptoJS": true,
+          "Peer": true
+        },
+        "rules": {
+          "no-param-reassign": 0,
+          "no-multi-assign": 0,
+          "no-use-before-define": 0
+        }
+      }
+    ]
   },
   "build": {
     "appId": "com.axlight.remote-faces",
-    "publish": [{ "provider": "github" }],
+    "publish": [
+      {
+        "provider": "github"
+      }
+    ],
     "mac": {
       "category": "public.app-category.productivity",
       "target": "dmg"

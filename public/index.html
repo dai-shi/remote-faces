@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Remote Faces</title>
+    <link rel="stylesheet" href="main.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.5.2/qs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+    <script src="https://cdn.rawgit.com/dai-shi/peerjs/80a47af81201cb35f11bcf8bf2861253dac4702c/dist/peer.min.js"></script>
+    <script src="main.js"></script>
+  </head>
+  <body>
+    <div id="error"></div>
+    <form id="init">
+      <table>
+        <tr><td>Room ID:</td><td><input id="param-roomid" /></td></tr>
+        <tr><td>Your Name:</td><td><input id="param-myself" /></td></tr>
+        <tr><td></td><td><input type="submit" value="OK" /></td></tr>
+      </table>
+    </form>
+    <div id="app">
+      <div id="base" class="card">
+        <img class="photo" alt="photo" />
+        <div class="name"></div>
+      </div>
+    </div>
+    <canvas></canvas>
+    <video autoplay playsinline></video>
+  </body>
+</html>
