@@ -3,11 +3,13 @@
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const hash = x => x && CryptoJS.MD5(x).toString().slice(0, 16);
 
-const showError = (mesg, color = 'red') => {
+const showError = async (mesg, color, waitSec) => {
   const ele = document.getElementById('error');
-  ele.innerHTML = mesg;
+  ele.innerHTML = mesg + ' Will reload in ' + waitSec + 's.';
   ele.style.backgroundColor = color;
   ele.style.display = 'block';
+  await sleep(waitSec * 1000);
+  window.location.reload();
 };
 
 // params --------------------------
@@ -146,9 +148,7 @@ const sendPhoto = async () => {
     sendPhoto();
   } catch (e) {
     console.error('sendPhoto', e);
-    showError('error while sending photo, reloading.', 'pink');
-    await sleep(10 * 1000);
-    window.location.reload();
+    showError('Unable to capture the image.', 'pink', 10);
   }
 };
 
@@ -219,24 +219,18 @@ const createMyPeer = () => {
     secure: window.location.protocol === 'https:',
   });
   myPeer.on('open', sendPhoto);
-  myPeer.on('error', async (err) => {
+  myPeer.on('error', (err) => {
     if (err.type === 'peer-unavailable') return;
     myPeer.destroy();
     myPeer = null;
     if (err.type === 'network') {
-      showError('The network is down, reloading.', 'orange');
-      await sleep(5000);
-      window.location.reload();
+      showError('The network is down.', 'orange', 5);
+    } else if (err.type === 'unavailable-id') {
+      showError('The name is not available.', 'green', 30);
+    } else {
+      console.error('main', err.type, err);
+      showError('Unknown error occured.', 'red', 60);
     }
-    if (err.type === 'unavailable-id') {
-      showError('The name is not available, reloading.', 'green');
-      await sleep(30 * 1000);
-      window.location.reload();
-    }
-    console.error('main', err.type, err);
-    showError('Unknown error occured, reloading.', 'red');
-    await sleep(60 * 1000);
-    window.location.reload();
   });
   myPeer.connMap = {};
   connectMembers();
@@ -348,4 +342,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r54)';
+document.title = 'Remote Faces (r55)';
