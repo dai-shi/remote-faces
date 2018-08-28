@@ -10,7 +10,7 @@
     "eslint": "eslint src public",
     "dist": "electron-builder --mac --win",
     "release": "electron-builder --mac --win --publish always",
-    "deploy": "gh-pages -d public"
+    "deploy": "gh-pages -d public -s '**/*.+(js|html|css)'"
   },
   "author": "Daishi Kato",
   "main": "src/main.js",
