@@ -171,26 +171,21 @@ const connectPeer = (id, conn) => {
   if (!conn) {
     if (myPeer.connMap[id] && myPeer.connMap[id].open) return;
     conn = myPeer.connect(id, { serialization: 'json' });
-    conn.connectByMyself = true;
   }
   myPeer.connMap[id] = conn;
   conn.on('data', receivePhoto(conn));
-  conn.on('close', async () => {
-    console.log('dataConnection closed', conn);
-    if (conn.connectByMyself) {
-      await sleep(5000);
-      connectPeer(id);
-    }
-  });
   conn.on('open', () => {
     if (lastData) conn.send(lastData);
   });
+  conn.on('close', async () => {
+    console.log('dataConnection closed', conn);
+    await sleep(5000);
+    connectPeer(id);
+  });
   conn.on('error', async (err) => {
     console.log('dataConnection error', err.type, err);
-    if (conn.connectByMyself) {
-      await sleep(4 * 60 * 1000);
-      connectPeer(id);
-    }
+    await sleep(4 * 60 * 1000);
+    connectPeer(id);
   });
 };
 
@@ -282,11 +277,6 @@ const connectRoomPeer = async () => {
     connectRoomPeer();
     return;
   }
-  if (roomPeer && roomPeer.open) {
-    await sleep(30 * 60 * 1000);
-    connectRoomPeer();
-    return;
-  }
   const id = hash(params.roomid);
   const conns = myPeer.connections[id];
   if (conns && conns.find(c => c.open)) return;
@@ -342,4 +332,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r55)';
+document.title = 'Remote Faces (r56)';
