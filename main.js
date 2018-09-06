@@ -216,7 +216,7 @@ const createMyPeer = () => {
   myPeer.on('open', sendPhoto);
   myPeer.on('error', (err) => {
     if (err.type === 'peer-unavailable') return;
-    myPeer.destroy();
+    if (myPeer) myPeer.destroy();
     myPeer = null;
     if (err.type === 'network') {
       showError('The network is down.', 'orange', 5);
@@ -332,4 +332,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r56)';
+document.title = 'Remote Faces (r57)';
