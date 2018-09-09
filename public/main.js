@@ -193,7 +193,6 @@ const connectMembers = () => {
   if (!myPeer || !myPeer.connMap) return;
   params.members.forEach((member) => {
     const id = hash(params.roomid) + '_' + hash(member);
-    if (myPeer.connMap[id]) return;
     connectPeer(id);
   });
 };
@@ -332,4 +331,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r57)';
+document.title = 'Remote Faces (r58)';
