@@ -60,7 +60,7 @@ const takePhoto = async () => {
   if (typeof ImageCapture !== 'undefined') {
     const imageCapture = new ImageCapture(track);
     await sleep(2000);
-    const blob = await imageCapture.takePhoto();
+    const blob = await imageCapture.takePhoto({});
     srcImg = await createImageBitmap(blob);
     srcW = srcImg.width;
     srcH = srcImg.height;
@@ -331,4 +331,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r58)';
+document.title = 'Remote Faces (r59)';
