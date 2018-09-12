@@ -47,6 +47,30 @@ const mergeMembers = (members) => {
 
 // photo ---------------------------
 
+const captureImage = async (stream, track) => {
+  if (typeof ImageCapture !== 'undefined') {
+    try {
+      const imageCapture = new ImageCapture(track);
+      await sleep(2000);
+      const blob = await imageCapture.takePhoto({});
+      const srcImg = await createImageBitmap(blob);
+      const srcW = srcImg.width;
+      const srcH = srcImg.height;
+      return { srcImg, srcW, srcH };
+    } catch (e) {
+      console.log('failed to use ImageCapture, falling back', e);
+    }
+  }
+  const video = document.querySelector('video');
+  video.style.display = 'block';
+  video.srcObject = stream;
+  await sleep(2000);
+  const srcImg = video;
+  const srcW = video.videoWidth;
+  const srcH = video.videoHeight;
+  return { srcImg, srcW, srcH };
+};
+
 const takePhoto = async () => {
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
   const track = stream.getVideoTracks()[0];
@@ -54,25 +78,7 @@ const takePhoto = async () => {
   const ctx = canvas.getContext('2d');
   const dstW = canvas.width = 72;
   const dstH = canvas.height = 72;
-  let srcImg;
-  let srcW;
-  let srcH;
-  if (typeof ImageCapture !== 'undefined') {
-    const imageCapture = new ImageCapture(track);
-    await sleep(2000);
-    const blob = await imageCapture.takePhoto({});
-    srcImg = await createImageBitmap(blob);
-    srcW = srcImg.width;
-    srcH = srcImg.height;
-  } else {
-    const video = document.querySelector('video');
-    video.style.display = 'block';
-    video.srcObject = stream;
-    await sleep(2000);
-    srcImg = video;
-    srcW = video.videoWidth;
-    srcH = video.videoHeight;
-  }
+  const { srcImg, srcW, srcH } = await captureImage(stream, track);
   const ratio = Math.max(dstW / srcW, dstH / srcH);
   const width = Math.min(srcW, dstW / ratio);
   const height = Math.min(srcH, dstH / ratio);
@@ -331,4 +337,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r59)';
+document.title = 'Remote Faces (r60)';
