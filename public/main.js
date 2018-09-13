@@ -12,6 +12,10 @@ const showError = async (mesg, color, waitSec) => {
   window.location.reload();
 };
 
+const debug = (...args) => {
+  console.log(new Date(), ...args);
+};
+
 // params --------------------------
 
 const params = Qs.parse(window.location.hash.slice(1));
@@ -58,7 +62,7 @@ const captureImage = async (stream, track) => {
       const srcH = srcImg.height;
       return { srcImg, srcW, srcH };
     } catch (e) {
-      console.log('failed to use ImageCapture, falling back', e);
+      debug('failed to use ImageCapture, falling back', e);
     }
   }
   const video = document.querySelector('video');
@@ -154,7 +158,7 @@ const sendPhoto = async () => {
     sendPhoto();
   } catch (e) {
     console.error('sendPhoto', e);
-    showError('Unable to capture the image.', 'pink', 10);
+    showError('Unable to capture the image.', 'pink', 20);
   }
 };
 
@@ -169,7 +173,7 @@ const receivePhoto = conn => async (data) => {
       connectMembers();
     }
   } catch (e) {
-    console.log('receivePhoto', e);
+    debug('receivePhoto', e);
   }
 };
 
@@ -184,13 +188,14 @@ const connectPeer = (id, conn) => {
     if (lastData) conn.send(lastData);
   });
   conn.on('close', async () => {
-    console.log('dataConnection closed', conn);
+    debug('dataConnection closed', conn);
     await sleep(5000);
     connectPeer(id);
   });
   conn.on('error', async (err) => {
-    console.log('dataConnection error', err.type, err);
+    debug('dataConnection error', err.type, err);
     await sleep(4 * 60 * 1000);
+    // TODO should we reload the entire page?
     connectPeer(id);
   });
 };
@@ -224,7 +229,7 @@ const createMyPeer = () => {
     if (myPeer) myPeer.destroy();
     myPeer = null;
     if (err.type === 'network') {
-      showError('The network is down.', 'orange', 5);
+      showError('The network is down.', 'orange', 10);
     } else if (err.type === 'unavailable-id') {
       showError('The name is not available.', 'green', 30);
     } else {
@@ -249,7 +254,7 @@ const createRoomPeer = () => {
     secure: window.location.protocol === 'https:',
   });
   roomPeer.on('error', async (err) => {
-    console.log('roomPeer error', err.type, err);
+    debug('roomPeer error', err.type, err);
     if (roomPeer && roomPeer.destroyed) {
       roomPeer = null;
     }
@@ -292,16 +297,16 @@ const connectRoomPeer = async () => {
         connectMembers();
       }
     } catch (e) {
-      console.log('connectRoomPeer on data', e);
+      debug('connectRoomPeer on data', e);
     }
   });
   conn.on('close', async () => {
-    console.log('connectRoomPeer close');
+    debug('connectRoomPeer close');
     await sleep(5000);
     connectRoomPeer();
   });
   conn.on('error', async (err) => {
-    console.log('connectRoomPeer error', err.type, err);
+    debug('connectRoomPeer error', err.type, err);
     await sleep(60 * 1000);
     connectRoomPeer();
   });
@@ -337,4 +342,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r60)';
+document.title = 'Remote Faces (r61)';
