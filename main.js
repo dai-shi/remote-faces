@@ -53,17 +53,18 @@ const mergeMembers = (members) => {
 
 const captureImage = async (stream, track) => {
   if (typeof ImageCapture !== 'undefined') {
+    const imageCapture = new ImageCapture(track);
+    await sleep(2000);
+    let srcImg;
     try {
-      const imageCapture = new ImageCapture(track);
-      await sleep(2000);
-      const blob = await imageCapture.takePhoto({});
-      const srcImg = await createImageBitmap(blob);
-      const srcW = srcImg.width;
-      const srcH = srcImg.height;
-      return { srcImg, srcW, srcH };
+      const blob = await imageCapture.takePhoto();
+      srcImg = await createImageBitmap(blob);
     } catch (e) {
-      debug('failed to use ImageCapture, falling back', e);
+      srcImg = await imageCapture.grabFrame();
     }
+    const srcW = srcImg.width;
+    const srcH = srcImg.height;
+    return { srcImg, srcW, srcH };
   }
   const video = document.querySelector('video');
   video.style.display = 'block';
@@ -342,4 +343,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r61)';
+document.title = 'Remote Faces (r62)';
