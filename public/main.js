@@ -178,6 +178,8 @@ const receivePhoto = conn => async (data) => {
   }
 };
 
+let peerClosedCounter = 0;
+
 const connectPeer = (id, conn) => {
   if (!conn) {
     if (myPeer.connMap[id] && myPeer.connMap[id].open) return;
@@ -190,14 +192,17 @@ const connectPeer = (id, conn) => {
   });
   conn.on('close', async () => {
     debug('dataConnection closed', conn);
-    await sleep(5000);
-    connectPeer(id);
+    peerClosedCounter += 1;
+    if (peerClosedCounter > 10) {
+      showError('Data connection closed for more than 10 times.', 'yellow', 5);
+    } else {
+      await sleep(5000);
+      connectPeer(id);
+    }
   });
   conn.on('error', async (err) => {
     debug('dataConnection error', err.type, err);
-    await sleep(4 * 60 * 1000);
-    // TODO should we reload the entire page?
-    connectPeer(id);
+    showError('Unexpected data connection error.', 'grey', 40);
   });
 };
 
@@ -343,4 +348,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r64)';
+document.title = 'Remote Faces (r65)';
