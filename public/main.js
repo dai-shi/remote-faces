@@ -194,15 +194,20 @@ const connectPeer = (id, conn) => {
     debug('dataConnection closed', conn);
     peerClosedCounter += 1;
     if (peerClosedCounter > 10) {
-      showError('Data connection closed for more than 10 times.', 'yellow', 5);
+      showError('Data connection closed for more than 10 times.', 'grey', 5);
     } else {
       await sleep(5000);
       connectPeer(id);
     }
   });
   conn.on('error', async (err) => {
-    debug('dataConnection error', err.type, err);
-    showError('Unexpected data connection error.', 'grey', 40);
+    if (err.type) {
+      debug('dataConnection error', err.type, err);
+      await sleep(4 * 60 * 1000);
+      connectPeer(id);
+    } else {
+      debug('dataConnection error: probably offline, giving up.', err);
+    }
   });
 };
 
@@ -260,7 +265,7 @@ const createRoomPeer = () => {
     secure: window.location.protocol === 'https:',
   });
   roomPeer.on('error', async (err) => {
-    debug('roomPeer error', err.type, err);
+    debug('createRoomPeer error', err.type, err);
     if (roomPeer && roomPeer.destroyed) {
       roomPeer = null;
     }
@@ -348,4 +353,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r65)';
+document.title = 'Remote Faces (r66)';
