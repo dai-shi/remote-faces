@@ -219,11 +219,7 @@ const heartbeat = async () => {
 
 const createMyPeer = () => {
   const id = hash(params.roomid) + '_' + hash(params.myself);
-  myPeer = new Peer(id, {
-    host: 'peerjs.axlight.com',
-    port: window.location.protocol === 'https:' ? 443 : 80,
-    secure: window.location.protocol === 'https:',
-  });
+  myPeer = new Peer(id);
   myPeer.on('open', sendPhoto);
   myPeer.on('error', (err) => {
     if (err.type === 'peer-unavailable') return;
@@ -249,11 +245,7 @@ const createRoomPeer = () => {
   if (roomPeer) return;
   // create for others
   const id = hash(params.roomid);
-  roomPeer = new Peer(id, {
-    host: 'peerjs.axlight.com',
-    port: window.location.protocol === 'https:' ? 443 : 80,
-    secure: window.location.protocol === 'https:',
-  });
+  roomPeer = new Peer(id);
   roomPeer.on('error', async (err) => {
     debug('createRoomPeer error', err.type, err);
     if (roomPeer && roomPeer.destroyed) {
@@ -343,4 +335,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r67)';
+document.title = 'Remote Faces (r68)';
