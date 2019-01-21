@@ -131,12 +131,20 @@ let myPeer;
 let roomPeer;
 let lastData;
 
+const getLivePeers = () => {
+  const { connMap = {} } = myPeer || {};
+  const isLive = c => c.open && c.lastReceived
+    && c.lastReceived < Date.now() - 2.5 * 60 * 1000;
+  return Object.keys(connMap).filter(isLive).map(c => c.id);
+};
+
 const sendPhoto = async () => {
   try {
     const dataUrl = await takePhoto();
     lastData = {
       myself: params.myself,
       members: [params.myself, ...params.members],
+      peers: getLivePeers(),
       img: dataUrl,
     };
     const { connMap = {} } = myPeer || {};
@@ -173,12 +181,14 @@ const receivePhoto = conn => async (data) => {
     if (mergeMembers(data.members || [])) {
       connectMembers();
     }
+    (data.peers || []).forEach(connectPeer);
   } catch (e) {
     debug('receivePhoto', e);
   }
 };
 
 const connectPeer = (id, conn) => {
+  if (myPeer.id === id) return;
   if (!conn) {
     if (myPeer.connMap[id] && myPeer.connMap[id].open) return;
     conn = myPeer.connect(id, { serialization: 'json' });
@@ -202,7 +212,7 @@ const connectPeer = (id, conn) => {
 };
 
 const connectMembers = () => {
-  if (!myPeer || !myPeer.connMap) return;
+  if (!myPeer) return;
   params.members.forEach((member) => {
     const id = hash(params.roomid) + '_' + hash(member);
     connectPeer(id);
@@ -335,4 +345,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r68)';
+document.title = 'Remote Faces (r69)';
