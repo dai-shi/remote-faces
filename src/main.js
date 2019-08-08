@@ -24,7 +24,7 @@ const createWindow = () => {
     y: store.get('y', 0),
     width: store.get('width', 400),
     height: store.get('height', 300),
-    alwaysOnTop: true,
+    alwaysOnTop: store.get('alwaysOnTop', false),
     frame: false,
   });
   // win.webContents.openDevTools();
@@ -73,6 +73,14 @@ const setupAppMenu = () => {
       click: () => {
         if (!win) return;
         win.setSize(36, win.getSize()[1]);
+      },
+    }, {
+      label: 'Toggle Always On Top',
+      click: () => {
+        if (win) win.close();
+        const oldValue = store.get('alwaysOnTop', false);
+        store.set('alwaysOnTop', !oldValue);
+        createWindow();
       },
     }, {
       label: 'Show Window Title',
