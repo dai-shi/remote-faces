@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="main.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.5.2/qs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/dai-shi/peerjs@729ee794a96722e8aa6c36123c09708d278c0b08/dist-peer.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.0.2/dist/peerjs.min.js"></script>
     <script src="main.js"></script>
   </head>
   <body>
@@ -18,10 +18,17 @@
         <tr><td></td><td><input type="submit" value="OK" /></td></tr>
       </table>
     </form>
+    <div id="status"></div>
     <div id="app">
-      <div id="base" class="card">
+      <div id="myself" class="card">
         <img class="photo" alt="photo" />
         <div class="name"></div>
+        <div class="mesg"><form><input /></form></div>
+      </div>
+      <div id="templ" class="card">
+        <img class="photo" alt="photo" />
+        <div class="name"></div>
+        <div class="mesg"></div>
       </div>
     </div>
     <canvas></canvas>
