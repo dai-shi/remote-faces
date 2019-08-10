@@ -1,15 +1,28 @@
 // utils ---------------------------
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-const hash = x => x && CryptoJS.MD5(x).toString().slice(0, 16);
+const hash = x => x && CryptoJS.MD5(x).toString().slice(0, 32);
+const rand4 = () => 1000 + Math.floor(Math.random() * 9000);
+const SEED_PEERS = 2; //5;
+const guessSeed = id => Number(id.split('_')[1]) < SEED_PEERS;
 
-const showError = async (mesg, color, waitSec) => {
+const showError = async (text, color, waitSec) => {
   const ele = document.getElementById('error');
-  ele.innerHTML = mesg + ' Will reload in ' + waitSec + 's.';
+  ele.textContent = text + ' Will reload in ' + waitSec + 's.';
   ele.style.backgroundColor = color;
   ele.style.display = 'block';
   await sleep(waitSec * 1000);
   window.location.reload();
+};
+
+const showStatus = (text) => {
+  const ele = document.getElementById('status');
+  ele.textContent = text;
+};
+const showConnectedStatus = (text) => {
+  showStatus('Connected to peers: '
+    + getLivePeers().map(t => t.split('_')[1]).join(', ')
+    + (text ? ' (' + text + ')' : ''));
 };
 
 const debug = (...args) => {
@@ -33,20 +46,6 @@ const updateRoomid = (roomid) => {
 const updateMyself = (myself) => {
   params.myself = myself;
   updateParams();
-};
-
-const mergeMembers = (members) => {
-  let updated = false;
-  members.forEach((member) => {
-    if (member === params.myself) return;
-    if (params.members.includes(member)) return;
-    params.members.push(member);
-    updated = true;
-  });
-  if (updated) {
-    updateParams();
-  }
-  return updated;
 };
 
 // photo ---------------------------
@@ -97,16 +96,19 @@ const takePhoto = async () => {
 const getImageEle = (id) => {
   const ele = document.getElementById(id);
   if (ele) return ele;
-  const newEle = document.getElementById('base').cloneNode(true);
+  const newEle = document.getElementById('templ').cloneNode(true);
   newEle.id = id;
   document.getElementById('app').appendChild(newEle);
   return newEle;
 };
 
-const updateImage = (id, name, img) => {
+const updateImage = (id, name, img, mesg) => {
   const ele = getImageEle(id);
   ele.querySelector('img').src = img;
-  ele.querySelector('.name').innerHTML = name;
+  ele.querySelector('.name').textContent = name;
+  if (id !== 'myself') {
+    ele.querySelector('.mesg').textContent = mesg;
+  }
   ele.dataset.modified = Date.now();
   ele.style.opacity = 1.0;
 };
@@ -127,43 +129,17 @@ const checkObsoletedImage = async () => {
 
 // peers ---------------------------
 
-let myPeer;
-let roomPeer;
-let lastData;
-
-const getLivePeers = () => {
-  const { connMap = {} } = myPeer || {};
-  const isLive = c => c.open && c.lastReceived
-    && c.lastReceived < Date.now() - 2.5 * 60 * 1000;
-  return Object.keys(connMap).filter(isLive).map(c => c.id);
-};
+let myPeer = null;
+let lastPhotoUrl = null;
 
 const sendPhoto = async () => {
   try {
-    const dataUrl = await takePhoto();
-    lastData = {
-      myself: params.myself,
-      members: [params.myself, ...params.members],
-      peers: getLivePeers(),
-      img: dataUrl,
-    };
-    const { connMap = {} } = myPeer || {};
-    Object.keys(connMap).forEach((key) => {
-      const conn = connMap[key];
-      if (conn.open) {
-        const data = Object.assign({}, lastData); // shallow copy
-        const last = conn.lastReceived;
-        if (last && last < Date.now() - 5 * 60 * 1000) {
-          // the conn may be stalled, so not sending img.
-          delete data.img;
-        }
-        conn.send(data);
-      }
-    });
+    lastPhotoUrl = await takePhoto();
+    sendDataToAllPeers();
     document.getElementById('app').style.display = 'block';
-    updateImage('base', params.myself, dataUrl);
+    updateImage('myself', params.myself, lastPhotoUrl);
     await sleep(2 * 60 * 1000);
-    lastData = null;
+    lastPhotoUrl = null;
     sendPhoto();
   } catch (e) {
     console.error('sendPhoto', e);
@@ -171,148 +147,148 @@ const sendPhoto = async () => {
   }
 };
 
-const receivePhoto = conn => async (data) => {
+const initForm = () => {
+  const form = document.querySelector('#myself .mesg form');
+  form.addEventListener('submit', sendDataToAllPeers);
+};
+
+const sendDataToAllPeers = () => {
+  if (myPeer) {
+    Object.keys(myPeer.connections).forEach((key) => {
+      myPeer.connections[key].forEach((conn) => {
+        if (conn.open) sendData(conn);
+      });
+    });
+  }
+};
+
+const getLivePeers = () => {
+  const peers = Object.keys(myPeer.connections);
+  const livePeers = peers.filter(
+    peer => myPeer.connections[peer].find(c => c.open),
+  );
+  return livePeers;
+};
+
+const sendData = (conn) => {
   try {
-    conn.lastReceived = Date.now();
-    myPeer.connMap[conn.peer] = conn;
+    if (!lastPhotoUrl) return;
+    const data = {
+      myself: params.myself,
+      img: lastPhotoUrl,
+      mesg: document.querySelector('#myself .mesg input').value,
+      peers: getLivePeers(),
+    };
+    conn.send(data);
+  } catch (e) {
+    debug('sendData', e);
+  }
+};
+
+const receiveData = (data) => {
+  try {
     if (data.myself && data.img) {
-      updateImage(conn.peer, data.myself, data.img);
-    }
-    if (mergeMembers(data.members || [])) {
-      connectMembers();
+      updateImage(hash(data.myself), data.myself, data.img, data.mesg);
     }
     (data.peers || []).forEach(connectPeer);
   } catch (e) {
-    debug('receivePhoto', e);
+    debug('receiveData', e);
   }
-};
-
-const connectPeer = (id, conn) => {
-  if (myPeer.id === id) return;
-  if (!conn) {
-    if (myPeer.connMap[id] && myPeer.connMap[id].open) return;
-    conn = myPeer.connect(id, { serialization: 'json' });
-  }
-  myPeer.connMap[id] = conn;
-  conn.on('data', receivePhoto(conn));
-  conn.on('open', () => {
-    if (lastData) conn.send(lastData);
-  });
-  conn.on('close', async () => {
-    debug('dataConnection closed', conn);
-    await sleep(5000);
-    connectPeer(id);
-  });
-  conn.on('error', async (err) => {
-    debug('dataConnection error', err.type, err);
-    await sleep(4 * 60 * 1000);
-    // TODO should we reload the entire page?
-    connectPeer(id);
-  });
-};
-
-const connectMembers = () => {
-  if (!myPeer) return;
-  params.members.forEach((member) => {
-    const id = hash(params.roomid) + '_' + hash(member);
-    connectPeer(id);
-  });
 };
 
 const heartbeat = async () => {
   await sleep(5 * 60 * 1000);
-  [myPeer, roomPeer].forEach((peer) => {
-    if (peer && peer.open) peer.socket.send({ type: 'HEARTBEAT' });
-  });
+  if (myPeer && myPeer.open) myPeer.socket.send({ type: 'HEARTBEAT' });
   heartbeat();
 };
 
-const createMyPeer = () => {
-  const id = hash(params.roomid) + '_' + hash(params.myself);
-  myPeer = new Peer(id);
-  myPeer.on('open', sendPhoto);
-  myPeer.on('error', (err) => {
-    if (err.type === 'peer-unavailable') return;
-    if (myPeer) myPeer.destroy();
-    myPeer = null;
-    if (err.type === 'network') {
-      showError('The network is down.', 'orange', 10);
-    } else if (err.type === 'unavailable-id') {
-      showError('The name is not available.', 'green', 30);
-    } else {
-      console.error('main', err.type, err);
-      showError('Unknown error occured.', 'red', 60);
-    }
+// startup ---------------------------
+
+const connectPeer = (id) => {
+  if (!myPeer) return;
+  if (myPeer.id === id) return;
+  if (myPeer.connections[id] && myPeer.connections[id].find(c => c.open)) return;
+  const conn = myPeer.connect(id, { serialization: 'json' });
+  initConnection(conn);
+};
+
+const initConnection = (conn) => {
+  conn.on('open', () => {
+    showConnectedStatus();
+    if (myPeer) sendData(conn);
   });
-  myPeer.connMap = {};
-  connectMembers();
-  myPeer.on('connection', (conn) => {
-    connectPeer(conn.peer, conn);
+  conn.on('data', receiveData);
+  conn.on('close', async () => {
+    debug('dataConnection closed', conn);
+    showConnectedStatus('closed: ' + conn.peer.split('_')[1]);
+    if (guessSeed(conn.peer)) reInitMyPeer(conn.peer);
+  });
+  conn.on('error', async (err) => {
+    debug('dataConnection error', conn, err.type, err);
+    showConnectedStatus('error: ' + conn.peer.split('_')[1]);
+    if (guessSeed(conn.peer)) reInitMyPeer(conn.peer);
   });
 };
 
-const createRoomPeer = () => {
-  if (roomPeer) return;
-  // create for others
-  const id = hash(params.roomid);
-  roomPeer = new Peer(id);
-  roomPeer.on('error', async (err) => {
-    debug('createRoomPeer error', err.type, err);
-    if (roomPeer && roomPeer.destroyed) {
-      roomPeer = null;
-    }
-    if (err.type === 'unavailable-id') {
-      // already created by others
-      await sleep(3 * 60 * 1000);
-    } else {
-      // retry
-      await sleep(5000);
-    }
-    if (roomPeer) {
-      if (roomPeer.disconnected) roomPeer.reconnect();
-    } else {
-      createRoomPeer();
-    }
-  });
-  roomPeer.on('connection', (conn) => {
-    conn.on('open', () => {
-      const data = {
-        members: [params.myself, ...params.members],
-      };
-      conn.send(data);
+const createMyPeer = (index) => {
+  showStatus('Initializing peer...' + index);
+  const isSeed = index < SEED_PEERS;
+  const id = hash(params.roomid) + '_' + (isSeed ? index : rand4());
+  const peer = new Peer(id);
+  return new Promise((resolve) => {
+    peer.on('open', () => {
+      resolve(peer);
+    });
+    peer.on('error', (err) => {
+      if (err.type === 'unavailable-id') {
+        peer.destroy();
+        createMyPeer(index + 1).then(resolve);
+      } else if (err.type === 'peer-unavailable') {
+        // ignore
+      } else if (err.type === 'network') {
+        debug('createMyPeer network error', err);
+        showError('The network is down.', 'orange', 10);
+      } else {
+        console.error('createMyPeer', err.type, err);
+        showError('Unknown error occured.', 'red', 60);
+      }
     });
   });
 };
 
-const connectRoomPeer = async () => {
-  if (!myPeer) {
-    await sleep(1000);
-    connectRoomPeer();
-    return;
-  }
-  const id = hash(params.roomid);
-  const conns = myPeer.connections[id];
-  if (conns && conns.find(c => c.open)) return;
-  const conn = myPeer.connect(id, { serialization: 'json' });
-  conn.on('data', (data) => {
-    try {
-      if (mergeMembers(data.members || [])) {
-        connectMembers();
-      }
-    } catch (e) {
-      debug('connectRoomPeer on data', e);
+const reInitMyPeer = async (disconnectedId) => {
+  if (!myPeer) return;
+  if (guessSeed(myPeer.id)) return;
+  const waitSec = 30 + Math.floor(Math.random() * 60);
+  showStatus('Disconnected seed peer: ' + disconnectedId.split('_')[1] + ', reinit in ' + waitSec + 'sec...');
+  await sleep(waitSec * 1000);
+  if (!myPeer) return;
+  if (guessSeed(myPeer.id)) return;
+  let checkSeeds = true;
+  for (let i = 0; i < SEED_PEERS; i += 1) {
+    const id = hash(params.roomid) + '_' + i;
+    if (!myPeer.connections[id].find(c => c.open)) {
+      checkSeeds = false;
     }
+  }
+  if (checkSeeds) return;
+  myPeer.destroy();
+  myPeer = null;
+  initMyPeer();
+};
+
+const initMyPeer = async () => {
+  if (myPeer) return;
+  myPeer = await createMyPeer(0);
+  myPeer.on('connection', (conn) => {
+    debug('new connection received', conn);
+    initConnection(conn);
   });
-  conn.on('close', async () => {
-    debug('connectRoomPeer close');
-    await sleep(5000);
-    connectRoomPeer();
-  });
-  conn.on('error', async (err) => {
-    debug('connectRoomPeer error', err.type, err);
-    await sleep(60 * 1000);
-    connectRoomPeer();
-  });
+  showStatus('Connecting to seed peers...');
+  for (let i = 0; i < SEED_PEERS; i += 1) {
+    const id = hash(params.roomid) + '_' + i;
+    connectPeer(id);
+  }
 };
 
 const initParams = () => new Promise((resolve) => {
@@ -337,12 +313,12 @@ const main = async () => {
   if (!params.roomid || !params.myself) {
     await initParams();
   }
-  createMyPeer();
-  createRoomPeer();
-  connectRoomPeer();
+  initMyPeer();
+  sendPhoto();
   checkObsoletedImage();
   heartbeat();
+  initForm();
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r69)';
+document.title = 'Remote Faces (r70)';

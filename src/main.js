@@ -15,7 +15,7 @@ let win;
 const loadURL = () => {
   if (!win) return;
   win.loadURL(store.get('url', 'https://dai-shi.github.io/remote-faces/'));
-  // win.loadFile('index.html');
+  // win.loadFile('public/index.html');
 };
 
 const createWindow = () => {
