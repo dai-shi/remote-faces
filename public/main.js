@@ -3,7 +3,7 @@
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const hash = x => x && CryptoJS.MD5(x).toString().slice(0, 32);
 const rand4 = () => 1000 + Math.floor(Math.random() * 9000);
-const SEED_PEERS = 2; //5;
+const SEED_PEERS = 5;
 const guessSeed = id => Number(id.split('_')[1]) < SEED_PEERS;
 
 const showError = async (text, color, waitSec) => {
@@ -149,7 +149,10 @@ const sendPhoto = async () => {
 
 const initForm = () => {
   const form = document.querySelector('#myself .mesg form');
-  form.addEventListener('submit', sendDataToAllPeers);
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    sendDataToAllPeers();
+  });
 };
 
 const sendDataToAllPeers = () => {
