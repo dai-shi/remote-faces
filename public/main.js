@@ -210,7 +210,12 @@ const heartbeat = async () => {
 const connectPeer = (id) => {
   if (!myPeer) return;
   if (myPeer.id === id) return;
-  if (myPeer.connections[id] && myPeer.connections[id].find(c => c.open)) return;
+  const conns = myPeer.connections[id];
+  const lastConn = conns && conns[conns.length - 1];
+  if (lastConn && (lastConn.open
+    || lastConn.peerConnection.signalingState === 'have-local-offer')) {
+    return;
+  }
   const conn = myPeer.connect(id, { serialization: 'json' });
   initConnection(conn);
 };
@@ -324,4 +329,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r70)';
+document.title = 'Remote Faces (r71)';
