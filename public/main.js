@@ -275,7 +275,7 @@ const reInitMyPeer = async (disconnectedId) => {
   let checkSeeds = true;
   for (let i = 0; i < SEED_PEERS; i += 1) {
     const id = hash(params.roomid) + '_' + i;
-    if (!myPeer.connections[id].find(c => c.open)) {
+    if (!myPeer.connections[id] || !myPeer.connections[id].find(c => c.open)) {
       checkSeeds = false;
     }
   }
@@ -329,4 +329,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r71)';
+document.title = 'Remote Faces (r72)';

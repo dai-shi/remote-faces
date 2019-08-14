@@ -68,6 +68,7 @@ body {
   font-size: 12px;
   font-family: sans-serif;
   white-space: nowrap;
+  -webkit-app-region: no-drag
 }
 
 canvas {
