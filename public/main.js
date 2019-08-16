@@ -211,12 +211,16 @@ const connectPeer = (id) => {
   if (!myPeer) return;
   if (myPeer.id === id) return;
   const conns = myPeer.connections[id];
-  const lastConn = conns && conns[conns.length - 1];
-  if (lastConn && (lastConn.open
-    || lastConn.peerConnection.signalingState === 'have-local-offer')) {
-    return;
-  }
-  debug('connectPeer lastConn:', lastConn);
+  const hasEffectiveConn = conns && conns.some((conn) => {
+    if (conn.open) return true;
+    const peerConn = conn.peerConnection;
+    return peerConn && (
+      peerConn.connectionState === 'connected'
+      || peerConn.connectionState === 'connecting'
+    );
+  });
+  if (hasEffectiveConn) return;
+  debug('connectPeer', id, conns);
   const conn = myPeer.connect(id, { serialization: 'json' });
   initConnection(conn);
 };
@@ -330,4 +334,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r73)';
+document.title = 'Remote Faces (r74)';
