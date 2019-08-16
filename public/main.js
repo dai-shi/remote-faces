@@ -216,6 +216,7 @@ const connectPeer = (id) => {
     || lastConn.peerConnection.signalingState === 'have-local-offer')) {
     return;
   }
+  debug('connectPeer lastConn:', lastConn);
   const conn = myPeer.connect(id, { serialization: 'json' });
   initConnection(conn);
 };
@@ -329,4 +330,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r72)';
+document.title = 'Remote Faces (r73)';
