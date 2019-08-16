@@ -220,7 +220,7 @@ const connectPeer = (id) => {
     );
   });
   if (hasEffectiveConn) return;
-  debug('connectPeer', id, conns.map(c => c.peerConnection && c.peerConnection.connectionState));
+  debug('connectPeer', id, (conns || []).map(c => c.peerConnection && c.peerConnection.connectionState));
   const conn = myPeer.connect(id, { serialization: 'json' });
   initConnection(conn);
 };
