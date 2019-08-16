@@ -220,7 +220,7 @@ const connectPeer = (id) => {
     );
   });
   if (hasEffectiveConn) return;
-  debug('connectPeer', id, conns);
+  debug('connectPeer', id, conns.map(c => c.peerConnection && c.peerConnection.connectionState));
   const conn = myPeer.connect(id, { serialization: 'json' });
   initConnection(conn);
 };
@@ -334,4 +334,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r74)';
+document.title = 'Remote Faces (r75)';
