@@ -221,7 +221,7 @@ const connectPeer = (id) => {
     );
   });
   if (hasEffectiveConn) return;
-  debug('connectPeer', id, (conns || []).map(c => c.peerConnection && c.peerConnection.connectionState));
+  debug('connectPeer', id, conns && conns.map(c => c.peerConnection && c.peerConnection.connectionState));
   const conn = myPeer.connect(id, { serialization: 'json' });
   initConnection(conn);
 };
@@ -248,6 +248,7 @@ const createMyPeer = (index) => {
   showStatus('Initializing peer...' + index);
   const isSeed = index < SEED_PEERS;
   const id = hash(params.roomid) + '_' + (isSeed ? index : rand4());
+  debug('createMyPeer', index, id);
   const peer = new Peer(id);
   return new Promise((resolve) => {
     peer.on('open', () => {
@@ -335,4 +336,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r76)';
+document.title = 'Remote Faces (r77)';
