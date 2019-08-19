@@ -29,6 +29,18 @@ const debug = (...args) => {
   console.log(new Date(), ...args);
 };
 
+const isConnectedConn = (conn, includesConnecting = false) => {
+  if (!conn) return false;
+  const peerConn = conn.peerConnection;
+  if (!peerConn) return false;
+  const connState = peerConn.connectionState;
+  if (connState === 'connected') return true;
+  if (includesConnecting && connState === 'connecting') return true;
+  // for safari
+  if (!connState && peerConn.signalingState === 'stable') return true;
+  return false;
+};
+
 // params --------------------------
 
 const params = Qs.parse(window.location.hash.slice(1));
@@ -168,7 +180,7 @@ const sendDataToAllPeers = () => {
 const getLivePeers = () => {
   const peers = Object.keys(myPeer.connections);
   const livePeers = peers.filter(
-    peer => myPeer.connections[peer].find(c => c.open),
+    peer => myPeer.connections[peer].find(isConnectedConn),
   );
   return livePeers;
 };
@@ -211,15 +223,8 @@ const connectPeer = (id) => {
   if (!myPeer) return;
   if (myPeer.id === id) return;
   const conns = myPeer.connections[id];
-  const hasEffectiveConn = conns && conns.some((conn) => {
-    if (conn.open) return true;
-    const peerConn = conn.peerConnection;
-    return peerConn && (
-      peerConn.connectionState === 'connected'
-      || peerConn.connectionState === 'connecting'
-      || peerConn.connectionState === 'new'
-    );
-  });
+  const hasEffectiveConn = conns
+    && conns.some(conn => isConnectedConn(conn, true));
   if (hasEffectiveConn) return;
   debug('connectPeer', id, conns && conns.map(c => c.peerConnection && c.peerConnection.connectionState));
   const conn = myPeer.connect(id, { serialization: 'json' });
@@ -282,7 +287,8 @@ const reInitMyPeer = async (disconnectedId) => {
   let checkSeeds = true;
   for (let i = 0; i < SEED_PEERS; i += 1) {
     const id = hash(params.roomid) + '_' + i;
-    if (!myPeer.connections[id] || !myPeer.connections[id].find(c => c.open)) {
+    const conns = myPeer.connections[id] || [];
+    if (!conns.find(isConnectedConn)) {
       checkSeeds = false;
     }
   }
@@ -336,4 +342,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r77)';
+document.title = 'Remote Faces (r78)';
