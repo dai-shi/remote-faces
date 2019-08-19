@@ -217,7 +217,6 @@ const connectPeer = (id) => {
     return peerConn && (
       peerConn.connectionState === 'connected'
       || peerConn.connectionState === 'connecting'
-      || peerConn.connectionState === 'new'
     );
   });
   if (hasEffectiveConn) return;
@@ -335,4 +334,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r76)';
+document.title = 'Remote Faces (r75)';
