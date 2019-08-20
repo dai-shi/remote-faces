@@ -184,7 +184,7 @@ const sendDataToAllPeers = () => {
 const getLivePeers = () => {
   const peers = Object.keys(myPeer.connections);
   const livePeers = peers.filter(
-    peer => myPeer.connections[peer].find(isConnectedConn),
+    peer => myPeer.connections[peer].some(isConnectedConn),
   );
   return livePeers;
 };
@@ -292,7 +292,7 @@ const reInitMyPeer = async (disconnectedId) => {
   for (let i = 0; i < SEED_PEERS; i += 1) {
     const id = hash(params.roomid) + '_' + i;
     const conns = myPeer.connections[id] || [];
-    if (!conns.find(isConnectedConn)) {
+    if (!conns.some(conn => isConnectedConn(conn, true))) {
       checkSeeds = false;
     }
   }
@@ -346,4 +346,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r79)';
+document.title = 'Remote Faces (r80)';
