@@ -35,7 +35,11 @@ const isConnectedConn = (conn, includesConnecting = false) => {
   if (!peerConn) return false;
   const connState = peerConn.connectionState;
   if (connState === 'connected') return true;
-  if (includesConnecting && connState === 'connecting') return true;
+  if (includesConnecting) {
+    if (connState === 'connecting' || connState === 'new') {
+      return true;
+    }
+  }
   // for safari
   if (!connState && peerConn.signalingState === 'stable') return true;
   return false;
@@ -342,4 +346,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r78)';
+document.title = 'Remote Faces (r79)';
