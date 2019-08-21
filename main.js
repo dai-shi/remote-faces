@@ -296,7 +296,10 @@ const reInitMyPeer = async (disconnectedId) => {
       checkSeeds = false;
     }
   }
-  if (checkSeeds) return;
+  if (checkSeeds) {
+    showConnectedStatus();
+    return;
+  }
   myPeer.destroy();
   myPeer = null;
   initMyPeer();
@@ -346,4 +349,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r80)';
+document.title = 'Remote Faces (r81)';
