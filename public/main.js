@@ -64,6 +64,11 @@ const updateMyself = (myself) => {
   updateParams();
 };
 
+const updateMesg = (mesg) => {
+  params.mesg = mesg;
+  updateParams();
+};
+
 // photo ---------------------------
 
 const captureImage = async (stream, track) => {
@@ -168,6 +173,12 @@ const initForm = () => {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     sendDataToAllPeers();
+  });
+  const input = form.querySelector('input');
+  input.textContent = params.mesg || '';
+  input.addEventListener('change', (e) => {
+    e.preventDefault();
+    updateMesg(e.target.value);
   });
 };
 
@@ -349,4 +360,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r81)';
+document.title = 'Remote Faces (r82)';
