@@ -175,7 +175,7 @@ const initForm = () => {
     sendDataToAllPeers();
   });
   const input = form.querySelector('input');
-  input.textContent = params.mesg || '';
+  input.value = params.mesg || '';
   input.addEventListener('change', (e) => {
     e.preventDefault();
     updateMesg(e.target.value);
@@ -360,4 +360,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r82)';
+document.title = 'Remote Faces (r83)';
