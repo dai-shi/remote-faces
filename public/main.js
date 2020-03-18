@@ -1,10 +1,10 @@
 // utils ---------------------------
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-const hash = x => x && CryptoJS.MD5(x).toString().slice(0, 32);
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const hash = (x) => x && CryptoJS.MD5(x).toString().slice(0, 32);
 const rand4 = () => 1000 + Math.floor(Math.random() * 9000);
 const SEED_PEERS = 5;
-const guessSeed = id => Number(id.split('_')[1]) < SEED_PEERS;
+const guessSeed = (id) => Number(id.split('_')[1]) < SEED_PEERS;
 
 const showError = async (text, color, waitSec) => {
   const ele = document.getElementById('error');
@@ -21,7 +21,7 @@ const showStatus = (text) => {
 };
 const showConnectedStatus = (text) => {
   showStatus('Connected to peers: '
-    + getLivePeers().map(t => t.split('_')[1]).join(', ')
+    + getLivePeers().map((t) => t.split('_')[1]).join(', ')
     + (text ? ' (' + text + ')' : ''));
 };
 
@@ -195,7 +195,7 @@ const sendDataToAllPeers = () => {
 const getLivePeers = () => {
   const peers = Object.keys(myPeer.connections);
   const livePeers = peers.filter(
-    peer => myPeer.connections[peer].some(isConnectedConn),
+    (peer) => myPeer.connections[peer].some(isConnectedConn),
   );
   return livePeers;
 };
@@ -239,9 +239,9 @@ const connectPeer = (id) => {
   if (myPeer.id === id) return;
   const conns = myPeer.connections[id];
   const hasEffectiveConn = conns
-    && conns.some(conn => isConnectedConn(conn, true));
+    && conns.some((conn) => isConnectedConn(conn, true));
   if (hasEffectiveConn) return;
-  debug('connectPeer', id, conns && conns.map(c => c.peerConnection && c.peerConnection.connectionState));
+  debug('connectPeer', id, conns && conns.map((c) => c.peerConnection && c.peerConnection.connectionState));
   const conn = myPeer.connect(id, { serialization: 'json' });
   initConnection(conn);
 };
@@ -303,7 +303,7 @@ const reInitMyPeer = async (disconnectedId) => {
   for (let i = 0; i < SEED_PEERS; i += 1) {
     const id = hash(params.roomid) + '_' + i;
     const conns = myPeer.connections[id] || [];
-    if (!conns.some(conn => isConnectedConn(conn, true))) {
+    if (!conns.some((conn) => isConnectedConn(conn, true))) {
       checkSeeds = false;
     }
   }
