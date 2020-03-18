@@ -15,18 +15,18 @@
   "author": "Daishi Kato",
   "main": "src/main.js",
   "dependencies": {
-    "electron-store": "^4.0.0",
-    "electron-updater": "^4.1.2"
+    "electron-store": "^5.1.1",
+    "electron-updater": "^4.2.5"
   },
   "devDependencies": {
-    "electron": "^6.0.0",
-    "electron-builder": "^21.2.0",
-    "eslint": "^6.1.0",
-    "eslint-config-airbnb": "^17.1.1",
-    "eslint-plugin-import": "^2.18.2",
+    "electron": "^8.1.1",
+    "electron-builder": "^22.4.1",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.1.0",
+    "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-react": "^7.14.3",
-    "gh-pages": "^2.0.1"
+    "eslint-plugin-react": "^7.19.0",
+    "gh-pages": "^2.2.0"
   },
   "eslintConfig": {
     "extends": [
