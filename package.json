@@ -3,7 +3,7 @@
   "productName": "Remote Faces",
   "description": "A small app to share webcam still images periodically",
   "private": true,
-  "version": "1.3.0",
+  "version": "1.4.0",
   "scripts": {
     "start": "electron .",
     "test": "npm run eslint",
