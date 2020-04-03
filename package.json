@@ -39,7 +39,7 @@
     "overrides": [
       {
         "files": [
-          "public/**/*.js"
+          "web/public/**/*.js"
         ],
         "env": {
           "browser": true
