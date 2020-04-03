@@ -33,6 +33,7 @@ jobs:
 
       - name: Copy dist
         if: github.event_name == 'pull_request'
+        run: mkdir -p web/dist/pr
         run: cp -r web/public web/dist/pr/${{ github.event.number }}
 
       - name: Deploy
