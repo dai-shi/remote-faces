@@ -6,14 +6,13 @@
   "version": "1.4.0",
   "scripts": {
     "start": "electron .",
-    "test": "npm run eslint",
+    "test": "run-s eslint",
     "eslint": "eslint src public",
     "dist": "electron-builder --mac --win",
-    "release": "electron-builder --mac --win --publish always",
-    "deploy": "gh-pages -d public -s '**/*.+(js|html|css)'"
+    "release": "electron-builder --mac --win --publish always"
   },
   "author": "Daishi Kato",
-  "main": "src/main.js",
+  "main": "electron/src/main.js",
   "dependencies": {
     "electron-store": "^5.1.1",
     "electron-updater": "^4.2.5"
@@ -26,7 +25,7 @@
     "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.19.0",
-    "gh-pages": "^2.2.0"
+    "npm-run-all": "^4.1.5"
   },
   "eslintConfig": {
     "extends": [
