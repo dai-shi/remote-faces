@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron .",
     "test": "run-s eslint",
-    "eslint": "eslint src public",
+    "eslint": "eslint electron/src web/public",
     "dist": "electron-builder --mac --win",
     "release": "electron-builder --mac --win --publish always"
   },
