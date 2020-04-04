@@ -61,7 +61,7 @@ jobs:
         uses: unsplash/comment-on-pr@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUM: ${{ github.event.number }}
         with:
-          msg: "Preview URL: https://dai-shi.github.io/remote-faces/pr/${PR_NUM}"
+          msg: |
+            Preview URL: https://dai-shi.github.io/remote-faces/pr/${{ github.event.number }}
           check_for_duplicate_msg: true
