@@ -1,6 +1,9 @@
 name: github pages
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
     paths:
       - 'web/**'
@@ -34,11 +37,17 @@ jobs:
       - name: Test
         run: yarn test
 
-      - name: Copy dist
+      - name: Copy to dist (PR)
         if: github.event_name == 'pull_request'
         run: |
           mkdir -p web/dist/pr
           cp -r web/public web/dist/pr/${{ github.event.number }}
+
+      - name: Copy to dist (master)
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p web/dist/d
+          cp -r web/public web/dist/d/`date '+%Y-%m-%d'`
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
