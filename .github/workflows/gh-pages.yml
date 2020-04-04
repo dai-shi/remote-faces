@@ -55,3 +55,13 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./web/dist
           keep_files: true
+
+      - name: Comment (PR)
+        if: github.event_name == 'pull_request'
+        uses: unsplash/comment-on-pr@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.number }}
+        with:
+          msg: "Preview URL: https://dai-shi.github.io/remote-faces/pr/${PR_NUM}"
+          check_for_duplicate_msg: true
