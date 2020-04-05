@@ -1,8 +1,10 @@
+![logo](images/logo.png)
+
 # Remote Faces
 
 This is a small app to share webcam still images periodically.
 
-![screenshot](screen01.png)
+![screenshot](images/screen01.png)
 
 ## Downloads
 
