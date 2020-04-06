@@ -2,16 +2,15 @@
   "name": "remote-faces-electron",
   "productName": "Remote Faces",
   "description": "A small app to share webcam still images periodically",
-  "private": true,
   "version": "1.4.0",
+  "private": true,
+  "author": "Daishi Kato",
   "scripts": {
     "start": "electron .",
-    "test": "run-s eslint",
-    "eslint": "eslint src",
+    "test": "eslint src",
     "dist": "electron-builder --mac --win",
     "release": "electron-builder --mac --win --publish always"
   },
-  "author": "Daishi Kato",
   "main": "electron/src/main.js",
   "dependencies": {
     "electron-store": "^5.1.1",
@@ -24,8 +23,7 @@
     "eslint-config-airbnb": "^18.1.0",
     "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-react": "^7.19.0",
-    "npm-run-all": "^4.1.5"
+    "eslint-plugin-react": "^7.19.0"
   },
   "eslintConfig": {
     "extends": [

@@ -2,6 +2,6 @@
   "name": "remote-faces",
   "description": "A small app to share webcam still images periodically",
   "private": true,
-  "workspaces": ["web", "electron"],
-  "author": "Daishi Kato"
+  "author": "Daishi Kato",
+  "workspaces": ["web", "electron"]
 }
