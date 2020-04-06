@@ -1,0 +1,43 @@
+{
+  "name": "remote-faces-web",
+  "description": "A small app to share webcam still images periodically",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "",
+    "test": "run-s eslint",
+    "eslint": "eslint public"
+  },
+  "author": "Daishi Kato",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.1.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.19.0",
+    "npm-run-all": "^4.1.5"
+  },
+  "eslintConfig": {
+    "extends": [
+      "airbnb"
+    ],
+    "env": {
+      "browser": true
+    },
+    "globals": {
+      "Qs": true,
+      "CryptoJS": true,
+      "Peer": true
+    },
+    "rules": {
+      "no-console": 0,
+      "prefer-template": 0,
+      "import/no-extraneous-dependencies": 0,
+      "no-param-reassign": 0,
+      "no-multi-assign": 0,
+      "no-use-before-define": 0
+    }
+  }
+}
