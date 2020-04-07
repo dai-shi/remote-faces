@@ -1,0 +1,82 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  -webkit-app-region: drag
+}
+
+#error {
+  display: none;
+  position: absolute;
+  z-index: 9999;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: red;
+}
+
+#init {
+  display: none;
+  -webkit-app-region: no-drag
+}
+
+#status {
+  background-color: lightyellow;
+  font-size: 8px;
+  font-family: sans-serif;
+  white-space: nowrap;
+  padding-left: 2px;
+}
+
+#app {
+  display: none;
+}
+
+#templ {
+  display: none;
+}
+
+.card {
+  margin: 0 2px 2px 0;
+  position: relative;
+}
+
+.photo {
+  display: block;
+  width: 36px;
+  height: 36px;
+}
+
+.name {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  color: white;
+  font-size: 8px;
+  line-height: 8px;
+  font-family: sans-serif;
+}
+
+.mesg {
+  position: absolute;
+  top: 8px;
+  left: 42px;
+  font-size: 12px;
+  font-family: sans-serif;
+  white-space: nowrap;
+  -webkit-app-region: no-drag
+}
+
+canvas {
+  display: none;
+}
+
+video {
+  display: none;
+  width: 1px;
+  height: 1px;
+}
