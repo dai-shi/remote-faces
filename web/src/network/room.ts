@@ -7,7 +7,7 @@ import { Conn, isConnectedConn, getLivePeers } from "./peerUtils";
 const SEED_PEERS = 5; // config
 const guessSeed = (id: string) => Number(id.split("_")[1]) < SEED_PEERS;
 
-type NetworkStatus =
+export type NetworkStatus =
   | { type: "CONNECTING_SEED_PEERS" }
   | { type: "NEW_CONNECTION"; peerId: number }
   | { type: "INITIALIZING_PEER"; index: number }
@@ -17,7 +17,7 @@ type NetworkStatus =
 
 type UpdateNetworkStatus = (status: NetworkStatus) => void;
 
-type ReceiveData = (data: unknown) => void;
+type ReceiveData = (peerId: number, data: unknown) => void;
 
 const createMyPeer = (
   index: number,
@@ -96,7 +96,7 @@ export const createRoom = (
             try {
               conn.send({ data, peers });
             } catch (e) {
-              console.log("broadcastData", e);
+              console.error("broadcastData", e);
             }
           }
         });
@@ -104,10 +104,11 @@ export const createRoom = (
     }
   };
 
-  const handlePayload = (payload: unknown) => {
+  const handlePayload = (conn: Conn, payload: unknown) => {
     try {
+      const peerId = Number(conn.peer.split("_")[1]);
       if (payload && typeof payload === "object") {
-        receiveData((payload as { data: unknown }).data);
+        receiveData(peerId, (payload as { data: unknown }).data);
         if (Array.isArray((payload as { peers: unknown }).peers)) {
           (payload as { peers: unknown[] }).peers.forEach((peer) => {
             if (typeof peer === "string" && peer.startsWith(`${roomId}_`)) {
@@ -131,7 +132,7 @@ export const createRoom = (
         });
       }
     });
-    conn.on("data", handlePayload);
+    conn.on("data", (payload: unknown) => handlePayload(conn, payload));
     conn.on("close", async () => {
       console.log("dataConnection closed", conn);
       showConnectedStatus(Number(conn.peer.split("_")[1]));
@@ -149,6 +150,8 @@ export const createRoom = (
     myPeer = await createMyPeer(0, roomId, updateNetworkStatus);
     myPeer.on("connection", (conn) => {
       console.log("new connection received", conn);
+      const peerId = Number(conn.peer.split("_")[1]);
+      updateNetworkStatus({ type: "NEW_CONNECTION", peerId });
       initConnection(conn);
     });
     updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
