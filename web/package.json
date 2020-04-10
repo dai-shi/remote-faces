@@ -7,7 +7,10 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test:app": "react-scripts test",
+    "test:lint": "eslint --ext .js,.ts,.tsx .",
+    "test:type": "tsc --noEmit",
+    "test": "yarn test:lint && yarn test:type && yarn test:app --watchAll=false",
     "eject": "react-scripts eject"
   },
   "dependencies": {
@@ -19,7 +22,7 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
-    "@types/jest": "^24.0.0",
+    "@types/jest": "^25.2.1",
     "@types/node": "^12.0.0",
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",

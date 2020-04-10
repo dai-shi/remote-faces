@@ -18,7 +18,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react",
-    "types":["w3c-image-capture"]
+    "types":["w3c-image-capture", "jest"]
   },
   "include": [
     "src"
