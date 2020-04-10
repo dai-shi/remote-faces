@@ -8,7 +8,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test:app": "react-scripts test",
-    "test:lint": "eslint --ext .js,.ts,.tsx .",
+    "test:lint": "eslint --ext .js,.ts,.tsx src",
     "test:type": "tsc --noEmit",
     "test": "yarn test:lint && yarn test:type && yarn test:app --watchAll=false",
     "eject": "react-scripts eject"
