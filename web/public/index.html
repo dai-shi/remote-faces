@@ -25,34 +25,8 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>Remote Faces - Share webcam still images periodically</title>
-    <link rel="stylesheet" href="main.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.5.2/qs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
-    <script src="https://unpkg.com/peerjs@1.0.2/dist/peerjs.min.js"></script>
-    <script src="main.js"></script>
   </head>
   <body>
-    <div id="error"></div>
-    <form id="init">
-      <table>
-        <tr><td>Room ID:</td><td><input id="param-roomid" /></td></tr>
-        <tr><td>Your Name:</td><td><input id="param-myself" /></td></tr>
-        <tr><td></td><td><input type="submit" value="OK" /></td></tr>
-      </table>
-    </form>
-    <div id="status"></div>
-    <div id="app">
-      <div id="myself" class="card">
-        <img class="photo" alt="photo" />
-        <div class="name"></div>
-        <div class="mesg"><form><input /></form></div>
-      </div>
-      <div id="templ" class="card">
-        <img class="photo" alt="photo" />
-        <div class="name"></div>
-        <div class="mesg"></div>
-      </div>
-    </div>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <canvas id="internal-canvas" style="display: none"></canvas>

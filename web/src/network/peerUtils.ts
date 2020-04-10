@@ -21,7 +21,7 @@ export const isConnectedConn = (conn: Conn, ignoreConnecting = false) => {
 export const getLivePeers = (myPeer: Peer) => {
   const peers = Object.keys(myPeer.connections);
   const livePeers = peers.filter((peer) =>
-    myPeer.connections[peer].some(isConnectedConn)
+    myPeer.connections[peer].some((conn: Conn) => isConnectedConn(conn, true))
   );
   return livePeers;
 };

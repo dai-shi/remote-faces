@@ -79,7 +79,7 @@ export const useFaceImages = (
         return changed ? next : prev;
       });
     };
-    const timer = setInterval(async () => {
+    const loop = async () => {
       try {
         checkObsoletedImage();
         const image = await takePhoto();
@@ -94,7 +94,9 @@ export const useFaceImages = (
         console.error(e);
         // TODO ErrorBoundary
       }
-    }, 2 * 60 * 1000);
+    };
+    loop();
+    const timer = setInterval(loop, 2 * 60 * 1000);
     return () => {
       dispose();
       clearTimeout(timer);

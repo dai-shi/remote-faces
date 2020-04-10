@@ -8,7 +8,7 @@ body {
   -webkit-app-region: drag
 }
 
-#error {
+.error {
   display: none;
   position: absolute;
   z-index: 9999;
@@ -19,12 +19,12 @@ body {
   background-color: red;
 }
 
-#init {
+.init {
   display: none;
   -webkit-app-region: no-drag
 }
 
-#status {
+.status {
   background-color: lightyellow;
   font-size: 8px;
   font-family: sans-serif;
@@ -32,11 +32,7 @@ body {
   padding-left: 2px;
 }
 
-#app {
-  display: none;
-}
-
-#templ {
+.app {
   display: none;
 }
 
@@ -69,14 +65,4 @@ body {
   font-family: sans-serif;
   white-space: nowrap;
   -webkit-app-region: no-drag
-}
-
-canvas {
-  display: none;
-}
-
-video {
-  display: none;
-  width: 1px;
-  height: 1px;
 }
