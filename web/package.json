@@ -13,6 +13,7 @@
     "test": "yarn test:lint && yarn test:type && yarn test:app --watchAll=false",
     "eject": "react-scripts eject"
   },
+  "homepage": "./",
   "dependencies": {
     "peerjs": "^1.2.0",
     "react": "^16.13.1",
