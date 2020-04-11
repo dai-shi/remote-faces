@@ -3,5 +3,8 @@
   "description": "A small app to share webcam still images periodically",
   "private": true,
   "author": "Daishi Kato",
-  "workspaces": ["web", "electron"]
+  "workspaces": ["web", "electron"],
+  "scripts": {
+    "test": "yarn workspaces run test"
+  }
 }

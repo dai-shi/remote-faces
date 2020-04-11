@@ -7,10 +7,15 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test:app": "react-scripts test",
+    "test:lint": "eslint --ext .js,.ts,.tsx src",
+    "test:type": "tsc --noEmit",
+    "test": "yarn test:lint && yarn test:type && yarn test:app --watchAll=false",
     "eject": "react-scripts eject"
   },
+  "homepage": "./",
   "dependencies": {
+    "peerjs": "^1.2.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },
@@ -18,15 +23,23 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
-    "@types/jest": "^24.0.0",
+    "@types/jest": "^25.2.1",
     "@types/node": "^12.0.0",
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
+    "@types/w3c-image-capture": "^1.0.2",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "prettier": "^2.0.4",
     "react-scripts": "3.4.1",
     "typescript": "~3.7.2"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": [
+      "eslint:recommended",
+      "react-app",
+      "plugin:prettier/recommended"
+    ]
   },
   "browserslist": {
     "production": [

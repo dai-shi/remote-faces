@@ -1,14 +1,10 @@
-html {
-  height: 100%;
-}
-
-body {
+.SingleRoomEntrance {
   height: 100%;
   margin: 0;
   -webkit-app-region: drag
 }
 
-#error {
+.error {
   display: none;
   position: absolute;
   z-index: 9999;
@@ -19,25 +15,16 @@ body {
   background-color: red;
 }
 
-#init {
-  display: none;
+.init {
   -webkit-app-region: no-drag
 }
 
-#status {
+.status {
   background-color: lightyellow;
   font-size: 8px;
   font-family: sans-serif;
   white-space: nowrap;
   padding-left: 2px;
-}
-
-#app {
-  display: none;
-}
-
-#templ {
-  display: none;
 }
 
 .card {
@@ -71,12 +58,43 @@ body {
   -webkit-app-region: no-drag
 }
 
-canvas {
-  display: none;
+/* ---------------------------------------------- */
+
+.App {
+  text-align: center;
 }
 
-video {
-  display: none;
-  width: 1px;
-  height: 1px;
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
