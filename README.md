@@ -47,17 +47,16 @@ It may work on other browsers including some on mobile.
 - [New version](https://dai-shi.github.io/remote-faces/d/2020-04-11/)
 - [Legacy version](https://dai-shi.github.io/remote-faces/d/2020-04-07/)
 
-You then enter a room name and your name.
-The room name should be something secret that only you and
-your colleagues know.
-After clicking the button, the app starts immediately.
+Click the button, the app starts immediately.
+Copy the URL and share it with your colleagues.
 It will take your face with webcam every two minuites.
 At first, you will only see your face,
-but once your colleagues enter the room with the same room name,
-face images are shared in the room.
+but once your colleagues enter the room,
+face images are broacast in the room.
 Note this app is based on peer-to-peer technology,
 and the images are only transferred in the participants of the room.
 
+You may specify your name in the text field.
 If you type a message in the text field right to your face,
 it will be shared along with your face image
 (so, it updates once every two minuites).

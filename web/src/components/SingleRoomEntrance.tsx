@@ -1,58 +1,27 @@
 import React, { useState } from "react";
 
-import { sha256 } from "../utils/hash";
+import { secureRandomId } from "../utils/crypto";
+import { getRoomIdFromUrl } from "../utils/url";
 import SingleRoom from "./SingleRoom";
 
+const roomIdFromUrl = getRoomIdFromUrl();
+const userId = secureRandomId();
+
 const SingleRoomEntrance: React.FC = () => {
-  const [roomId, setRoomId] = useState<string>();
-  const [userId, setUserId] = useState<string>();
-  const [roomName, setRoomName] = useState("");
-  const [nickname, setNickname] = useState("");
+  const [roomId, setRoomId] = useState<string | null>(roomIdFromUrl);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setRoomId(await sha256(roomName));
-    setUserId(await sha256(`${roomName}_${Date.now()}`));
+    setRoomId(secureRandomId());
   };
 
-  if (roomId && userId && nickname) {
-    return <SingleRoom roomId={roomId} userId={userId} nickname={nickname} />;
+  if (roomId) {
+    return <SingleRoom roomId={roomId} userId={userId} />;
   }
 
   return (
     <form className="init" onSubmit={onSubmit}>
-      <table>
-        <tbody>
-          <tr>
-            <td>Room Name:</td>
-            <td>
-              <input
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-              />
-            </td>
-          </tr>
-          <tr>
-            <td>Your Name:</td>
-            <td>
-              <input
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-              />
-            </td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>
-              <input
-                type="submit"
-                value="Enter"
-                disabled={!roomName || !nickname}
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <input type="submit" value="Create a new room" />
     </form>
   );
 };

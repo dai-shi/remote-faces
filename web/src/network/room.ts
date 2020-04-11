@@ -1,6 +1,6 @@
 import Peer from "peerjs";
 
-import { rand4 } from "../utils/hash";
+import { rand4 } from "../utils/crypto";
 import { sleep } from "../utils/sleep";
 import { Conn, isConnectedConn, getLivePeers } from "./peerUtils";
 
