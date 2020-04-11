@@ -81,7 +81,7 @@ We welcome your contribution at any level; from coding,
 issue reporting, bug fixing, discussing features, documentation
 and to promotion!
 
-For more information, check out [CONTRIBUTION.md](./CONTRIBUTION.md).
+For more information, check out [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Screenshots
 
