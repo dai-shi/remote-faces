@@ -40,7 +40,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
           <a href={window.location.href}>Link to this room</a> (Share this with
           your colleagues)
         </div>
-        <div>
+        <div style={{ color: "red" }}>
           Your Name:{" "}
           <input
             onChange={(e) => {
