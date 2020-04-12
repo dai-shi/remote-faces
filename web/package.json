@@ -28,17 +28,90 @@
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
     "@types/w3c-image-capture": "^1.0.2",
+    "eslint-config-airbnb": "^18.1.0",
     "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-react": "^7.19.0",
+    "eslint-plugin-react-hooks": "^3.0.0",
     "prettier": "^2.0.4",
     "react-scripts": "3.4.1",
     "typescript": "~3.7.2"
   },
   "eslintConfig": {
     "extends": [
-      "eslint:recommended",
       "react-app",
-      "plugin:prettier/recommended"
+      "plugin:prettier/recommended",
+      "airbnb",
+      "prettier",
+      "prettier/react"
+    ],
+    "settings": {
+      "import/resolver": {
+        "node": {
+          "extensions": [
+            ".js",
+            ".ts",
+            ".tsx"
+          ]
+        }
+      }
+    },
+    "rules": {
+      "no-console": "off",
+      "import/prefer-default-export": "off",
+      "react/prop-types": "off",
+      "react/jsx-filename-extension": [
+        "error",
+        {
+          "extensions": [
+            ".tsx"
+          ]
+        }
+      ],
+      "import/extensions": [
+        "error",
+        "never"
+      ]
+    },
+    "overrides": [
+      {
+        "files": [
+          "**/*.test.*",
+          "src/setupTests.ts"
+        ],
+        "env": {
+          "jest": true
+        },
+        "rules": {
+          "import/no-extraneous-dependencies": [
+            "error",
+            {
+              "devDependencies": true
+            }
+          ]
+        }
+      },
+      {
+        "files": [
+          "src/network/room.ts"
+        ],
+        "rules": {
+          "no-use-before-define": "off"
+        }
+      },
+      {
+        "files": [
+          "src/react-app-env.d.ts",
+          "src/serviceWorker.ts"
+        ],
+        "rules": {
+          "no-use-before-define": "off",
+          "no-param-reassign": "off",
+          "spaced-comment": "off"
+        }
+      }
     ]
   },
   "browserslist": {

@@ -32,8 +32,10 @@ export const takePhoto = async () => {
     "internal-canvas"
   ) as HTMLCanvasElement;
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-  const dstW = (canvas.width = 72);
-  const dstH = (canvas.height = 72);
+  const dstW = 72;
+  const dstH = 72;
+  canvas.width = dstW;
+  canvas.height = dstH;
   const { srcImg, srcW, srcH } = await captureImage(stream, track);
   const ratio = Math.max(dstW / srcW, dstH / srcH);
   const width = Math.min(srcW, dstW / ratio);

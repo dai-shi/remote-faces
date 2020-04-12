@@ -44,11 +44,11 @@ export const createConnectionMap = () => {
   const getLivePeerJsIds = () =>
     Array.from(map.keys()).filter((k) => map.get(k)?.live);
   const forEachLiveConns = (callback: (conn: Peer.DataConnection) => void) => {
-    for (const value of map.values()) {
+    Array.from(map.values()).forEach((value) => {
       if (value.live) {
         callback(value.conn);
       }
-    }
+    });
   };
   return {
     addConn,
