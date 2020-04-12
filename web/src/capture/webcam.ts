@@ -25,8 +25,13 @@ const captureImage = async (stream: MediaStream, track: MediaStreamTrack) => {
   return { srcImg, srcW, srcH };
 };
 
-export const takePhoto = async () => {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+export const takePhoto = async (deviceId?: string) => {
+  const constraints = deviceId
+    ? {
+        video: { deviceId },
+      }
+    : { video: true };
+  const stream = await navigator.mediaDevices.getUserMedia(constraints);
   const track = stream.getVideoTracks()[0];
   const canvas = document.getElementById(
     "internal-canvas"
@@ -45,4 +50,21 @@ export const takePhoto = async () => {
   ctx.drawImage(srcImg, x, y, width, height, 0, 0, dstW, dstH);
   track.stop();
   return canvas.toDataURL("image/png");
+};
+
+export const getVideoDeviceInfoList = async () => {
+  type VideoDeviceInfo = {
+    label: string;
+    deviceId: string;
+  };
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const list: VideoDeviceInfo[] = devices
+      .filter(({ kind }) => kind === "videoinput")
+      .map(({ label, deviceId }) => ({ label, deviceId }));
+    return list;
+  } catch (e) {
+    // ignored
+    return [];
+  }
 };
