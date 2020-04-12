@@ -62,12 +62,12 @@ export const createRoom = (
   updateNetworkStatus: UpdateNetworkStatus,
   receiveData: ReceiveData
 ) => {
+  let disposed = false;
   let myPeer: Peer | null = null;
   let lastBroadcastData: unknown | null = null;
   const connMap = createConnectionMap();
 
   const showConnectedStatus = () => {
-    if (!myPeer) return;
     const peerIds = connMap.getLivePeerJsIds().map(getPeerIdFromPeerJsId);
     updateNetworkStatus({ type: "CONNECTED_PEERS", peerIds });
   };
@@ -83,8 +83,8 @@ export const createRoom = (
   };
 
   const broadcastData = (data: unknown) => {
+    if (disposed) return;
     lastBroadcastData = data;
-    if (!myPeer) return;
     const peers = connMap.getLivePeerJsIds();
     connMap.forEachLiveConns((conn) => {
       try {
@@ -96,6 +96,7 @@ export const createRoom = (
   };
 
   const handlePayload = (conn: Peer.DataConnection, payload: unknown) => {
+    if (disposed) return;
     try {
       const peerId = getPeerIdFromConn(conn);
       if (payload && typeof payload === "object") {
@@ -117,7 +118,7 @@ export const createRoom = (
     conn.on("open", () => {
       connMap.markLive(conn);
       showConnectedStatus();
-      if (myPeer && lastBroadcastData) {
+      if (lastBroadcastData) {
         conn.send({
           data: lastBroadcastData,
           peers: connMap.getLivePeerJsIds(),
@@ -134,6 +135,7 @@ export const createRoom = (
   };
 
   const initMyPeer = async () => {
+    if (disposed) return;
     if (myPeer) return;
     myPeer = await createMyPeer(0, roomId, updateNetworkStatus);
     if (process.env.NODE_ENV !== "production") {
@@ -146,6 +148,10 @@ export const createRoom = (
       connMap.addConn(conn);
       initConnection(conn);
       connMap.markLive(conn);
+    });
+    myPeer.on("close", () => {
+      myPeer = null;
+      setTimeout(initMyPeer, 60 * 1000);
     });
     updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
     for (let i = 0; i < SEED_PEERS; i += 1) {
@@ -182,6 +188,7 @@ export const createRoom = (
   };
 
   const dispose = () => {
+    disposed = true;
     if (myPeer) {
       const oldPeer = myPeer;
       myPeer = null;
