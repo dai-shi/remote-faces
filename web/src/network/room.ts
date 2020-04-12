@@ -149,6 +149,13 @@ export const createRoom = (
       initConnection(conn);
       connMap.markLive(conn);
     });
+    myPeer.on("disconnected", () => {
+      if (!myPeer) return;
+      const oldPeer = myPeer;
+      myPeer = null;
+      oldPeer.destroy();
+      setTimeout(initMyPeer, 60 * 1000);
+    });
     myPeer.on("close", () => {
       myPeer = null;
       setTimeout(initMyPeer, 60 * 1000);
