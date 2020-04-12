@@ -30,6 +30,18 @@ export const useFaceImages = (
   const [myImage, setMyImage] = useState<ImageUrl>();
   const [roomImages, setRoomImages] = useState<RoomImage[]>([]);
   const [networkStatus, updateNetworkStatus] = useState<NetworkStatus>();
+  const [fatalError, setFatalError] = useState<Error>();
+
+  if (fatalError) {
+    throw fatalError;
+  }
+  if (
+    networkStatus &&
+    (networkStatus.type === "NETWORK_ERROR" ||
+      networkStatus.type === "UNKNOWN_ERROR")
+  ) {
+    throw new Error("network error");
+  }
 
   useEffect(() => {
     const receiveData = (_peerId: number, data: unknown) => {
@@ -92,7 +104,7 @@ export const useFaceImages = (
         broadcastData(data);
       } catch (e) {
         console.error(e);
-        // TODO ErrorBoundary
+        setFatalError(e);
       }
     };
     loop();

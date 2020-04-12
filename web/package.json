@@ -73,7 +73,8 @@
       "import/extensions": [
         "error",
         "never"
-      ]
+      ],
+      "react/state-in-constructor": "off"
     },
     "overrides": [
       {
