@@ -156,7 +156,8 @@ export const createRoom = (
   initMyPeer();
 
   const reInitMyPeer = async (disconnectedId: string) => {
-    if (!myPeer || guessSeed(myPeer.id)) return;
+    if (!myPeer) return;
+    if (guessSeed(myPeer.id)) return;
     const waitSec = 30 + Math.floor(Math.random() * 60);
     console.log(
       `Disconnected seed peer: ${getPeerIdFromPeerJsId(
@@ -164,7 +165,8 @@ export const createRoom = (
       )}, reinit in ${waitSec}sec...`
     );
     await sleep(waitSec * 1000);
-    if (!myPeer || guessSeed(myPeer.id)) return;
+    if (!myPeer) return;
+    if (guessSeed(myPeer.id)) return;
     const existsAllSeeds = Array.from(Array(SEED_PEERS).keys()).every((i) => {
       const id = generatePeerJsId(roomId, i);
       return connMap.isLive(id);
@@ -173,15 +175,17 @@ export const createRoom = (
       showConnectedStatus();
       return;
     }
-    myPeer.destroy();
+    const oldPeer = myPeer;
     myPeer = null;
+    oldPeer.destroy();
     initMyPeer();
   };
 
   const dispose = () => {
     if (myPeer) {
-      myPeer.destroy();
+      const oldPeer = myPeer;
       myPeer = null;
+      oldPeer.destroy();
     }
   };
 
