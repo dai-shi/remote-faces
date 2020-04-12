@@ -1,5 +1,6 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 
+import { setRoomIdToUrl } from "../utils/url";
 import { useFaceImages } from "../hooks/useFaceImages";
 
 const BLANK_IMAGE =
@@ -8,18 +9,21 @@ const BLANK_IMAGE =
 type Props = {
   roomId: string;
   userId: string;
-  nickname: string;
 };
 
-const SingleRoom: React.FC<Props> = ({ roomId, userId, nickname }) => {
+const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
+  const nicknameRef = useRef("");
   const messageRef = useRef("");
+  useEffect(() => {
+    setRoomIdToUrl(roomId);
+  }, [roomId]);
 
   const getFaceInfo = useCallback(
     () => ({
-      nickname,
+      nickname: nicknameRef.current,
       message: messageRef.current,
     }),
-    [nickname]
+    []
   );
   const { myImage, roomImages, networkStatus } = useFaceImages(
     roomId,
@@ -30,10 +34,24 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId, nickname }) => {
   return (
     <>
       <div className="status">{JSON.stringify(networkStatus)}</div>
+      <div className="room-info">
+        <div>
+          <a href={window.location.href}>Link to this room</a> (Share this with
+          your colleagues)
+        </div>
+        <div>
+          Your Name:{" "}
+          <input
+            onChange={(e) => {
+              nicknameRef.current = e.target.value;
+            }}
+          />
+        </div>
+      </div>
       <div>
         <div className="card">
           <img src={myImage || BLANK_IMAGE} className="photo" alt="myself" />
-          <div className="name">{nickname}</div>
+          <div className="name">{nicknameRef.current}</div>
           <div className="mesg">
             <form>
               <input
