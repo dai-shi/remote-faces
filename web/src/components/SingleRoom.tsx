@@ -63,6 +63,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
                 onChange={(e) => {
                   messageRef.current = e.target.value;
                 }}
+                placeholder="Enter message."
               />
             </form>
           </div>
