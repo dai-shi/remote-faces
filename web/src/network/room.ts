@@ -2,10 +2,16 @@ import Peer from "peerjs";
 
 import { rand4 } from "../utils/crypto";
 import { sleep } from "../utils/sleep";
-import { Conn, isConnectedConn, getLivePeers } from "./peerUtils";
+import {
+  isValidPeerJsId,
+  generatePeerJsId,
+  getPeerIdFromPeerJsId,
+  getPeerIdFromConn,
+  createConnectionMap,
+} from "./peerUtils";
 
 const SEED_PEERS = 5; // config
-const guessSeed = (id: string) => Number(id.split("_")[1]) < SEED_PEERS;
+const guessSeed = (id: string) => getPeerIdFromPeerJsId(id) < SEED_PEERS;
 
 export type NetworkStatus =
   | { type: "CONNECTING_SEED_PEERS" }
@@ -27,7 +33,7 @@ const createMyPeer = (
   updateNetworkStatus({ type: "INITIALIZING_PEER", index });
   const isSeed = index < SEED_PEERS;
   const peerId = isSeed ? index : rand4();
-  const id = `${roomId}_${peerId}`;
+  const id = generatePeerJsId(roomId, peerId);
   console.log("createMyPeer", index, id);
   const peer = new Peer(id);
   return new Promise((resolve) => {
@@ -58,60 +64,45 @@ export const createRoom = (
 ) => {
   let myPeer: Peer | null = null;
   let lastBroadcastData: unknown | null = null;
+  const connMap = createConnectionMap();
 
-  const showConnectedStatus = (closedPeerId?: number) => {
+  const showConnectedStatus = () => {
     if (!myPeer) return;
-    const peerIds = getLivePeers(myPeer)
-      .map((id) => Number(id.split("_")[1]))
-      .filter((peerId) => peerId !== closedPeerId);
+    const peerIds = connMap.getLivePeerJsIds().map(getPeerIdFromPeerJsId);
     updateNetworkStatus({ type: "CONNECTED_PEERS", peerIds });
   };
 
   const connectPeer = (id: string) => {
     if (!myPeer) return;
     if (myPeer.id === id) return;
-    const conns = myPeer.connections[id];
-    const hasEffectiveConn = conns && conns.some(isConnectedConn);
-    if (hasEffectiveConn) return;
-    console.log(
-      "connectPeer",
-      id,
-      conns &&
-        conns.map(
-          (c: Conn) => c.peerConnection && c.peerConnection.connectionState
-        )
-    );
+    if (connMap.hasConn(id)) return;
+    console.log("connectPeer", id);
     const conn = myPeer.connect(id, { serialization: "json" });
+    connMap.addConn(conn);
     initConnection(conn);
   };
 
   const broadcastData = (data: unknown) => {
     lastBroadcastData = data;
-    if (myPeer) {
-      Object.keys(myPeer.connections).forEach((key) => {
-        if (!myPeer) return;
-        const peers = getLivePeers(myPeer);
-        myPeer.connections[key].forEach((conn: Conn) => {
-          if (conn.open) {
-            try {
-              conn.send({ data, peers });
-            } catch (e) {
-              console.error("broadcastData", e);
-            }
-          }
-        });
-      });
-    }
+    if (!myPeer) return;
+    const peers = connMap.getLivePeerJsIds();
+    connMap.forEachLiveConns((conn) => {
+      try {
+        conn.send({ data, peers });
+      } catch (e) {
+        console.error("broadcastData", e);
+      }
+    });
   };
 
-  const handlePayload = (conn: Conn, payload: unknown) => {
+  const handlePayload = (conn: Peer.DataConnection, payload: unknown) => {
     try {
-      const peerId = Number(conn.peer.split("_")[1]);
+      const peerId = getPeerIdFromConn(conn);
       if (payload && typeof payload === "object") {
         receiveData(peerId, (payload as { data: unknown }).data);
         if (Array.isArray((payload as { peers: unknown }).peers)) {
           (payload as { peers: unknown[] }).peers.forEach((peer) => {
-            if (typeof peer === "string" && peer.startsWith(`${roomId}_`)) {
+            if (isValidPeerJsId(roomId, peer)) {
               connectPeer(peer);
             }
           });
@@ -122,25 +113,22 @@ export const createRoom = (
     }
   };
 
-  const initConnection = (conn: Conn) => {
+  const initConnection = (conn: Peer.DataConnection) => {
     conn.on("open", () => {
+      connMap.markLive(conn);
       showConnectedStatus();
       if (myPeer && lastBroadcastData) {
         conn.send({
           data: lastBroadcastData,
-          peers: getLivePeers(myPeer),
+          peers: connMap.getLivePeerJsIds(),
         });
       }
     });
     conn.on("data", (payload: unknown) => handlePayload(conn, payload));
     conn.on("close", async () => {
+      connMap.delConn(conn);
       console.log("dataConnection closed", conn);
-      showConnectedStatus(Number(conn.peer.split("_")[1]));
-      if (guessSeed(conn.peer)) reInitMyPeer(conn.peer);
-    });
-    conn.on("error", async (err: Error) => {
-      console.error("dataConnection error", conn, err);
-      showConnectedStatus(Number(conn.peer.split("_")[1]));
+      showConnectedStatus();
       if (guessSeed(conn.peer)) reInitMyPeer(conn.peer);
     });
   };
@@ -148,43 +136,40 @@ export const createRoom = (
   const initMyPeer = async () => {
     if (myPeer) return;
     myPeer = await createMyPeer(0, roomId, updateNetworkStatus);
+    if (process.env.NODE_ENV !== "production") {
+      (window as any).myPeer = myPeer;
+    }
     myPeer.on("connection", (conn) => {
       console.log("new connection received", conn);
-      const peerId = Number(conn.peer.split("_")[1]);
+      const peerId = getPeerIdFromConn(conn);
       updateNetworkStatus({ type: "NEW_CONNECTION", peerId });
+      connMap.addConn(conn);
       initConnection(conn);
+      connMap.markLive(conn);
     });
     updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
     for (let i = 0; i < SEED_PEERS; i += 1) {
-      const id = `${roomId}_${i}`;
+      const id = generatePeerJsId(roomId, i);
       connectPeer(id);
     }
   };
   initMyPeer();
 
   const reInitMyPeer = async (disconnectedId: string) => {
-    if (!myPeer) return;
-    if (guessSeed(myPeer.id)) return;
+    if (!myPeer || guessSeed(myPeer.id)) return;
     const waitSec = 30 + Math.floor(Math.random() * 60);
     console.log(
-      "Disconnected seed peer: " +
-        disconnectedId.split("_")[1] +
-        ", reinit in " +
-        waitSec +
-        "sec..."
+      `Disconnected seed peer: ${getPeerIdFromPeerJsId(
+        disconnectedId
+      )}, reinit in ${waitSec}sec...`
     );
     await sleep(waitSec * 1000);
-    if (!myPeer) return;
-    if (guessSeed(myPeer.id)) return;
-    let checkSeeds = true;
-    for (let i = 0; i < SEED_PEERS; i += 1) {
-      const id = `${roomId}_${i}`;
-      const conns = myPeer.connections[id] || [];
-      if (!conns.some(isConnectedConn)) {
-        checkSeeds = false;
-      }
-    }
-    if (checkSeeds) {
+    if (!myPeer || guessSeed(myPeer.id)) return;
+    const existsAllSeeds = Array.from(Array(SEED_PEERS).keys()).every((i) => {
+      const id = generatePeerJsId(roomId, i);
+      return connMap.isLive(id);
+    });
+    if (existsAllSeeds) {
       showConnectedStatus();
       return;
     }
@@ -196,7 +181,7 @@ export const createRoom = (
   const dispose = () => {
     if (myPeer) {
       myPeer.destroy();
-      // do not set null
+      myPeer = null;
     }
   };
 
