@@ -4,7 +4,7 @@ import SingleRoomEntrance from "./SingleRoomEntrance";
 import "./App.css";
 
 const App: React.FC = () => (
-  <div className="SingleRoomEntrance">
+  <div className="App">
     <SingleRoomEntrance />
   </div>
 );

@@ -1,0 +1,38 @@
+.SingleRoom-status {
+  background-color: lightyellow;
+  font-size: 8px;
+  font-family: sans-serif;
+  white-space: nowrap;
+  padding-left: 2px;
+}
+
+.SingleRoom-card {
+  margin: 0 2px 2px 0;
+  position: relative;
+}
+
+.SingleRoom-photo {
+  display: block;
+  width: 36px;
+  height: 36px;
+}
+
+.SingleRoom-name {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  color: white;
+  font-size: 8px;
+  line-height: 8px;
+  font-family: sans-serif;
+}
+
+.SingleRoom-mesg {
+  position: absolute;
+  top: 8px;
+  left: 42px;
+  font-size: 12px;
+  font-family: sans-serif;
+  white-space: nowrap;
+  -webkit-app-region: no-drag
+}

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { secureRandomId } from "../utils/crypto";
 import { getRoomIdFromUrl } from "../utils/url";
 import SingleRoom from "./SingleRoom";
+import "./SingleRoomEntrance.css";
 
 const roomIdFromUrl = getRoomIdFromUrl();
 const userId = secureRandomId();
@@ -20,7 +21,7 @@ const SingleRoomEntrance: React.FC = () => {
   }
 
   return (
-    <form className="init" onSubmit={onSubmit}>
+    <form className="SingleRoomEntrance-init" onSubmit={onSubmit}>
       <input type="submit" value="Create a new room" />
     </form>
   );
