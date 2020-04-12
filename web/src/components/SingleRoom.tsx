@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from "react";
 
 import { setRoomIdToUrl } from "../utils/url";
+import { setStringItem, getStringItem } from "../utils/storage";
 import { useFaceImages } from "../hooks/useFaceImages";
 import "./SingleRoom.css";
 
@@ -12,8 +13,10 @@ type Props = {
   userId: string;
 };
 
+const initialNickname = getStringItem("nickname");
+
 const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
-  const nicknameRef = useRef("");
+  const nicknameRef = useRef(initialNickname);
   const messageRef = useRef("");
   useEffect(() => {
     setRoomIdToUrl(roomId);
@@ -43,8 +46,10 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
         <div>
           Your Name:{" "}
           <input
+            defaultValue={initialNickname}
             onChange={(e) => {
               nicknameRef.current = e.target.value;
+              setStringItem("nickname", nicknameRef.current);
             }}
           />
         </div>
