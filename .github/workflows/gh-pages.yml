@@ -54,7 +54,7 @@ jobs:
           cp -r web/build web/dist/d/`date '+%Y-%m-%d'`
 
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+        uses: dai-shi/actions-gh-pages@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           external_repository: ${{ env.GITHUB_ACTOR }}/remote-faces
