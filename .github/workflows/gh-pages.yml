@@ -42,6 +42,7 @@ jobs:
       - name: Copy to dist (PR)
         if: github.event_name == 'pull_request'
         run: |
+          echo ${GITHUB_ACTOR}/remote-faces
           (cd web; CI=false yarn build)
           mkdir -p web/dist/pr
           cp -r web/build web/dist/pr/${{ github.event.number }}
