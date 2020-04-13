@@ -42,9 +42,9 @@ jobs:
       - name: Experiment (PR)
         if: github.event_name == 'pull_request'
         run: |
-          echo ${{ github.event }}
+          echo ${{ github.event.pull_request }}
           echo ${{ github.event_name }}
-          echo ${{ github.head_ref }}
+          echo https://codesandbox.io/s/github/${{ github.event.pull_request.user.login }}/remote-faces/tree/${{ github.head_ref }}/web/
 
       - name: Comment (PR)
         if: github.event_name == 'pull_request'
