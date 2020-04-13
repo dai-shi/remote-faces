@@ -41,9 +41,10 @@ jobs:
 
       - name: Experiment (PR)
         if: github.event_name == 'pull_request'
-        run: echo ${{ github.event }}
-        run: echo ${{ github.event_name }}
-        run: echo ${{ github.head_ref }}
+        run: |
+          echo ${{ github.event }}
+          echo ${{ github.event_name }}
+          echo ${{ github.head_ref }}
 
       - name: Comment (PR)
         if: github.event_name == 'pull_request'
