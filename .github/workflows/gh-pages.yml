@@ -40,7 +40,7 @@ jobs:
         run: yarn test
 
       - name: Comment (PR)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request_disabled'
         uses: unsplash/comment-on-pr@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
