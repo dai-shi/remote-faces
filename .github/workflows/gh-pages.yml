@@ -42,6 +42,7 @@ jobs:
       - name: Copy to dist (PR)
         if: github.event_name == 'pull_request'
         run: |
+          echo ${GITHUB_ACTOR}/remote-faces
           (cd web; CI=false yarn build)
           mkdir -p web/dist/pr
           cp -r web/build web/dist/pr/${{ github.event.number }}
@@ -56,7 +57,8 @@ jobs:
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
-          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          external_repository: ${GITHUB_ACTOR}/remote-faces
           publish_dir: ./web/dist
           keep_files: true
 
@@ -67,5 +69,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           msg: |
-            Preview URL: https://dai-shi.github.io/remote-faces/pr/${{ github.event.number }}
+            Preview URL: https://${GITHUB_ACTOR}.github.io/remote-faces/pr/${{ github.event.number }}
           check_for_duplicate_msg: true
