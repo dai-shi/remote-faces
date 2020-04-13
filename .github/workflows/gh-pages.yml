@@ -39,19 +39,14 @@ jobs:
       - name: Test
         run: yarn test
 
-      - name: Experiment (PR)
-        if: github.event_name == 'pull_request'
-        run: echo ${{ github.head_ref}}
-
       - name: Comment (PR)
         if: github.event_name == 'pull_request'
-        run: github.head_ref
         uses: unsplash/comment-on-pr@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           msg: |
-            Preview URL: https://dai-shi.github.io/remote-faces/pr/${{ github.event.number }}
+            Preview URL: https://codesandbox.io/s/github/${{ github.event.pull_request.user.login }}/remote-faces/tree/${{ github.head_ref }}/web/
           check_for_duplicate_msg: true
 
       - name: Copy to dist (master)
