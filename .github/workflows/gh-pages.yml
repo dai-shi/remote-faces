@@ -40,16 +40,7 @@ jobs:
         run: yarn test
 
       - name: Comment (PR)
-        if: github.event_name == 'pull_request'
-        uses: mshick/add-pr-comment@v1
-        with:
-          message: |
-            Preview URL: https://codesandbox.io/s/github/${{ github.event.pull_request.user.login }}/remote-faces/tree/${{ github.head_ref }}/web/
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          allow-repeats: false
-
-      - name: Comment (PR)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request_disabled'
         uses: unsplash/comment-on-pr@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
