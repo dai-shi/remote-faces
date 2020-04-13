@@ -45,7 +45,6 @@ jobs:
 
       - name: Comment (PR)
         if: github.event_name == 'pull_request'
-        run: github.head_ref
         uses: unsplash/comment-on-pr@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
