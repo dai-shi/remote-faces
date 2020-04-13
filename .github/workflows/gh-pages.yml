@@ -56,7 +56,8 @@ jobs:
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
-          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          external_repository: ${{ env.GITHUB_ACTOR }}/remote-faces
           publish_dir: ./web/dist
           keep_files: true
 
@@ -67,5 +68,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           msg: |
-            Preview URL: https://dai-shi.github.io/remote-faces/pr/${{ github.event.number }}
+            Preview URL: https://${{ env.GITHUB_ACTOR }}.github.io/remote-faces/pr/${{ github.event.number }}
           check_for_duplicate_msg: true
