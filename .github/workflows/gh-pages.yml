@@ -39,12 +39,14 @@ jobs:
       - name: Test
         run: yarn test
 
-      - name: Experiment (PR)
+      - name: Comment (PR)
         if: github.event_name == 'pull_request'
-        run: |
-          echo ${{ github.event.pull_request }}
-          echo ${{ github.event_name }}
-          echo https://codesandbox.io/s/github/${{ github.event.pull_request.user.login }}/remote-faces/tree/${{ github.head_ref }}/web/
+        uses: mshick/add-pr-comment@v1
+        with:
+          message: |
+            Preview URL: https://codesandbox.io/s/github/${{ github.event.pull_request.user.login }}/remote-faces/tree/${{ github.head_ref }}/web/
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          allow-repeats: false
 
       - name: Comment (PR)
         if: github.event_name == 'pull_request'
@@ -53,7 +55,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           msg: |
-            Preview URL: https://dai-shi.github.io/remote-faces/pr/${{ github.event.number }}
+            Preview URL: https://codesandbox.io/s/github/${{ github.event.pull_request.user.login }}/remote-faces/tree/${{ github.head_ref }}/web/
           check_for_duplicate_msg: true
 
       - name: Copy to dist (master)
