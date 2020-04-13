@@ -39,12 +39,20 @@ jobs:
       - name: Test
         run: yarn test
 
-      - name: Copy to dist (PR)
+      - name: Experiment (PR)
         if: github.event_name == 'pull_request'
-        run: |
-          (cd web; CI=false yarn build)
-          mkdir -p web/dist/pr
-          cp -r web/build web/dist/pr/${{ github.event.number }}
+        run: echo ${{ github.head_ref}}
+
+      - name: Comment (PR)
+        if: github.event_name == 'pull_request'
+        run: github.head_ref
+        uses: unsplash/comment-on-pr@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          msg: |
+            Preview URL: https://dai-shi.github.io/remote-faces/pr/${{ github.event.number }}
+          check_for_duplicate_msg: true
 
       - name: Copy to dist (master)
         if: github.event_name == 'push'
@@ -53,19 +61,10 @@ jobs:
           mkdir -p web/dist/d
           cp -r web/build web/dist/d/`date '+%Y-%m-%d'`
 
-      - name: Deploy
+      - name: Deploy (master)
+        if: github.event_name == 'push'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./web/dist
           keep_files: true
-
-      - name: Comment (PR)
-        if: github.event_name == 'pull_request'
-        uses: unsplash/comment-on-pr@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          msg: |
-            Preview URL: https://dai-shi.github.io/remote-faces/pr/${{ github.event.number }}
-          check_for_duplicate_msg: true
