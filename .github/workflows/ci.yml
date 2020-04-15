@@ -33,11 +33,6 @@ jobs:
       - name: Test
         run: yarn test
 
-      - name: Debug
-        run: |
-          echo ${{ github.ref }}
-          echo ${{ env.GITHUB_REF }}
-
       - name: Comment (PR)
         if: github.event_name == 'pull_request_disabled'
         uses: unsplash/comment-on-pr@master
@@ -49,14 +44,14 @@ jobs:
           check_for_duplicate_msg: true
 
       - name: Copy to dist (master)
-        if: github.event_name == 'push' && github.ref == 'master'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
           (cd web; CI=false yarn build)
           mkdir -p web/dist/d
           cp -r web/build web/dist/d/`date '+%Y-%m-%d'`
 
       - name: Deploy (master)
-        if: github.event_name == 'push' && github.ref == 'master'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
