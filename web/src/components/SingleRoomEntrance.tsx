@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { secureRandomId } from "../utils/crypto";
-import { getRoomIdFromUrl } from "../utils/url";
+import { getRoomIdFromUrl, extractRoomIdFromLink } from "../utils/url";
 import SingleRoom from "./SingleRoom";
 import "./SingleRoomEntrance.css";
 
@@ -10,10 +10,14 @@ const userId = secureRandomId();
 
 const SingleRoomEntrance: React.FC = () => {
   const [roomId, setRoomId] = useState<string | null>(roomIdFromUrl);
+  const [linkText, setLinkText] = useState("");
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onCreateNew = () => {
     setRoomId(secureRandomId());
+  };
+
+  const onEnter = () => {
+    setRoomId(extractRoomIdFromLink(linkText));
   };
 
   if (roomId) {
@@ -21,9 +25,24 @@ const SingleRoomEntrance: React.FC = () => {
   }
 
   return (
-    <form className="SingleRoomEntrance-init" onSubmit={onSubmit}>
-      <input type="submit" value="Create a new room" />
-    </form>
+    <div className="SingleRoomEntrance-init">
+      <button type="button" onClick={onCreateNew}>
+        Create a new room
+      </button>
+      OR
+      <input
+        value={linkText}
+        onChange={(e) => setLinkText(e.target.value)}
+        placeholder="Enter room link..."
+      />
+      <button
+        type="button"
+        onClick={onEnter}
+        disabled={!extractRoomIdFromLink(linkText)}
+      >
+        Enter room
+      </button>
+    </div>
   );
 };
 
