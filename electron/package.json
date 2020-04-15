@@ -5,6 +5,10 @@
   "version": "2.0.0",
   "private": true,
   "author": "Daishi Kato",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dai-shi/remote-faces.git"
+  },
   "scripts": {
     "start": "electron .",
     "test": "eslint src",
