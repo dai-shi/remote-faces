@@ -33,6 +33,9 @@ jobs:
       - name: Test
         run: yarn test
 
+      - name: Debug
+        run: echo ${{ JSON.stringify(github) }}
+
       - name: Comment (PR)
         if: github.event_name == 'pull_request_disabled'
         uses: unsplash/comment-on-pr@master
