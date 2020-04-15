@@ -34,7 +34,7 @@ jobs:
         run: yarn test
 
       - name: Debug
-        run: echo ${{ JSON.stringify(github) }}
+        run: echo ${{ github }}
 
       - name: Comment (PR)
         if: github.event_name == 'pull_request_disabled'
