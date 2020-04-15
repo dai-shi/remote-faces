@@ -25,7 +25,8 @@ const isFaceInfo = (x: unknown): x is FaceInfo =>
 export const useFaceImages = (
   roomId: string,
   userId: string,
-  getFaceInfo: () => FaceInfo
+  getFaceInfo: () => FaceInfo,
+  deviceId?: string
 ) => {
   const [myImage, setMyImage] = useState<ImageUrl>();
   const [roomImages, setRoomImages] = useState<RoomImage[]>([]);
@@ -43,6 +44,7 @@ export const useFaceImages = (
     throw new Error("network error");
   }
 
+  // TODO: split two effects so that changing deviceId won't reconnect.
   useEffect(() => {
     const receiveData = (_peerId: number, data: unknown) => {
       if (
@@ -94,7 +96,7 @@ export const useFaceImages = (
     const loop = async () => {
       try {
         checkObsoletedImage();
-        const image = await takePhoto();
+        const image = await takePhoto(deviceId);
         setMyImage(image);
         const data = {
           userId,
@@ -113,7 +115,7 @@ export const useFaceImages = (
       dispose();
       clearTimeout(timer);
     };
-  }, [roomId, userId, getFaceInfo]);
+  }, [roomId, userId, getFaceInfo, deviceId]);
 
   return {
     myImage,

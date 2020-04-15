@@ -1,18 +1,12 @@
-name: github pages
+name: CI
 
 on:
   push:
-    branches:
-      - master
-    paths:
-      - 'web/**'
   pull_request:
-    paths:
-      - 'web/**'
 
 jobs:
-  deploy:
-    runs-on: ubuntu-18.04
+  test_and_deploy:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
@@ -50,14 +44,14 @@ jobs:
           check_for_duplicate_msg: true
 
       - name: Copy to dist (master)
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'master'
         run: |
           (cd web; CI=false yarn build)
           mkdir -p web/dist/d
           cp -r web/build web/dist/d/`date '+%Y-%m-%d'`
 
       - name: Deploy (master)
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'master'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

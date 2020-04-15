@@ -67,7 +67,7 @@ You can open it as many as you want and simulate
 the app behavior with many participants.
 
 If you have a question, don't hesitate to
-[open a issue](https://github.com/dai-shi/remote-faces/issues/new/choose)
+[open an issue](https://github.com/dai-shi/remote-faces/issues/new/choose)
 for it.
 
 ## How to contribute

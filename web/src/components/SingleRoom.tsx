@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { setRoomIdToUrl } from "../utils/url";
 import { setStringItem, getStringItem } from "../utils/storage";
 import { useFaceImages } from "../hooks/useFaceImages";
+import { useVideoDevices } from "../hooks/useVideoDevices";
 import "./SingleRoom.css";
 
 const BLANK_IMAGE =
@@ -22,6 +23,9 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
 
+  const [deviceId, setDeviceId] = useState<string>();
+  const videoDevices = useVideoDevices();
+
   const getFaceInfo = useCallback(
     () => ({
       nickname: nicknameRef.current,
@@ -32,7 +36,8 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const { myImage, roomImages, networkStatus } = useFaceImages(
     roomId,
     userId,
-    getFaceInfo
+    getFaceInfo,
+    deviceId
   );
 
   return (
@@ -53,6 +58,16 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             }}
           />
         </div>
+        <div>
+          Select Camera:{" "}
+          <select onChange={(e) => setDeviceId(e.target.value)}>
+            {videoDevices.map((videoDevice) => (
+              <option key={videoDevice.deviceId} value={videoDevice.deviceId}>
+                {videoDevice.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <div>
         <div className="SingleRoom-card">
@@ -68,6 +83,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
                 onChange={(e) => {
                   messageRef.current = e.target.value;
                 }}
+                placeholder="Enter message."
               />
             </form>
           </div>
