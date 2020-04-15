@@ -2,7 +2,7 @@
 
 The are two parts of the tool in this repository.
 - [web app](./web) The main part of the tool. React based.
-- [electron app](./electron) A wrapper part of the tool. Electron based. (This is not yet ready. https://github.com/dai-shi/remote-faces/issues/10 )
+- [electron app](./electron) A wrapper part of the tool. Electron based.
 
 ## Coding contribution
 
@@ -35,6 +35,21 @@ https://codesandbox.io/s/github/dai-shi/remote-faces/tree/master/web
 
 (You could even fork and commit in CodeSandbox.)
 
+### Running electron app locally
+
+Fork the repository
+
+```bash
+git clone git@github.com:<your account>/remote-faces.git
+cd remote-faces/electron
+yarn install
+yarn start
+```
+
+Electron app is just a tiny wrapper to run the web app.
+We should only add features that are only possible natively.
+
+Check this out for more information: https://github.com/dai-shi/remote-faces/issues/10
 
 ## Non-coding contribution
 
