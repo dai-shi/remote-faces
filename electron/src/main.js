@@ -12,9 +12,26 @@ const store = new Store();
 
 let win;
 
+const getVersionFromUrl = () => {
+  if (!win) return '';
+  const url = win.webContents.getURL();
+  const match = /remote-faces\/([^/]+\/[^/]+)/.exec(url);
+  if (match) {
+    return match[1];
+  }
+  return '';
+};
+
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  if (!win) return;
+  win.loadURL(url.replace(/^remote-faces/, 'https'));
+});
+app.setAsDefaultProtocolClient('remote-faces');
+
 const loadURL = () => {
   if (!win) return;
-  win.loadURL(store.get('url', 'https://dai-shi.github.io/remote-faces/'));
+  win.loadURL(store.get('url', 'https://dai-shi.github.io/remote-faces/tools/select.html'));
   // win.loadFile('public/index.html');
 };
 
@@ -32,6 +49,14 @@ const createWindow = () => {
   win.webContents.reloadIgnoringCache();
   win.webContents.on('did-fail-load', () => {
     setTimeout(loadURL, 3000);
+  });
+  win.webContents.on('did-finish-load', () => {
+    const version = getVersionFromUrl();
+    if (version && process.platform === 'darwin') {
+      app.setAboutPanelOptions({
+        version,
+      });
+    }
   });
   win.on('page-title-updated', (event, title) => {
     const revision = title.replace(app.getName(), '').replace(/^\s*\(*|\)*\s*$/g, '');
@@ -83,13 +108,22 @@ const setupAppMenu = () => {
         createWindow();
       },
     }, {
-      label: 'Show Window Title',
+      label: 'Show Version',
       click: () => {
         if (!win) return;
+        const version = getVersionFromUrl();
         dialog.showMessageBox({
           type: 'info',
-          message: win.getTitle(),
+          message: version,
         });
+      },
+    }, {
+      label: 'Select Versions',
+      click: () => {
+        if (!win) return;
+        const url = win.webContents.getURL();
+        const i = url.indexOf('#');
+        win.loadURL('https://dai-shi.github.io/remote-faces/tools/select.html' + (i >= 0 ? url.slice(i) : ''));
       },
     }],
   };
