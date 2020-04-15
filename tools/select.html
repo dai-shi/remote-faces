@@ -5,7 +5,7 @@
 window.onload = function() {
   var elements = document.querySelectorAll('a');
   for (var i = 0; i < elements.length; ++i) {
-    elememnts[i].setAttribute('href', elements[i].getAttribute('href') + window.location.hash);
+    elements[i].setAttribute('href', elements[i].getAttribute('href') + window.location.hash);
   }  
 };
 </script>
