@@ -45,8 +45,9 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
       <div className="SingleRoom-status">{JSON.stringify(networkStatus)}</div>
       <div className="SingleRoom-room-info">
         <div>
-          <a href={window.location.href}>Link to this room</a> (Share this with
-          your colleagues)
+          Link to this room:
+          <input defaultValue={window.location.href} readOnly />
+          (Share this link with your colleagues)
         </div>
         <div>
           Your Name:{" "}
