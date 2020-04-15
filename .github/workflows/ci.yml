@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  test_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -33,9 +33,6 @@ jobs:
       - name: Test
         run: yarn test
 
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
       - name: Comment (PR)
         if: github.event_name == 'pull_request_disabled'
         uses: unsplash/comment-on-pr@master
