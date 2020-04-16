@@ -44,7 +44,7 @@ Just visit either of the following links.
 Google Chrome on PC is recommended.
 It may work on other browsers including some on mobile.
 
-- [New version](https://dai-shi.github.io/remote-faces/d/2020-04-11/)
+- [New version](https://dai-shi.github.io/remote-faces/d/2020-04-16/)
 - [Legacy version](https://dai-shi.github.io/remote-faces/d/2020-04-07/)
 
 Click the button, the app starts immediately.
