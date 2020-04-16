@@ -3,15 +3,28 @@ type StringItemName = "nickname" | "TODO1";
 type JsonItemName = "TODO2" | "TODO3";
 
 export const setStringItem = (name: StringItemName, value: string) => {
-  window.localStorage.setItem(name, value);
+  try {
+    window.localStorage.setItem(name, value);
+  } catch (e) {
+    console.log("Failed to save string to localStorage", e);
+  }
 };
 
 export const getStringItem = (name: StringItemName) => {
-  return window.localStorage.getItem(name) || "";
+  try {
+    return window.localStorage.getItem(name) || "";
+  } catch (e) {
+    // ignore
+    return "";
+  }
 };
 
 export const setJsonItem = (name: JsonItemName, value: unknown) => {
-  window.localStorage.setItem(name, JSON.stringify(value));
+  try {
+    window.localStorage.setItem(name, JSON.stringify(value));
+  } catch (e) {
+    console.log("Failed to save json to localStorage", e);
+  }
 };
 
 export const getJsonItem = (name: JsonItemName): unknown | null => {
@@ -24,5 +37,9 @@ export const getJsonItem = (name: JsonItemName): unknown | null => {
 };
 
 export const removeItem = (name: StringItemName | JsonItemName) => {
-  window.localStorage.removeItem(name);
+  try {
+    window.localStorage.removeItem(name);
+  } catch (e) {
+    // ignore
+  }
 };
