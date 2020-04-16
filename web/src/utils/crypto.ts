@@ -8,7 +8,7 @@ export const sha256 = async (text: string) => {
 };
 
 export const secureRandomId = () => {
-  const arrbuf = window.crypto.getRandomValues(new Uint8Array(16));
+  const arrbuf = window.crypto.getRandomValues(new Uint8Array(32));
   const arr = Array.from(arrbuf);
   const hex = arr.map((b) => b.toString(16).padStart(2, "0")).join("");
   return hex;
