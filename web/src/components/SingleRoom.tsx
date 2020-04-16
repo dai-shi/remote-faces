@@ -40,6 +40,11 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
     deviceId
   );
 
+  const appLink = `remote-faces://${window.location.href.replace(
+    /^https:\/\//,
+    ""
+  )}`;
+
   return (
     <>
       <div className="SingleRoom-status">{JSON.stringify(networkStatus)}</div>
@@ -48,6 +53,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
           Link to this room:
           <input value={window.location.href} readOnly />
           (Share this link with your colleagues)
+          <a href={appLink}>Open App</a>
         </div>
         <div>
           Your Name:{" "}
