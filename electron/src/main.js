@@ -22,16 +22,25 @@ const getVersionFromUrl = () => {
   return '';
 };
 
+let openUrl;
 app.on('open-url', (event, url) => {
   event.preventDefault();
-  if (!win) return;
-  win.loadURL(url.replace(/^remote-faces/, 'https'));
+  if (url.startsWith('remote-faces://remote-faces.js.org/')) {
+    openUrl = `https${url.slice(12)}`;
+  } else if (url.startsWith('remote-faces://dai-shi.github.io/remote-faces/')) {
+    openUrl = `https${url.slice(12)}`;
+  } else if (url.startsWith('remote-faces://localhost:')) {
+    openUrl = `http${url.slice(12)}`;
+  }
+  if (win && openUrl) {
+    win.loadUrl(openUrl);
+  }
 });
 app.setAsDefaultProtocolClient('remote-faces');
 
 const loadURL = () => {
   if (!win) return;
-  win.loadURL(store.get('url', 'https://dai-shi.github.io/remote-faces/tools/select.html'));
+  win.loadURL(openUrl || store.get('url', 'https://dai-shi.github.io/remote-faces/tools/select.html'));
   // win.loadFile('public/index.html');
 };
 
