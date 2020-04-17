@@ -40,19 +40,18 @@ our technology focus is for peer-to-peer network.
 
 ## How to use
 
-Just visit either of the following links.
+Just visit the following links and select "Latest Version."
 Google Chrome on PC is recommended.
 It may work on other browsers including some on mobile.
 
-- [New version](https://dai-shi.github.io/remote-faces/d/2020-04-16/)
-- [Legacy version](https://dai-shi.github.io/remote-faces/d/2020-04-07/)
+[Select Remote Faces Versions](https://dai-shi.github.io/remote-faces/tools/select.html)
 
-Click the button, the app starts immediately.
+To create a new room, click the button and the app starts immediately.
 Copy the URL and share it with your colleagues.
-It will take your face with webcam every two minuites.
+It will take your face image with webcam every two minuites.
 At first, you will only see your face,
 but once your colleagues enter the room,
-face images are broacast in the room.
+face images are broacasted within the room.
 Note this app is based on peer-to-peer technology,
 and the images are only transferred in the participants of the room.
 
