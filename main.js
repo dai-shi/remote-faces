@@ -350,7 +350,8 @@ const initParams = () => new Promise((resolve) => {
 
 const main = async () => {
   if (!params.roomid || !params.myself) {
-    await initParams();
+    return;
+    // await initParams();
   }
   initMyPeer();
   sendPhoto();
