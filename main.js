@@ -353,6 +353,7 @@ const main = async () => {
     return;
     // await initParams();
   }
+  document.getElementById('landing').style.display = 'none';
   initMyPeer();
   sendPhoto();
   checkObsoletedImage();
