@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 const ErrorFallback: React.FC = () => {
-  const [waitSec, setWaitSec] = useState(60);
+  const [waitSec, setWaitSec] = useState(30);
 
   useEffect(() => {
     if (waitSec > 0) {
