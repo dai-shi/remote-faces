@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 import { createRoom, NetworkStatus } from "../network/room";
 
@@ -76,17 +76,25 @@ export const useRoomNetworkStatus = (roomId: string) => {
   return networkStatus;
 };
 
+type BroadcastData = ReturnType<typeof createRoom>["broadcastData"];
+
 export const useBroadcastData = (roomId: string) => {
-  const [broadcastData, setBroadcastData] = useState<(data: unknown) => void>();
+  const broadcastDataRef = useRef<BroadcastData>();
+  const broadcastData = useCallback((...args: Parameters<BroadcastData>) => {
+    if (broadcastDataRef.current) {
+      broadcastDataRef.current(...args);
+    } else {
+      // TODO pending queue
+    }
+  }, []);
   useEffect(() => {
     const { broadcastData: broadcastDataByRegister, unregister } = register(
       roomId
     );
-    setBroadcastData(broadcastDataByRegister);
+    broadcastDataRef.current = broadcastDataByRegister;
     return unregister;
   }, [roomId]);
-  // TODO pending queue
-  return broadcastData || (() => undefined);
+  return broadcastData;
 };
 
 export const useRoomData = <Data>(

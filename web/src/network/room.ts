@@ -82,9 +82,11 @@ export const createRoom = (
     initConnection(conn);
   };
 
-  const broadcastData = (data: unknown) => {
+  const broadcastData = (data: unknown, replaceLastData?: boolean) => {
     if (disposed) return;
-    lastBroadcastData = data;
+    if (replaceLastData) {
+      lastBroadcastData = data;
+    }
     const peers = connMap.getLivePeerJsIds();
     connMap.forEachLiveConns((conn) => {
       try {

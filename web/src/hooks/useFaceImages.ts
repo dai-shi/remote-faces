@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import { takePhoto } from "../capture/webcam";
 import { useRoomData, useBroadcastData } from "./useRoom";
@@ -47,23 +47,26 @@ export const useFaceImages = (
 
   const broadcastData = useBroadcastData(roomId);
   const imageData = useRoomData<ImageData>(roomId, isImageData);
-  if (imageData) {
-    const roomImage: RoomImage = {
-      ...imageData,
-      received: Date.now(),
-      obsoleted: false,
-    };
-    setRoomImages((prev) => {
-      let found = false;
-      const next = prev.map((item) => {
-        if (item.userId === roomImage.userId) {
-          found = true;
-          return roomImage;
-        }
-        return item;
-      });
-      return found ? next : [...prev, roomImage];
-    });
+  const roomImage = useMemo(
+    () =>
+      imageData && {
+        ...imageData,
+        received: Date.now(),
+        obsoleted: false,
+      },
+    [imageData]
+  );
+  if (roomImage) {
+    const found = roomImages.find((item) => item.userId === roomImage.userId);
+    if (!found) {
+      setRoomImages([...roomImages, roomImage]);
+    } else if (found.received !== roomImage.received) {
+      setRoomImages(
+        roomImages.map((item) =>
+          item.userId === roomImage.userId ? roomImage : item
+        )
+      );
+    }
   }
 
   useEffect(() => {
@@ -91,7 +94,7 @@ export const useFaceImages = (
           image,
           info: getFaceInfo(),
         };
-        broadcastData(data);
+        broadcastData(data, true);
       } catch (e) {
         console.error(e);
         setFatalError(e);
