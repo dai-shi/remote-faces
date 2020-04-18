@@ -10,6 +10,10 @@
   -webkit-app-region: no-drag
 }
 
+.SingleRoom-statusmesg {
+  -webkit-app-region: no-drag
+}
+
 .SingleRoom-card {
   margin: 0 2px 2px 0;
   position: relative;
@@ -33,10 +37,10 @@
 
 .SingleRoom-mesg {
   position: absolute;
-  top: 8px;
-  left: 42px;
-  font-size: 12px;
+  bottom: 2px;
+  left: 1px;
+  color: white;
+  font-size: 8px;
+  line-height: 8px;
   font-family: sans-serif;
-  white-space: nowrap;
-  -webkit-app-region: no-drag
 }

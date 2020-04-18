@@ -73,6 +73,15 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
               }}
             />
           </div>
+          <div className="SingleRoom-statusmesg">
+            Your Status:{" "}
+            <input
+              onChange={(e) => {
+                messageRef.current = e.target.value;
+              }}
+              placeholder="Enter status message"
+            />
+          </div>
           <div>
             Select Camera:{" "}
             <select onChange={(e) => setDeviceId(e.target.value)}>
@@ -97,16 +106,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             alt="myself"
           />
           <div className="SingleRoom-name">{nicknameRef.current}</div>
-          <div className="SingleRoom-mesg">
-            <form>
-              <input
-                onChange={(e) => {
-                  messageRef.current = e.target.value;
-                }}
-                placeholder="Enter message."
-              />
-            </form>
-          </div>
+          <div className="SingleRoom-mesg">{messageRef.current}</div>
         </div>
         {roomImages.map((item) => (
           <div
