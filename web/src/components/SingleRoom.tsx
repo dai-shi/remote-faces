@@ -24,6 +24,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   }, [roomId]);
 
   const [deviceId, setDeviceId] = useState<string>();
+  const [configOpen, setConfigOpen] = useState<boolean>(true);
   const videoDevices = useVideoDevices();
 
   const getFaceInfo = useCallback(
@@ -48,34 +49,43 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   return (
     <>
       <div className="SingleRoom-status">{JSON.stringify(networkStatus)}</div>
-      <div className="SingleRoom-room-info">
-        <div>
-          Link to this room:
-          <input value={window.location.href} readOnly />
-          (Share this link with your colleagues)
-          <a href={appLink}>Open App</a>
+      {configOpen ? (
+        <div className="SingleRoom-room-info">
+          <button type="button" onClick={() => setConfigOpen(!configOpen)}>
+            Hide config
+          </button>
+          <div>
+            Link to this room:
+            <input value={window.location.href} readOnly />
+            (Share this link with your colleagues)
+            <a href={appLink}>Open App</a>
+          </div>
+          <div>
+            Your Name:{" "}
+            <input
+              defaultValue={initialNickname}
+              onChange={(e) => {
+                nicknameRef.current = e.target.value;
+                setStringItem("nickname", nicknameRef.current);
+              }}
+            />
+          </div>
+          <div>
+            Select Camera:{" "}
+            <select onChange={(e) => setDeviceId(e.target.value)}>
+              {videoDevices.map((videoDevice) => (
+                <option key={videoDevice.deviceId} value={videoDevice.deviceId}>
+                  {videoDevice.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div>
-          Your Name:{" "}
-          <input
-            defaultValue={initialNickname}
-            onChange={(e) => {
-              nicknameRef.current = e.target.value;
-              setStringItem("nickname", nicknameRef.current);
-            }}
-          />
-        </div>
-        <div>
-          Select Camera:{" "}
-          <select onChange={(e) => setDeviceId(e.target.value)}>
-            {videoDevices.map((videoDevice) => (
-              <option key={videoDevice.deviceId} value={videoDevice.deviceId}>
-                {videoDevice.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      ) : (
+        <button type="button" onClick={() => setConfigOpen(!configOpen)}>
+          Show config
+        </button>
+      )}
       <div>
         <div className="SingleRoom-card">
           <img
