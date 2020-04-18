@@ -51,7 +51,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
       <div className="SingleRoom-status">{JSON.stringify(networkStatus)}</div>
       {configOpen ? (
         <div className="SingleRoom-room-info">
-          <button type="button" onClick={() => setConfigOpen(!configOpen)}>
+          <button type="button" onClick={() => setConfigOpen(false)}>
             Hide config
           </button>
           <div>
