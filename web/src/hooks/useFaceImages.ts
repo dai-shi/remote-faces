@@ -16,6 +16,7 @@ type ImageData = {
 type RoomImage = ImageData & {
   received: number; // in milliseconds
   obsoleted: boolean;
+  tooOld: boolean;
 };
 
 const isFaceInfo = (x: unknown): x is FaceInfo =>
@@ -53,6 +54,7 @@ export const useFaceImages = (
         ...imageData,
         received: Date.now(),
         obsoleted: false,
+        tooOld: false,
       },
     [imageData]
   );
@@ -72,12 +74,16 @@ export const useFaceImages = (
   useEffect(() => {
     const checkObsoletedImage = () => {
       const twoMinAgo = Date.now() - 2 * 60 * 1000;
+      const tenMinAgo = Date.now() - 10 * 60 * 1000;
       setRoomImages((prev) => {
         let changed = false;
         const next = prev.map((item) => {
           if (item.received < twoMinAgo && !item.obsoleted) {
             changed = true;
             return { ...item, obsoleted: true };
+          }
+          if (item.received < tenMinAgo && item.obsoleted) {
+            return { ...item, tooOld: true };
           }
           return item;
         });

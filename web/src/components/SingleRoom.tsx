@@ -108,17 +108,19 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             </form>
           </div>
         </div>
-        {roomImages.map((item) => (
-          <div
-            key={item.userId}
-            className="SingleRoom-card"
-            style={{ opacity: item.obsoleted ? 0.2 : 1 }}
-          >
-            <img src={item.image} className="SingleRoom-photo" alt="friend" />
-            <div className="SingleRoom-name">{item.info.nickname}</div>
-            <div className="SingleRoom-mesg">{item.info.message}</div>
-          </div>
-        ))}
+        {roomImages.map((item) =>
+          item.tooOld ? null : (
+            <div
+              key={item.userId}
+              className="SingleRoom-card"
+              style={{ opacity: item.obsoleted ? 0.2 : 1 }}
+            >
+              <img src={item.image} className="SingleRoom-photo" alt="friend" />
+              <div className="SingleRoom-name">{item.info.nickname}</div>
+              <div className="SingleRoom-mesg">{item.info.message}</div>
+            </div>
+          )
+        )}
       </div>
     </>
   );
