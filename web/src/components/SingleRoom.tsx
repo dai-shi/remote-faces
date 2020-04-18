@@ -63,7 +63,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             (Share this link with your colleagues)
             <a href={appLink}>Open App</a>
           </div>
-          <div>
+          <div className="SingleRoom-nickname">
             Your Name:{" "}
             <input
               defaultValue={initialNickname}

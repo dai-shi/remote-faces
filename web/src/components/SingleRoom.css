@@ -6,6 +6,10 @@
   padding-left: 2px;
 }
 
+.SingleRoom-nickname {
+  -webkit-app-region: no-drag
+}
+
 .SingleRoom-card {
   margin: 0 2px 2px 0;
   position: relative;
