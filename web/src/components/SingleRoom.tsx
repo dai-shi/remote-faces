@@ -82,7 +82,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
           </div>
         </div>
       ) : (
-        <button type="button" onClick={() => setConfigOpen(!configOpen)}>
+        <button type="button" onClick={() => setConfigOpen(true)}>
           Show config
         </button>
       )}
