@@ -77,10 +77,7 @@ export const useRoomNetworkStatus = (roomId: string) => {
 };
 
 export const useBroadcastData = (roomId: string) => {
-  // TODO pending queue
-  const [broadcastData, setBroadcastData] = useState<(data: unknown) => void>(
-    () => () => undefined
-  );
+  const [broadcastData, setBroadcastData] = useState<(data: unknown) => void>();
   useEffect(() => {
     const { broadcastData: broadcastDataByRegister, unregister } = register(
       roomId
@@ -88,7 +85,8 @@ export const useBroadcastData = (roomId: string) => {
     setBroadcastData(broadcastDataByRegister);
     return unregister;
   }, [roomId]);
-  return broadcastData;
+  // TODO pending queue
+  return broadcastData || (() => undefined);
 };
 
 export const useRoomData = <Data>(
