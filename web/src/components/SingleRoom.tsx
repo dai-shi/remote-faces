@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { setRoomIdToUrl } from "../utils/url";
 import { setStringItem, getStringItem } from "../utils/storage";
+import { useRoomNetworkStatus } from "../hooks/useRoom";
 import { useFaceImages } from "../hooks/useFaceImages";
 import { useVideoDevices } from "../hooks/useVideoDevices";
 import "./SingleRoom.css";
@@ -34,12 +35,14 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
     }),
     []
   );
-  const { myImage, roomImages, networkStatus } = useFaceImages(
+  const { myImage, roomImages } = useFaceImages(
     roomId,
     userId,
     getFaceInfo,
     deviceId
   );
+
+  const networkStatus = useRoomNetworkStatus(roomId);
 
   const appLink = `remote-faces://${window.location.href.replace(
     /^https:\/\//,
