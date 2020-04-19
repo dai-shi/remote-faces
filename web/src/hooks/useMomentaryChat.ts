@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef } from "react";
 
 import { useRoomData, useBroadcastData } from "./useRoom";
 
+const MAX_CHAT_LIST_SIZE = 100;
+
 type ChatData = {
   userId: string;
   nickname: string;
@@ -87,7 +89,7 @@ export const useMomentaryChat = (
         text: chatData.chatText,
         replies: [],
       };
-      setChatList((prev) => [chatItem, ...prev]);
+      setChatList((prev) => [chatItem, ...prev].slice(0, MAX_CHAT_LIST_SIZE));
     }
   }, []);
 
