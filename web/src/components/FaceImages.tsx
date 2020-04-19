@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React from "react";
 
 import "./FaceImages.css";
 import { useFaceImages } from "../hooks/useFaceImages";
@@ -9,25 +9,23 @@ const BLANK_IMAGE =
 type Props = {
   roomId: string;
   userId: string;
-  deviceId?: string;
   nickname: string;
   statusMesg: string;
+  deviceId?: string;
 };
 
 const FaceImages: React.FC<Props> = ({
   roomId,
   userId,
-  deviceId,
   nickname,
   statusMesg,
+  deviceId,
 }) => {
-  const faceInfo = useRef({ nickname, message: statusMesg });
-  faceInfo.current = { nickname, message: statusMesg };
-  const getFaceInfo = useCallback(() => faceInfo.current, []);
   const { myImage, roomImages } = useFaceImages(
     roomId,
     userId,
-    getFaceInfo,
+    nickname,
+    statusMesg,
     deviceId
   );
 

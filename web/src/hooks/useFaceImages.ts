@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 
 import { takePhoto } from "../capture/webcam";
 import { useRoomData, useBroadcastData } from "./useRoom";
@@ -34,12 +34,15 @@ const isImageData = (x: unknown): x is ImageData =>
 export const useFaceImages = (
   roomId: string,
   userId: string,
-  getFaceInfo: () => FaceInfo,
+  nickname: string,
+  statusMesg: string,
   deviceId?: string
 ) => {
   const [myImage, setMyImage] = useState<ImageUrl>();
   const [roomImages, setRoomImages] = useState<RoomImage[]>([]);
   const [fatalError, setFatalError] = useState<Error>();
+  const faceInfo = useRef({ nickname, message: statusMesg });
+  faceInfo.current = { nickname, message: statusMesg };
 
   if (fatalError) {
     throw fatalError;
@@ -92,7 +95,7 @@ export const useFaceImages = (
         const data = {
           userId,
           image,
-          info: getFaceInfo(),
+          info: faceInfo.current,
         };
         broadcastData(data, true);
       } catch (e) {
@@ -105,7 +108,7 @@ export const useFaceImages = (
     return () => {
       clearTimeout(timer);
     };
-  }, [roomId, userId, getFaceInfo, deviceId, broadcastData]);
+  }, [roomId, userId, deviceId, broadcastData]);
 
   return {
     myImage,
