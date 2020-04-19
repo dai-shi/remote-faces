@@ -1,15 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import "./SingleRoom.css";
 import { setRoomIdToUrl } from "../utils/url";
 import { setStringItem, getStringItem } from "../utils/storage";
 import { useRoomNetworkStatus } from "../hooks/useRoom";
-import { useFaceImages } from "../hooks/useFaceImages";
 import { useVideoDevices } from "../hooks/useVideoDevices";
+import FaceImages from "./FaceImages";
 import MomentaryChat from "./MomentaryChat";
-
-const BLANK_IMAGE =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQI12NgYAAAAAMAASDVlMcAAAAASUVORK5CYII=";
 
 type Props = {
   roomId: string;
@@ -28,16 +25,6 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const [deviceId, setDeviceId] = useState<string>();
   const [configOpen, setConfigOpen] = useState<boolean>(true);
   const videoDevices = useVideoDevices();
-
-  const faceInfo = useRef({ nickname, message: statusMesg });
-  faceInfo.current = { nickname, message: statusMesg };
-  const getFaceInfo = useCallback(() => faceInfo.current, []);
-  const { myImage, roomImages } = useFaceImages(
-    roomId,
-    userId,
-    getFaceInfo,
-    deviceId
-  );
 
   const networkStatus = useRoomNetworkStatus(roomId);
 
@@ -95,28 +82,13 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
           Show config
         </button>
       )}
-      <div>
-        <div className="SingleRoom-card">
-          <img
-            src={myImage || BLANK_IMAGE}
-            className="SingleRoom-photo"
-            alt="myself"
-          />
-          <div className="SingleRoom-name">{nickname}</div>
-          <div className="SingleRoom-mesg">{statusMesg}</div>
-        </div>
-        {roomImages.map((item) => (
-          <div
-            key={item.userId}
-            className="SingleRoom-card"
-            style={{ opacity: item.obsoleted ? 0.2 : 1 }}
-          >
-            <img src={item.image} className="SingleRoom-photo" alt="friend" />
-            <div className="SingleRoom-name">{item.info.nickname}</div>
-            <div className="SingleRoom-mesg">{item.info.message}</div>
-          </div>
-        ))}
-      </div>
+      <FaceImages
+        roomId={roomId}
+        userId={userId}
+        deviceId={deviceId}
+        nickname={nickname}
+        statusMesg={statusMesg}
+      />
       <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
     </>
   );

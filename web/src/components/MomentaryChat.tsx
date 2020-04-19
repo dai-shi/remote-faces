@@ -3,6 +3,42 @@ import React, { useState } from "react";
 import "./MomentaryChat.css";
 import { useMomentaryChat } from "../hooks/useMomentaryChat";
 
+type ChatList = ReturnType<typeof useMomentaryChat>["chatList"];
+type ReplyChat = ReturnType<typeof useMomentaryChat>["replyChat"];
+
+const MomentaryChatContent = React.memo<{
+  chatList: ChatList;
+  replyChat: ReplyChat;
+}>(({ chatList, replyChat }) => (
+  <ul className="MomentaryChat-list">
+    {chatList.map((item) => (
+      <li key={item.key}>
+        {item.nickname} - {item.text} {JSON.stringify(item.replies)}
+        <button
+          type="button"
+          onClick={() => {
+            replyChat("👍", item.replyTo);
+          }}
+        >
+          <span role="img" aria-label="Thumb Up">
+            👍
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            replyChat("❤️", item.replyTo);
+          }}
+        >
+          <span role="img" aria-label="Heart">
+            ❤️
+          </span>
+        </button>
+      </li>
+    ))}
+  </ul>
+));
+
 type Props = {
   roomId: string;
   userId: string;
@@ -33,35 +69,9 @@ const MomentaryChat: React.FC<Props> = ({ roomId, userId, nickname }) => {
           Send
         </button>
       </form>
-      <ul className="MomentaryChat-list">
-        {chatList.map((item) => (
-          <li key={item.key}>
-            {item.nickname} - {item.text} {JSON.stringify(item.replies)}
-            <button
-              type="button"
-              onClick={() => {
-                replyChat("👍", item.replyTo);
-              }}
-            >
-              <span role="img" aria-label="Thumb Up">
-                👍
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                replyChat("❤️", item.replyTo);
-              }}
-            >
-              <span role="img" aria-label="Heart">
-                ❤️
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      <MomentaryChatContent chatList={chatList} replyChat={replyChat} />
     </div>
   );
 };
 
-export default MomentaryChat;
+export default React.memo(MomentaryChat);
