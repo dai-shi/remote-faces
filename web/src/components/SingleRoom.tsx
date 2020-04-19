@@ -18,8 +18,8 @@ type Props = {
 const initialNickname = getStringItem("nickname");
 
 const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
-  const nicknameRef = useRef(initialNickname);
-  const messageRef = useRef("");
+  const [nickname, setNickname] = useState(initialNickname);
+  const [statusMesg, setStatusMesg] = useState("");
   useEffect(() => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
@@ -28,13 +28,9 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const [configOpen, setConfigOpen] = useState<boolean>(true);
   const videoDevices = useVideoDevices();
 
-  const getFaceInfo = useCallback(
-    () => ({
-      nickname: nicknameRef.current,
-      message: messageRef.current,
-    }),
-    []
-  );
+  const faceInfo = useRef({ nickname, message: statusMesg });
+  faceInfo.current = { nickname, message: statusMesg };
+  const getFaceInfo = useCallback(() => faceInfo.current, []);
   const { myImage, roomImages } = useFaceImages(
     roomId,
     userId,
@@ -68,8 +64,8 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             <input
               defaultValue={initialNickname}
               onChange={(e) => {
-                nicknameRef.current = e.target.value;
-                setStringItem("nickname", nicknameRef.current);
+                setNickname(e.target.value);
+                setStringItem("nickname", e.target.value);
               }}
             />
           </div>
@@ -77,7 +73,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             Your Status:{" "}
             <input
               onChange={(e) => {
-                messageRef.current = e.target.value;
+                setStatusMesg(e.target.value);
               }}
               placeholder="Enter status message"
             />
@@ -105,8 +101,8 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             className="SingleRoom-photo"
             alt="myself"
           />
-          <div className="SingleRoom-name">{nicknameRef.current}</div>
-          <div className="SingleRoom-mesg">{messageRef.current}</div>
+          <div className="SingleRoom-name">{nickname}</div>
+          <div className="SingleRoom-mesg">{statusMesg}</div>
         </div>
         {roomImages.map((item) => (
           <div
