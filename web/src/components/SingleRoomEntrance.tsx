@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 
+import "./SingleRoomEntrance.css";
 import { secureRandomId } from "../utils/crypto";
 import { getRoomIdFromUrl, extractRoomIdFromLink } from "../utils/url";
 import SingleRoom from "./SingleRoom";
-import "./SingleRoomEntrance.css";
 
 const roomIdFromUrl = getRoomIdFromUrl();
 const userId = secureRandomId();

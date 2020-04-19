@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
+import "./SingleRoom.css";
 import { setRoomIdToUrl } from "../utils/url";
 import { setStringItem, getStringItem } from "../utils/storage";
 import { useRoomNetworkStatus } from "../hooks/useRoom";
 import { useFaceImages } from "../hooks/useFaceImages";
 import { useVideoDevices } from "../hooks/useVideoDevices";
-import "./SingleRoom.css";
+import MomentaryChat from "./MomentaryChat";
 
 const BLANK_IMAGE =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQI12NgYAAAAAMAASDVlMcAAAAASUVORK5CYII=";
@@ -116,6 +117,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
           </div>
         ))}
       </div>
+      <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
     </>
   );
 };
