@@ -17,45 +17,13 @@ export type NetworkStatus =
   | { type: "CONNECTING_SEED_PEERS" }
   | { type: "NEW_CONNECTION"; peerId: number }
   | { type: "INITIALIZING_PEER"; index: number }
-  | { type: "NETWORK_ERROR" }
+  | { type: "REINITIALIZING" }
   | { type: "UNKNOWN_ERROR" }
   | { type: "CONNECTED_PEERS"; peerIds: number[] };
 
 type UpdateNetworkStatus = (status: NetworkStatus) => void;
 
 type ReceiveData = (peerId: number, data: unknown) => void;
-
-const createMyPeer = (
-  index: number,
-  roomId: string,
-  updateNetworkStatus: UpdateNetworkStatus
-): Promise<Peer> => {
-  updateNetworkStatus({ type: "INITIALIZING_PEER", index });
-  const isSeed = index < SEED_PEERS;
-  const peerId = isSeed ? index : rand4();
-  const id = generatePeerJsId(roomId, peerId);
-  console.log("createMyPeer", index, id);
-  const peer = new Peer(id);
-  return new Promise((resolve) => {
-    peer.on("open", () => {
-      resolve(peer);
-    });
-    peer.on("error", (err) => {
-      if (err.type === "unavailable-id") {
-        peer.destroy();
-        createMyPeer(index + 1, roomId, updateNetworkStatus).then(resolve);
-      } else if (err.type === "peer-unavailable") {
-        // ignore
-      } else if (err.type === "network") {
-        console.log("createMyPeer network error", err);
-        updateNetworkStatus({ type: "NETWORK_ERROR" });
-      } else {
-        console.error("createMyPeer", err.type, err);
-        updateNetworkStatus({ type: "UNKNOWN_ERROR" });
-      }
-    });
-  });
-};
 
 export const createRoom = (
   roomId: string,
@@ -136,10 +104,45 @@ export const createRoom = (
     });
   };
 
+  const createMyPeer = (index: number): Promise<Peer> => {
+    updateNetworkStatus({ type: "INITIALIZING_PEER", index });
+    const isSeed = index < SEED_PEERS;
+    const peerId = isSeed ? index : rand4();
+    const id = generatePeerJsId(roomId, peerId);
+    console.log("createMyPeer", index, id);
+    const peer = new Peer(id);
+    return new Promise((resolve) => {
+      peer.on("open", () => {
+        resolve(peer);
+      });
+      peer.on("error", async (err) => {
+        if (err.type === "unavailable-id") {
+          peer.destroy();
+          createMyPeer(index + 1).then(resolve);
+        } else if (err.type === "peer-unavailable") {
+          // ignore
+        } else if (err.type === "network") {
+          console.log("createMyPeer network error, reinit in 5sec", err);
+          updateNetworkStatus({ type: "REINITIALIZING" });
+          if (myPeer) {
+            const oldPeer = myPeer;
+            myPeer = null;
+            oldPeer.destroy();
+          }
+          await sleep(5000);
+          initMyPeer();
+        } else {
+          console.error("createMyPeer", err.type, err);
+          updateNetworkStatus({ type: "UNKNOWN_ERROR" });
+        }
+      });
+    });
+  };
+
   const initMyPeer = async () => {
     if (disposed) return;
     if (myPeer) return;
-    myPeer = await createMyPeer(0, roomId, updateNetworkStatus);
+    myPeer = await createMyPeer(0);
     if (process.env.NODE_ENV !== "production") {
       (window as any).myPeer = myPeer;
     }
