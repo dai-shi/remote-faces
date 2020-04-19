@@ -122,7 +122,7 @@ export const createRoom = (
         } else if (err.type === "peer-unavailable") {
           // ignore
         } else if (err.type === "network") {
-          console.log("createMyPeer network error, reinit in 5sec", err);
+          console.log("createMyPeer network error, reinit in 10sec", err);
           updateNetworkStatus({ type: "REINITIALIZING" });
           if (!myPeer) return;
           const oldPeer = myPeer;
@@ -154,6 +154,7 @@ export const createRoom = (
       connMap.markLive(conn);
     });
     myPeer.on("disconnected", () => {
+      console.log("initMyPeer disconnected, reinit in 60sec");
       if (!myPeer) return;
       const oldPeer = myPeer;
       myPeer = null;
@@ -161,7 +162,11 @@ export const createRoom = (
       setTimeout(initMyPeer, 60 * 1000);
     });
     myPeer.on("close", () => {
+      console.log("initMyPeer closed, reinit in 60sec");
+      if (!myPeer) return;
+      const oldPeer = myPeer;
       myPeer = null;
+      oldPeer.destroy();
       setTimeout(initMyPeer, 60 * 1000);
     });
     updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
