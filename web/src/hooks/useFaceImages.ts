@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 
-import { takePhoto } from "../capture/webcam";
+import { takePhoto } from "../media/capture";
 import { useRoomData, useBroadcastData } from "./useRoom";
 
 type ImageUrl = string;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { getVideoDeviceInfoList } from "../capture/webcam";
+import { getVideoDeviceInfoList } from "../media/capture";
 
 type DeviceInfoList = ReturnType<typeof getVideoDeviceInfoList> extends Promise<
   infer T
