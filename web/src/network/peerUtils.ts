@@ -50,6 +50,12 @@ export const createConnectionMap = () => {
       }
     });
   };
+  const clearAll = () => {
+    if (map.size) {
+      console.log("connectionMap garbage:", map);
+    }
+    map.clear();
+  };
   return {
     addConn,
     markLive,
@@ -58,5 +64,6 @@ export const createConnectionMap = () => {
     delConn,
     getLivePeerJsIds,
     forEachLiveConns,
+    clearAll,
   };
 };

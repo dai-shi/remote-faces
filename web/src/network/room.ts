@@ -115,7 +115,7 @@ export const createRoom = (
       peer.on("open", () => {
         resolve(peer);
       });
-      peer.on("error", async (err) => {
+      peer.on("error", (err) => {
         if (err.type === "unavailable-id") {
           peer.destroy();
           createMyPeer(index + 1).then(resolve);
@@ -124,13 +124,11 @@ export const createRoom = (
         } else if (err.type === "network") {
           console.log("createMyPeer network error, reinit in 5sec", err);
           updateNetworkStatus({ type: "REINITIALIZING" });
-          if (myPeer) {
-            const oldPeer = myPeer;
-            myPeer = null;
-            oldPeer.destroy();
-          }
-          await sleep(5000);
-          initMyPeer();
+          if (!myPeer) return;
+          const oldPeer = myPeer;
+          myPeer = null;
+          oldPeer.destroy();
+          setTimeout(initMyPeer, 10 * 1000);
         } else {
           console.error("createMyPeer", err.type, err);
           updateNetworkStatus({ type: "UNKNOWN_ERROR" });
@@ -142,6 +140,7 @@ export const createRoom = (
   const initMyPeer = async () => {
     if (disposed) return;
     if (myPeer) return;
+    connMap.clearAll();
     myPeer = await createMyPeer(0);
     if (process.env.NODE_ENV !== "production") {
       (window as any).myPeer = myPeer;
