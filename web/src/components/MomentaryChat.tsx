@@ -47,6 +47,16 @@ const MomentaryChat: React.FC<Props> = ({ roomId, userId, nickname }) => {
                 👍
               </span>
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                replyChat("❤️", item.replyTo);
+              }}
+            >
+              <span role="img" aria-label="Heart">
+                ❤️
+              </span>
+            </button>
           </li>
         ))}
       </ul>
