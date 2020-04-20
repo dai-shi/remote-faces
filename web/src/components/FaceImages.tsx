@@ -30,7 +30,7 @@ const FaceImages: React.FC<Props> = ({
   );
 
   return (
-    <div>
+    <div className="FaceImage-container">
       <div className="FaceImages-card">
         <img
           src={myImage || BLANK_IMAGE}

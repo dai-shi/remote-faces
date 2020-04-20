@@ -1,3 +1,8 @@
+.FaceImage-container {
+  float: left;
+  margin-right: 10px;
+}
+
 .FaceImages-card {
   margin: 0 2px 2px 0;
   position: relative;

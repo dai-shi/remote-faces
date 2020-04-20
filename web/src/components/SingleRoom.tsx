@@ -36,52 +36,57 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   return (
     <>
       <div className="SingleRoom-status">{JSON.stringify(networkStatus)}</div>
-      {configOpen ? (
-        <div className="SingleRoom-room-info">
-          <button type="button" onClick={() => setConfigOpen(false)}>
-            Hide config
+      <div className="SingleRoom-room-info">
+        {configOpen ? (
+          <>
+            <button type="button" onClick={() => setConfigOpen(false)}>
+              Hide config
+            </button>
+            <div>
+              Link to this room:
+              <input value={window.location.href} readOnly />
+              (Share this link with your colleagues)
+              <a href={appLink}>Open App</a>
+            </div>
+            <div className="SingleRoom-nickname">
+              Your Name:{" "}
+              <input
+                defaultValue={initialNickname}
+                onChange={(e) => {
+                  setNickname(e.target.value);
+                  setStringItem("nickname", e.target.value);
+                }}
+              />
+            </div>
+            <div className="SingleRoom-statusmesg">
+              Your Status:{" "}
+              <input
+                onChange={(e) => {
+                  setStatusMesg(e.target.value);
+                }}
+                placeholder="Enter status message"
+              />
+            </div>
+            <div>
+              Select Camera:{" "}
+              <select onChange={(e) => setDeviceId(e.target.value)}>
+                {videoDevices.map((videoDevice) => (
+                  <option
+                    key={videoDevice.deviceId}
+                    value={videoDevice.deviceId}
+                  >
+                    {videoDevice.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        ) : (
+          <button type="button" onClick={() => setConfigOpen(true)}>
+            Show config
           </button>
-          <div>
-            Link to this room:
-            <input value={window.location.href} readOnly />
-            (Share this link with your colleagues)
-            <a href={appLink}>Open App</a>
-          </div>
-          <div className="SingleRoom-nickname">
-            Your Name:{" "}
-            <input
-              defaultValue={initialNickname}
-              onChange={(e) => {
-                setNickname(e.target.value);
-                setStringItem("nickname", e.target.value);
-              }}
-            />
-          </div>
-          <div className="SingleRoom-statusmesg">
-            Your Status:{" "}
-            <input
-              onChange={(e) => {
-                setStatusMesg(e.target.value);
-              }}
-              placeholder="Enter status message"
-            />
-          </div>
-          <div>
-            Select Camera:{" "}
-            <select onChange={(e) => setDeviceId(e.target.value)}>
-              {videoDevices.map((videoDevice) => (
-                <option key={videoDevice.deviceId} value={videoDevice.deviceId}>
-                  {videoDevice.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      ) : (
-        <button type="button" onClick={() => setConfigOpen(true)}>
-          Show config
-        </button>
-      )}
+        )}
+      </div>
       <FaceImages
         roomId={roomId}
         userId={userId}

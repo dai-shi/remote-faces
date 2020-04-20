@@ -6,6 +6,10 @@
   padding-left: 2px;
 }
 
+.SingleRoom-room-info {
+  overflow: hidden;
+}
+
 .SingleRoom-nickname {
   -webkit-app-region: no-drag
 }
