@@ -161,6 +161,7 @@ export const createRoom = (
       }
     });
     peer.on("connection", (conn) => {
+      if (myPeer !== peer) return;
       console.log("new connection received", conn);
       updateNetworkStatus({
         type: "NEW_CONNECTION",
