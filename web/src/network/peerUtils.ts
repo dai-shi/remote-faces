@@ -18,21 +18,21 @@ export const getPeerIdFromConn = (conn: Peer.DataConnection) =>
 export const createConnectionMap = () => {
   type Value = {
     conn: Peer.DataConnection;
-    live: boolean;
+    connected: boolean;
   };
   const map = new Map<string, Value>();
   const addConn = (conn: Peer.DataConnection) => {
-    map.set(conn.peer, { conn, live: false });
+    map.set(conn.peer, { conn, connected: false });
   };
-  const markLive = (conn: Peer.DataConnection) => {
+  const markConnected = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
     if (value) {
-      value.live = true;
+      value.connected = true;
     }
   };
-  const isLive = (peerJsId: string) => {
+  const isConnected = (peerJsId: string) => {
     const value = map.get(peerJsId);
-    return value ? value.live : false;
+    return value ? value.connected : false;
   };
   const hasConn = (peerJsId: string) => map.has(peerJsId);
   const delConn = (conn: Peer.DataConnection) => {
@@ -41,11 +41,13 @@ export const createConnectionMap = () => {
       map.delete(conn.peer);
     }
   };
-  const getLivePeerJsIds = () =>
-    Array.from(map.keys()).filter((k) => map.get(k)?.live);
-  const forEachLiveConns = (callback: (conn: Peer.DataConnection) => void) => {
+  const getConnectedPeerJsIds = () =>
+    Array.from(map.keys()).filter((k) => map.get(k)?.connected);
+  const forEachConnectedConns = (
+    callback: (conn: Peer.DataConnection) => void
+  ) => {
     Array.from(map.values()).forEach((value) => {
-      if (value.live) {
+      if (value.connected) {
         callback(value.conn);
       }
     });
@@ -58,12 +60,12 @@ export const createConnectionMap = () => {
   };
   return {
     addConn,
-    markLive,
-    isLive,
+    markConnected,
+    isConnected,
     hasConn,
     delConn,
-    getLivePeerJsIds,
-    forEachLiveConns,
+    getConnectedPeerJsIds,
+    forEachConnectedConns,
     clearAll,
   };
 };
