@@ -61,7 +61,11 @@ const MomentaryChat: React.FC<Props> = ({ roomId, userId, nickname }) => {
   return (
     <div className="MomentaryChat-container">
       <form onSubmit={onSubmit}>
-        <input value={text} onChange={(e) => setText(e.target.value)} />
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Enter chat message"
+        />
         <button type="submit" disabled={!text}>
           Send
         </button>
