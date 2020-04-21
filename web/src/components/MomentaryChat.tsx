@@ -25,11 +25,20 @@ const MomentaryChatContent = React.memo<{
     {chatList.map((item) => {
       const reply = (text: string) => replyChat(text, item.replyTo);
       return (
-        <li key={item.key}>
-          {item.nickname} - {item.text} {JSON.stringify(item.replies)}
-          {reactions.map((text) => (
-            <ReactionButton key={text} text={text} onClick={reply} />
-          ))}
+        <li key={item.key} className="MomentaryChat-listPart">
+          <div className="MomentaryChat-nickname">
+            {item.nickname || "No Name"}
+          </div>
+          <div className="MomentaryChat-iconButton-container">
+            <div className="MomentaryChat-iconButton">
+              {reactions.map((text) => (
+                <ReactionButton key={text} text={text} onClick={reply} />
+              ))}
+            </div>
+          </div>
+          <div>
+            {item.text} {JSON.stringify(item.replies)}
+          </div>
         </li>
       );
     })}
