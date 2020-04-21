@@ -22,7 +22,11 @@ export type NetworkStatus =
 
 type UpdateNetworkStatus = (status: NetworkStatus) => void;
 
-type ReceiveData = (peerId: number, data: unknown) => void;
+type ReceiveData = (
+  data: unknown,
+  info: { peerId: number; liveMode: boolean }
+) => void;
+type ReceiveStream = (stream: MediaStream, info: { peerId: number }) => void;
 
 export const createRoom = (
   roomId: string,
@@ -33,6 +37,9 @@ export const createRoom = (
   let myPeer: Peer | null = null;
   let lastBroadcastData: unknown | null = null;
   const connMap = createConnectionMap();
+  let liveMode = false;
+  let myStream: MediaStream | null = null;
+  let receiveStream: ReceiveStream | null = null;
 
   const showConnectedStatus = () => {
     if (disposed) return;
@@ -55,9 +62,10 @@ export const createRoom = (
       lastBroadcastData = data;
     }
     const peers = connMap.getConnectedPeerJsIds();
+    const livePeers = connMap.getLivePeerJsIds();
     connMap.forEachConnectedConns((conn) => {
       try {
-        conn.send({ data, peers });
+        conn.send({ data, peers, liveMode, livePeers });
       } catch (e) {
         console.error("broadcastData", e);
       }
@@ -67,9 +75,12 @@ export const createRoom = (
   const handlePayload = (conn: Peer.DataConnection, payload: unknown) => {
     if (disposed) return;
     try {
-      const peerId = getPeerIdFromConn(conn);
       if (payload && typeof payload === "object") {
-        receiveData(peerId, (payload as { data: unknown }).data);
+        const info = {
+          peerId: getPeerIdFromConn(conn),
+          liveMode: !!(payload as { liveMode?: unknown }).liveMode,
+        };
+        receiveData((payload as { data: unknown }).data, info);
         if (Array.isArray((payload as { peers: unknown }).peers)) {
           (payload as { peers: unknown[] }).peers.forEach((peer) => {
             if (isValidPeerJsId(roomId, peer)) {
@@ -169,6 +180,14 @@ export const createRoom = (
       });
       initConnection(conn);
     });
+    peer.on("call", (media) => {
+      if (myPeer !== peer) return;
+      if (!myStream) return;
+      console.log("new media received", media);
+      if (initMedia(media)) {
+        media.answer(myStream);
+      }
+    });
     peer.on("disconnected", () => {
       console.log("initMyPeer disconnected", index);
       setTimeout(() => {
@@ -211,6 +230,63 @@ export const createRoom = (
     initMyPeer();
   };
 
+  const callPeer = (conn: Peer.DataConnection) => {
+    if (disposed) return;
+    if (!myPeer || myPeer.id === conn.peer) return;
+    if (!myStream) return;
+    if (connMap.hasMedia(conn.peer)) return;
+    console.log("callPeer", conn.peer);
+    const media = myPeer.call(conn.peer, myStream);
+    initMedia(media);
+  };
+
+  const initMedia = (media: Peer.MediaConnection) => {
+    if (connMap.hasMedia(media.peer)) {
+      media.close();
+      return false;
+    }
+    connMap.setMedia(media);
+    media.on("stream", (stream: MediaStream) => {
+      const info = {
+        peerId: getPeerIdFromPeerJsId(media.peer),
+      };
+      if (receiveStream) receiveStream(stream, info);
+    });
+    media.on("close", () => {
+      connMap.delMedia(media);
+      console.log("mediaConnection closed", media);
+    });
+    return true;
+  };
+
+  const enableLiveMode = (stream: MediaStream, recvStream: ReceiveStream) => {
+    if (liveMode) {
+      console.warn("liveMode already enabled");
+      return;
+    }
+    liveMode = true;
+    myStream = stream;
+    receiveStream = recvStream;
+    broadcastData(null);
+    connMap.forEachLiveConns((conn) => {
+      callPeer(conn);
+    });
+  };
+
+  const disableLiveMode = () => {
+    if (!liveMode) {
+      console.warn("liveMode already disabled");
+      return;
+    }
+    liveMode = false;
+    myStream = null;
+    receiveStream = null;
+    broadcastData(null);
+    connMap.forEachLiveConns((_conn, media) => {
+      if (media) media.close();
+    });
+  };
+
   const dispose = () => {
     disposed = true;
     if (myPeer) {
@@ -220,6 +296,8 @@ export const createRoom = (
 
   return {
     broadcastData,
+    enableLiveMode,
+    disableLiveMode,
     dispose,
   };
 };

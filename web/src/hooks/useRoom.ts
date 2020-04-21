@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { createRoom, NetworkStatus } from "../network/room";
 
 type NetworkStatusListener = (status: NetworkStatus) => void;
-type DataListener = (peerId: number, data: unknown) => void;
+type DataListener = (data: unknown) => void;
 type RoomEntry = {
   room: ReturnType<typeof createRoom>;
   networkStatusListeners: Set<NetworkStatusListener>;
@@ -25,9 +25,9 @@ const register = (
         listener(status);
       });
     };
-    const receiveData = (peerId: number, data: unknown) => {
+    const receiveData = (data: unknown) => {
       dataListeners.forEach((listener) => {
-        listener(peerId, data);
+        listener(data);
       });
     };
     const room = createRoom(roomId, updateNetworkStatus, receiveData);
@@ -99,7 +99,7 @@ export const useRoomData = <Data>(
 ) => {
   const [data, setData] = useState<Data>();
   useEffect(() => {
-    const dataListener = (_peerId: number, unknownData: unknown) => {
+    const dataListener = (unknownData: unknown) => {
       if (isValidData(unknownData)) {
         setData(unknownData as Data);
       }
