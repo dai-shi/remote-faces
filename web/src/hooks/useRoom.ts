@@ -3,11 +3,12 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { createRoom, NetworkStatus } from "../network/room";
 
 type NetworkStatusListener = (status: NetworkStatus) => void;
-type DataListener = (data: unknown) => void;
+type DataListener = (data: unknown) => boolean;
 type RoomEntry = {
   room: ReturnType<typeof createRoom>;
   networkStatusListeners: Set<NetworkStatusListener>;
   dataListeners: Set<DataListener>;
+  mediaAttachedData: Map<number, unknown>;
   count: number;
 };
 const roomEntryMap = new Map<string, RoomEntry>();
@@ -20,18 +21,31 @@ const register = (
   if (!entry) {
     const networkStatusListeners = new Set<NetworkStatusListener>();
     const dataListeners = new Set<DataListener>();
+    const mediaAttachedData = new Map<number, unknown>();
     const updateNetworkStatus = (status: NetworkStatus) => {
+      if (status.type === "CONNECTION_CLOSED") {
+        mediaAttachedData.delete(status.peerId);
+      }
       networkStatusListeners.forEach((listener) => {
         listener(status);
       });
     };
-    const receiveData = (data: unknown) => {
+    const receiveData = (data: unknown, info: { peerId: number }) => {
       dataListeners.forEach((listener) => {
-        listener(data);
+        const attatchToMedia = listener(data);
+        if (attatchToMedia) {
+          mediaAttachedData.set(info.peerId, data);
+        }
       });
     };
     const room = createRoom(roomId, updateNetworkStatus, receiveData);
-    entry = { room, networkStatusListeners, dataListeners, count: 0 };
+    entry = {
+      room,
+      networkStatusListeners,
+      dataListeners,
+      mediaAttachedData,
+      count: 0,
+    };
     roomEntryMap.set(roomId, entry);
   }
   if (networkStatusListener) {
@@ -95,17 +109,44 @@ export const useBroadcastData = (roomId: string) => {
 
 export const useRoomData = <Data>(
   roomId: string,
-  isValidData: (data: unknown) => boolean
+  isValidData: (data: unknown) => boolean,
+  attatchToMedia?: boolean
 ) => {
   const [data, setData] = useState<Data>();
   useEffect(() => {
     const dataListener = (unknownData: unknown) => {
       if (isValidData(unknownData)) {
         setData(unknownData as Data);
+        return !!attatchToMedia;
       }
+      return false;
     };
     const { unregister } = register(roomId, undefined, dataListener);
     return unregister;
-  }, [roomId, isValidData]);
+  }, [roomId, isValidData, attatchToMedia]);
   return data;
+};
+
+export const useRoomMedia = (roomId: string, myStream?: MediaStream) => {
+  const [streamList, setStreamList] = useState<
+    { stream: MediaStream; attachedData: unknown }[]
+  >([]);
+  useEffect(() => {
+    const entry = roomEntryMap.get(roomId);
+    if (!entry) {
+      throw new Error("useRoomMedia can only be used after useRoomData");
+    }
+    if (myStream) {
+      entry.room.enableLiveMode(myStream, (stream, info) => {
+        const attachedData = entry.mediaAttachedData.get(info.peerId);
+        setStreamList((prev) => [...prev, { stream, attachedData }]);
+      });
+    } else {
+      entry.room.disableLiveMode();
+    }
+    return () => {
+      entry.room.disableLiveMode();
+    };
+  }, [roomId, myStream]);
+  return streamList;
 };

@@ -15,6 +15,7 @@ const guessSeed = (id: string) => getPeerIdFromPeerJsId(id) < SEED_PEERS;
 export type NetworkStatus =
   | { type: "CONNECTING_SEED_PEERS" }
   | { type: "NEW_CONNECTION"; peerId: number }
+  | { type: "CONNECTION_CLOSED"; peerId: number }
   | { type: "INITIALIZING_PEER"; index: number }
   | { type: "RECONNECTING" }
   | { type: "UNKNOWN_ERROR" }
@@ -88,6 +89,16 @@ export const createRoom = (
             }
           });
         }
+        if (
+          liveMode &&
+          Array.isArray((payload as { livePeers: unknown }).livePeers)
+        ) {
+          (payload as { livePeers: unknown[] }).livePeers.forEach((peer) => {
+            if (isValidPeerJsId(roomId, peer)) {
+              callPeer(peer);
+            }
+          });
+        }
       }
     } catch (e) {
       console.error("handlePayload", e);
@@ -114,6 +125,10 @@ export const createRoom = (
     conn.on("close", () => {
       connMap.delConn(conn);
       console.log("dataConnection closed", conn);
+      updateNetworkStatus({
+        type: "CONNECTION_CLOSED",
+        peerId: getPeerIdFromConn(conn),
+      });
       showConnectedStatus();
       if (connMap.getConnectedPeerJsIds().length === 0) {
         reInitMyPeer(true);
@@ -230,13 +245,14 @@ export const createRoom = (
     initMyPeer();
   };
 
-  const callPeer = (conn: Peer.DataConnection) => {
+  const callPeer = (id: string) => {
     if (disposed) return;
-    if (!myPeer || myPeer.id === conn.peer) return;
+    if (!myPeer || myPeer.id === id) return;
     if (!myStream) return;
-    if (connMap.hasMedia(conn.peer)) return;
-    console.log("callPeer", conn.peer);
-    const media = myPeer.call(conn.peer, myStream);
+    if (!connMap.isConnected(id)) return;
+    if (connMap.hasMedia(id)) return;
+    console.log("callPeer", id);
+    const media = myPeer.call(id, myStream);
     initMedia(media);
   };
 
@@ -269,7 +285,7 @@ export const createRoom = (
     receiveStream = recvStream;
     broadcastData(null);
     connMap.forEachLiveConns((conn) => {
-      callPeer(conn);
+      callPeer(conn.peer);
     });
   };
 
