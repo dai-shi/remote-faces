@@ -26,3 +26,7 @@
 .MomentaryChat-listPart:hover .MomentaryChat-iconButton {
   opacity: 1;
 }
+
+.MomentaryChat-listPart-header {
+  margin-bottom: 5px;
+}
