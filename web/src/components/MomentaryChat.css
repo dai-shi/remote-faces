@@ -1,0 +1,32 @@
+.MomentaryChat-container {
+  overflow: hidden;
+}
+
+.MomentaryChat-list {
+  list-style: none;
+  padding-inline-start: 0;
+}
+
+.MomentaryChat-listPart:hover {
+  background-color: #eee;
+}
+
+.MomentaryChat-nickname {
+  font-weight: bold;
+}
+
+.MomentaryChat-iconButton-container {
+  float: right;
+}
+
+.MomentaryChat-iconButton {
+  opacity: 0;
+}
+
+.MomentaryChat-listPart:hover .MomentaryChat-iconButton {
+  opacity: 1;
+}
+
+.MomentaryChat-listPart-header {
+  margin-bottom: 5px;
+}

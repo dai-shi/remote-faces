@@ -1,14 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 
+import "./SingleRoom.css";
 import { setRoomIdToUrl } from "../utils/url";
 import { setStringItem, getStringItem } from "../utils/storage";
 import { useRoomNetworkStatus } from "../hooks/useRoom";
-import { useFaceImages } from "../hooks/useFaceImages";
 import { useVideoDevices } from "../hooks/useVideoDevices";
-import "./SingleRoom.css";
-
-const BLANK_IMAGE =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQI12NgYAAAAAMAASDVlMcAAAAASUVORK5CYII=";
+import FaceImages from "./FaceImages";
+import MomentaryChat from "./MomentaryChat";
 
 type Props = {
   roomId: string;
@@ -18,8 +16,8 @@ type Props = {
 const initialNickname = getStringItem("nickname");
 
 const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
-  const nicknameRef = useRef(initialNickname);
-  const messageRef = useRef("");
+  const [nickname, setNickname] = useState(initialNickname);
+  const [statusMesg, setStatusMesg] = useState("");
   useEffect(() => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
@@ -27,20 +25,6 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const [deviceId, setDeviceId] = useState<string>();
   const [configOpen, setConfigOpen] = useState<boolean>(true);
   const videoDevices = useVideoDevices();
-
-  const getFaceInfo = useCallback(
-    () => ({
-      nickname: nicknameRef.current,
-      message: messageRef.current,
-    }),
-    []
-  );
-  const { myImage, roomImages } = useFaceImages(
-    roomId,
-    userId,
-    getFaceInfo,
-    deviceId
-  );
 
   const networkStatus = useRoomNetworkStatus(roomId);
 
@@ -52,76 +36,65 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   return (
     <>
       <div className="SingleRoom-status">{JSON.stringify(networkStatus)}</div>
-      {configOpen ? (
-        <div className="SingleRoom-room-info">
-          <button type="button" onClick={() => setConfigOpen(false)}>
-            Hide config
-          </button>
-          <div>
-            Link to this room:
-            <input value={window.location.href} readOnly />
-            (Share this link with your colleagues)
-            <a href={appLink}>Open App</a>
-          </div>
-          <div className="SingleRoom-nickname">
-            Your Name:{" "}
-            <input
-              defaultValue={initialNickname}
-              onChange={(e) => {
-                nicknameRef.current = e.target.value;
-                setStringItem("nickname", nicknameRef.current);
-              }}
-            />
-          </div>
-          <div className="SingleRoom-statusmesg">
-            Your Status:{" "}
-            <input
-              onChange={(e) => {
-                messageRef.current = e.target.value;
-              }}
-              placeholder="Enter status message"
-            />
-          </div>
-          <div>
-            Select Camera:{" "}
-            <select onChange={(e) => setDeviceId(e.target.value)}>
-              {videoDevices.map((videoDevice) => (
-                <option key={videoDevice.deviceId} value={videoDevice.deviceId}>
-                  {videoDevice.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      ) : (
-        <button type="button" onClick={() => setConfigOpen(true)}>
-          Show config
-        </button>
-      )}
-      <div>
-        <div className="SingleRoom-card">
-          <img
-            src={myImage || BLANK_IMAGE}
-            className="SingleRoom-photo"
-            alt="myself"
-          />
-          <div className="SingleRoom-name">{nicknameRef.current}</div>
-          <div className="SingleRoom-mesg">{messageRef.current}</div>
-        </div>
-        {roomImages.map((item) =>
-          item.tooOld ? null : (
-            <div
-              key={item.userId}
-              className="SingleRoom-card"
-              style={{ opacity: item.obsoleted ? 0.2 : 1 }}
-            >
-              <img src={item.image} className="SingleRoom-photo" alt="friend" />
-              <div className="SingleRoom-name">{item.info.nickname}</div>
-              <div className="SingleRoom-mesg">{item.info.message}</div>
+      <div className="SingleRoom-room-info">
+        {configOpen ? (
+          <>
+            <button type="button" onClick={() => setConfigOpen(false)}>
+              Hide config
+            </button>
+            <div>
+              Link to this room:
+              <input value={window.location.href} readOnly />
+              (Share this link with your colleagues)
+              <a href={appLink}>Open App</a>
             </div>
-          )
+            <div className="SingleRoom-nickname">
+              Your Name:{" "}
+              <input
+                defaultValue={initialNickname}
+                onChange={(e) => {
+                  setNickname(e.target.value);
+                  setStringItem("nickname", e.target.value);
+                }}
+              />
+            </div>
+            <div className="SingleRoom-statusmesg">
+              Your Status:{" "}
+              <input
+                onChange={(e) => {
+                  setStatusMesg(e.target.value);
+                }}
+                placeholder="Enter status message"
+              />
+            </div>
+            <div>
+              Select Camera:{" "}
+              <select onChange={(e) => setDeviceId(e.target.value)}>
+                {videoDevices.map((videoDevice) => (
+                  <option
+                    key={videoDevice.deviceId}
+                    value={videoDevice.deviceId}
+                  >
+                    {videoDevice.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        ) : (
+          <button type="button" onClick={() => setConfigOpen(true)}>
+            Show config
+          </button>
         )}
       </div>
+      <FaceImages
+        roomId={roomId}
+        userId={userId}
+        deviceId={deviceId}
+        nickname={nickname}
+        statusMesg={statusMesg}
+      />
+      <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
     </>
   );
 };
