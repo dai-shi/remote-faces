@@ -90,7 +90,7 @@ export const useFaceImages = (
             }
             return item;
           })
-          .filter((item) => item);
+          .filter((item) => item) as typeof prev;
 
         return changed ? next : prev;
       });
