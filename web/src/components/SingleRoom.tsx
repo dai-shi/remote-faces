@@ -22,6 +22,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
 
+  const [liveMode, setLiveMode] = useState(false);
   const [deviceId, setDeviceId] = useState<string>();
   const [configOpen, setConfigOpen] = useState<boolean>(true);
   const videoDevices = useVideoDevices();
@@ -79,6 +80,16 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label>
+                Live Mode:{" "}
+                <input
+                  type="checkbox"
+                  checked={liveMode}
+                  onChange={(e) => setLiveMode(e.target.checked)}
+                />
+              </label>
             </div>
           </>
         ) : (

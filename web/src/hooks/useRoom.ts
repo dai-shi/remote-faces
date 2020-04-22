@@ -74,7 +74,7 @@ const register = (
           close &&
           !(entry as RoomEntry).mediaAttachedData.has(peerId)
         ) {
-          // stream received too early, closing media
+          console.warn("stream received too early, closing media:", peerId);
           close();
           return;
         }
