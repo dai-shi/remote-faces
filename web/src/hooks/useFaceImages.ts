@@ -86,11 +86,11 @@ export const useFaceImages = (
             }
             if (item.received < tenMinAgo && item.obsoleted) {
               changed = true;
-              return { ...item, userId: "tooOld" };
+              return null;
             }
             return item;
           })
-          .filter((item) => item.userId !== "tooOld");
+          .filter((item) => item);
 
         return changed ? next : prev;
       });
