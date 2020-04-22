@@ -39,9 +39,9 @@ const MomentaryChatContent = React.memo<{
             </div>
           </div>
           <div>{item.text}</div>
-          {item.replies.map((itemPart) => (
+          {item.replies.map(([name, count]) => (
             <div className="Momentary-icon">
-              {itemPart[0]} {itemPart[1]}
+              {name} {count}
             </div>
           ))}
         </li>
