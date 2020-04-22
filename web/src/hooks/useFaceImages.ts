@@ -75,15 +75,23 @@ export const useFaceImages = (
   useEffect(() => {
     const checkObsoletedImage = () => {
       const twoMinAgo = Date.now() - 2 * 60 * 1000;
+      const tenMinAgo = Date.now() - 10 * 60 * 1000;
       setRoomImages((prev) => {
         let changed = false;
-        const next = prev.map((item) => {
-          if (item.received < twoMinAgo && !item.obsoleted) {
-            changed = true;
-            return { ...item, obsoleted: true };
-          }
-          return item;
-        });
+        const next = prev
+          .map((item) => {
+            if (item.received < twoMinAgo && !item.obsoleted) {
+              changed = true;
+              return { ...item, obsoleted: true };
+            }
+            if (item.received < tenMinAgo && item.obsoleted) {
+              changed = true;
+              return null;
+            }
+            return item;
+          })
+          .filter((item) => item) as typeof prev;
+
         return changed ? next : prev;
       });
     };
