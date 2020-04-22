@@ -30,7 +30,7 @@ export const getVideoStream = async (deviceId?: string) => {
   const timer = setInterval(() => {
     ctx.drawImage(video, x, y, width, height, 0, 0, dstW, dstH);
   }, 1000 / 30);
-  const canvasStream = (canvas as any).captureStream();
+  const canvasStream = (canvas as any).captureStream() as MediaStream;
   const dispose = () => {
     video.style.display = "none";
     clearInterval(timer);

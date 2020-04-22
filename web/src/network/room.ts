@@ -27,7 +27,10 @@ type ReceiveData = (
   data: unknown,
   info: { peerId: number; liveMode: boolean }
 ) => void;
-type ReceiveStream = (stream: MediaStream, info: { peerId: number }) => void;
+type ReceiveStream = (
+  stream: MediaStream | null, // null for removing stream
+  info: { peerId: number }
+) => void;
 
 export const createRoom = (
   roomId: string,
@@ -263,14 +266,19 @@ export const createRoom = (
     }
     connMap.setMedia(media);
     media.on("stream", (stream: MediaStream) => {
+      console.log("mediaConnection received stream", media);
       const info = {
         peerId: getPeerIdFromPeerJsId(media.peer),
       };
       if (receiveStream) receiveStream(stream, info);
     });
     media.on("close", () => {
-      connMap.delMedia(media);
       console.log("mediaConnection closed", media);
+      const info = {
+        peerId: getPeerIdFromPeerJsId(media.peer),
+      };
+      if (receiveStream) receiveStream(null, info);
+      connMap.delMedia(media);
     });
     return true;
   };
