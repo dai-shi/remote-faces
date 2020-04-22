@@ -6,7 +6,7 @@ import { useMomentaryChat } from "../hooks/useMomentaryChat";
 type ChatList = ReturnType<typeof useMomentaryChat>["chatList"];
 type ReplyChat = ReturnType<typeof useMomentaryChat>["replyChat"];
 
-const reactions = ["👍", "❤️", "😁", "😎", "🤣", "Send a PR!"];
+const reactions = ["👍", "❤️", "😁", "😎", "🤣"];
 
 const ReactionButton: React.FC<{
   text: string;
@@ -38,9 +38,12 @@ const MomentaryChatContent = React.memo<{
               {item.nickname || "No Name"}
             </div>
           </div>
-          <div>
-            {item.text} {JSON.stringify(item.replies)}
-          </div>
+          <div>{item.text}</div>
+          {item.replies.map((itemPart) => (
+            <div className="Momentary-icon">
+              {itemPart[0]} {itemPart[1]}
+            </div>
+          ))}
         </li>
       );
     })}
