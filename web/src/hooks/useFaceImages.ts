@@ -49,7 +49,7 @@ export const useFaceImages = (
   }
 
   const broadcastData = useBroadcastData(roomId);
-  const imageData = useRoomData<ImageData>(roomId, isImageData);
+  const imageData = useRoomData<ImageData>(roomId, isImageData, true);
   const roomImage = useMemo(
     () =>
       imageData && {

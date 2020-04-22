@@ -41,8 +41,8 @@ const register = (
     };
     const receiveData = (data: unknown, info: { peerId: number }) => {
       dataListeners.forEach((listener) => {
-        const attatchToMedia = listener(data);
-        if (attatchToMedia) {
+        const attachToMedia = listener(data);
+        if (attachToMedia) {
           mediaAttachedData.set(info.peerId, data);
         }
       });
@@ -68,7 +68,16 @@ const register = (
     entry.streamListeners.add(streamListener);
     if (entry.streamListeners.size === 1) {
       entry.myStream = new MediaStream();
-      entry.room.enableLiveMode(entry.myStream, (stream, { peerId }) => {
+      entry.room.enableLiveMode(entry.myStream, (stream, { peerId }, close) => {
+        if (
+          stream &&
+          close &&
+          !(entry as RoomEntry).mediaAttachedData.has(peerId)
+        ) {
+          // stream received too early, closing media
+          close();
+          return;
+        }
         const attachedData = (entry as RoomEntry).mediaAttachedData.get(peerId);
         (entry as RoomEntry).streamListeners.forEach((listener) => {
           listener(peerId, stream, attachedData);
@@ -140,20 +149,20 @@ export const useBroadcastData = (roomId: string) => {
 export const useRoomData = <Data>(
   roomId: string,
   isValidData: (data: unknown) => boolean,
-  attatchToMedia?: boolean
+  attachToMedia?: boolean
 ) => {
   const [data, setData] = useState<Data>();
   useEffect(() => {
     const dataListener = (unknownData: unknown) => {
       if (isValidData(unknownData)) {
         setData(unknownData as Data);
-        return !!attatchToMedia;
+        return !!attachToMedia;
       }
       return false;
     };
     const { unregister } = register(roomId, undefined, dataListener);
     return unregister;
-  }, [roomId, isValidData, attatchToMedia]);
+  }, [roomId, isValidData, attachToMedia]);
   return data;
 };
 

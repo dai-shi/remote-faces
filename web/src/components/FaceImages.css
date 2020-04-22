@@ -33,3 +33,20 @@
   line-height: 8px;
   font-family: sans-serif;
 }
+
+.FaceImages-live-indicator {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  color: red;
+  font-size: 8px;
+  line-height: 8px;
+  font-family: sans-serif;
+  animation: FaceImagesBlink 1.5s infinite;
+}
+
+@keyframes FaceImagesBlink {
+   0% { opacity: 0 }
+  50% { opacity: 1 }
+ 100% { opacity: 0 }
+}

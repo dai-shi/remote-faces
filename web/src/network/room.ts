@@ -29,7 +29,8 @@ type ReceiveData = (
 ) => void;
 type ReceiveStream = (
   stream: MediaStream | null, // null for removing stream
-  info: { peerId: number }
+  info: { peerId: number },
+  close?: () => void
 ) => void;
 
 export const createRoom = (
@@ -92,15 +93,17 @@ export const createRoom = (
             }
           });
         }
-        if (
-          liveMode &&
-          Array.isArray((payload as { livePeers: unknown }).livePeers)
-        ) {
-          (payload as { livePeers: unknown[] }).livePeers.forEach((peer) => {
-            if (isValidPeerJsId(roomId, peer)) {
-              callPeer(peer);
-            }
-          });
+        if (liveMode) {
+          if (info.liveMode && isValidPeerJsId(roomId, conn.peer)) {
+            callPeer(conn.peer);
+          }
+          if (Array.isArray((payload as { livePeers: unknown }).livePeers)) {
+            (payload as { livePeers: unknown[] }).livePeers.forEach((peer) => {
+              if (isValidPeerJsId(roomId, peer)) {
+                callPeer(peer);
+              }
+            });
+          }
         }
       }
     } catch (e) {
@@ -121,6 +124,8 @@ export const createRoom = (
         conn.send({
           data: lastBroadcastData,
           peers: connMap.getConnectedPeerJsIds(),
+          liveMode,
+          livePeers: connMap.getLivePeerJsIds(),
         });
       }
     });
@@ -190,7 +195,10 @@ export const createRoom = (
       }
     });
     peer.on("connection", (conn) => {
-      if (myPeer !== peer) return;
+      if (myPeer !== peer) {
+        conn.close();
+        return;
+      }
       console.log("new connection received", conn);
       updateNetworkStatus({
         type: "NEW_CONNECTION",
@@ -199,8 +207,10 @@ export const createRoom = (
       initConnection(conn);
     });
     peer.on("call", (media) => {
-      if (myPeer !== peer) return;
-      if (!myStream) return;
+      if (myPeer !== peer || !myStream) {
+        media.close();
+        return;
+      }
       console.log("new media received", media);
       if (initMedia(media)) {
         media.answer(myStream);
@@ -260,17 +270,19 @@ export const createRoom = (
   };
 
   const initMedia = (media: Peer.MediaConnection) => {
-    if (connMap.hasMedia(media.peer)) {
+    if (connMap.isMediaStreamReady(media)) {
       media.close();
       return false;
     }
     connMap.setMedia(media);
     media.on("stream", (stream: MediaStream) => {
       console.log("mediaConnection received stream", media);
+      connMap.markMediaStreamReady(media);
       const info = {
         peerId: getPeerIdFromPeerJsId(media.peer),
       };
-      if (receiveStream) receiveStream(stream, info);
+      const close = () => media.close();
+      if (receiveStream) receiveStream(stream, info, close);
     });
     media.on("close", () => {
       console.log("mediaConnection closed", media);
