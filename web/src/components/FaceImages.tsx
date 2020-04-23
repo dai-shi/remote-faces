@@ -23,10 +23,7 @@ const FaceImage = React.memo<{
   return (
     <div className="FaceImages-card" style={{ opacity: obsoleted ? 0.2 : 1 }}>
       {stream ? (
-        <>
-          <video className="FaceImages-photo" ref={videoRef} autoPlay muted />
-          <div className="FaceImages-live-indicator">&#9673;</div>
-        </>
+        <video className="FaceImages-photo" ref={videoRef} autoPlay muted />
       ) : (
         <img
           src={image || BLANK_IMAGE}
@@ -36,6 +33,7 @@ const FaceImage = React.memo<{
       )}
       <div className="FaceImages-name">{nickname}</div>
       <div className="FaceImages-mesg">{statusMesg}</div>
+      {!!stream && <div className="FaceImages-live-indicator">&#9673;</div>}
     </div>
   );
 });
