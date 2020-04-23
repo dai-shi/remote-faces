@@ -72,12 +72,10 @@ export const createConnectionMap = () => {
     });
   };
 
-  const forEachLiveConns = (
-    callback: (conn: Peer.DataConnection, media?: Peer.MediaConnection) => void
-  ) => {
+  const forEachLiveConns = (callback: (conn: Peer.DataConnection) => void) => {
     Array.from(map.values()).forEach((value) => {
       if (value.connected && value.live) {
-        callback(value.conn, value.media);
+        callback(value.conn);
       }
     });
   };
@@ -106,6 +104,16 @@ export const createConnectionMap = () => {
     }
   };
 
+  const closeAllMedia = () => {
+    Array.from(map.values()).forEach((value) => {
+      if (value.media) {
+        value.media.close();
+        const valueToModify = value;
+        delete valueToModify.media;
+      }
+    });
+  };
+
   const clearAll = () => {
     if (map.size) {
       console.log("connectionMap garbage:", map);
@@ -126,6 +134,7 @@ export const createConnectionMap = () => {
     setMedia,
     getMedia,
     delMedia,
+    closeAllMedia,
     clearAll,
   };
 };

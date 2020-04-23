@@ -95,12 +95,16 @@ export const createRoom = (
         }
         if (liveMode) {
           if (info.liveMode && isValidPeerJsId(roomId, conn.peer)) {
-            callPeer(conn.peer);
+            setTimeout(() => {
+              callPeer(conn.peer);
+            }, 100);
           }
           if (Array.isArray((payload as { livePeers: unknown }).livePeers)) {
             (payload as { livePeers: unknown[] }).livePeers.forEach((peer) => {
               if (isValidPeerJsId(roomId, peer)) {
-                callPeer(peer);
+                setTimeout(() => {
+                  callPeer(peer);
+                }, 100);
               }
             });
           }
@@ -212,9 +216,7 @@ export const createRoom = (
         return;
       }
       console.log("new media received", media);
-      if (initMedia(media)) {
-        media.answer(myStream);
-      }
+      initMedia(media, () => myStream && media.answer(myStream));
     });
     peer.on("disconnected", () => {
       console.log("initMyPeer disconnected", index);
@@ -269,22 +271,24 @@ export const createRoom = (
     initMedia(media);
   };
 
-  const initMedia = (media: Peer.MediaConnection) => {
+  const initMedia = (media: Peer.MediaConnection, answer?: () => void) => {
     const prevMedia = connMap.getMedia(media.peer);
     if (prevMedia) {
       if (
         myPeer &&
         getPeerIdFromPeerJsId(myPeer.id) > getPeerIdFromPeerJsId(media.peer)
       ) {
+        console.log("my peer id is bigger, closing media", media);
         media.close();
-        return false;
+        return;
       }
       console.log("closing prevMedia", prevMedia);
       connMap.delMedia(prevMedia);
       prevMedia.close();
     }
-    console.log("init media", media);
+    console.log("init media", media, answer ? ", answering" : "");
     connMap.setMedia(media);
+    if (answer) answer();
     media.on("stream", (stream: MediaStream) => {
       console.log("mediaConnection received stream", media);
       const info = {
@@ -300,7 +304,6 @@ export const createRoom = (
       if (receiveStream) receiveStream(null, info);
       connMap.delMedia(media);
     });
-    return true;
   };
 
   const enableLiveMode = (stream: MediaStream, recvStream: ReceiveStream) => {
@@ -324,11 +327,9 @@ export const createRoom = (
     }
     liveMode = false;
     myStream = null;
-    broadcastData(null);
-    connMap.forEachLiveConns((_conn, media) => {
-      if (media) media.close();
-    });
     receiveStream = null;
+    broadcastData(null);
+    connMap.closeAllMedia();
   };
 
   const dispose = () => {
