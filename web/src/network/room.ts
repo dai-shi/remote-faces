@@ -96,15 +96,14 @@ export const createRoom = (
         if (liveMode) {
           if (info.liveMode && isValidPeerJsId(roomId, conn.peer)) {
             setTimeout(() => {
+              // XXX I don't know why it only works with setTimeout
               callPeer(conn.peer);
-            }, 100);
+            }, 1000);
           }
           if (Array.isArray((payload as { livePeers: unknown }).livePeers)) {
             (payload as { livePeers: unknown[] }).livePeers.forEach((peer) => {
               if (isValidPeerJsId(roomId, peer)) {
-                setTimeout(() => {
-                  callPeer(peer);
-                }, 100);
+                callPeer(peer);
               }
             });
           }
@@ -216,7 +215,9 @@ export const createRoom = (
         return;
       }
       console.log("new media received", media);
-      initMedia(media, () => myStream && media.answer(myStream));
+      if (initMedia(media)) {
+        media.answer(myStream);
+      }
     });
     peer.on("disconnected", () => {
       console.log("initMyPeer disconnected", index);
@@ -271,7 +272,7 @@ export const createRoom = (
     initMedia(media);
   };
 
-  const initMedia = (media: Peer.MediaConnection, answer?: () => void) => {
+  const initMedia = (media: Peer.MediaConnection) => {
     const prevMedia = connMap.getMedia(media.peer);
     if (prevMedia) {
       if (
@@ -280,15 +281,14 @@ export const createRoom = (
       ) {
         console.log("my peer id is bigger, closing media", media);
         media.close();
-        return;
+        return false;
       }
       console.log("closing prevMedia", prevMedia);
       connMap.delMedia(prevMedia);
       prevMedia.close();
     }
-    console.log("init media", media, answer ? ", answering" : "");
+    console.log("init media", media);
     connMap.setMedia(media);
-    if (answer) answer();
     media.on("stream", (stream: MediaStream) => {
       console.log("mediaConnection received stream", media);
       const info = {
@@ -304,6 +304,7 @@ export const createRoom = (
       if (receiveStream) receiveStream(null, info);
       connMap.delMedia(media);
     });
+    return true;
   };
 
   const enableLiveMode = (stream: MediaStream, recvStream: ReceiveStream) => {
