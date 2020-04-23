@@ -22,6 +22,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
 
+  const [liveMode, setLiveMode] = useState(false);
   const [deviceId, setDeviceId] = useState<string>();
   const [configOpen, setConfigOpen] = useState<boolean>(true);
   const videoDevices = useVideoDevices();
@@ -80,6 +81,18 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
                 ))}
               </select>
             </div>
+            <div>
+              {/* FIXME I don't know why this rule complains */
+              /* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+              <label>
+                Live Mode:{" "}
+                <input
+                  type="checkbox"
+                  checked={liveMode}
+                  onChange={(e) => setLiveMode(e.target.checked)}
+                />
+              </label>
+            </div>
           </>
         ) : (
           <button type="button" onClick={() => setConfigOpen(true)}>
@@ -93,6 +106,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
         deviceId={deviceId}
         nickname={nickname}
         statusMesg={statusMesg}
+        liveMode={liveMode}
       />
       <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
     </>

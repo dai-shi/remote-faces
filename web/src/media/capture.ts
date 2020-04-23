@@ -17,12 +17,16 @@ const captureImage = async (stream: MediaStream, track: MediaStreamTrack) => {
   }
   const video = document.getElementById("internal-video") as HTMLVideoElement;
   video.style.display = "block";
+  const savedSrcObject = video.srcObject;
+  const revert = () => {
+    video.srcObject = savedSrcObject;
+  };
   video.srcObject = stream;
   await sleep(2000);
   const srcImg = video;
   const srcW = video.videoWidth;
   const srcH = video.videoHeight;
-  return { srcImg, srcW, srcH };
+  return { srcImg, srcW, srcH, revert };
 };
 
 export const takePhoto = async (deviceId?: string) => {
@@ -41,13 +45,16 @@ export const takePhoto = async (deviceId?: string) => {
   const dstH = 72;
   canvas.width = dstW;
   canvas.height = dstH;
-  const { srcImg, srcW, srcH } = await captureImage(stream, track);
+  const { srcImg, srcW, srcH, revert } = await captureImage(stream, track);
   const ratio = Math.max(dstW / srcW, dstH / srcH);
   const width = Math.min(srcW, dstW / ratio);
   const height = Math.min(srcH, dstH / ratio);
   const x = (srcW - width) / 2;
   const y = (srcH - height) / 2;
   ctx.drawImage(srcImg, x, y, width, height, 0, 0, dstW, dstH);
+  if (revert) {
+    revert();
+  }
   track.stop();
   return canvas.toDataURL("image/png");
 };

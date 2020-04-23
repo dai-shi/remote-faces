@@ -1,10 +1,44 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 
 import "./FaceImages.css";
 import { useFaceImages } from "../hooks/useFaceImages";
+import { useFaceVideos } from "../hooks/useFaceVideos";
 
 const BLANK_IMAGE =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQI12NgYAAAAAMAASDVlMcAAAAASUVORK5CYII=";
+
+const FaceImage = React.memo<{
+  image?: string;
+  nickname: string;
+  statusMesg: string;
+  obsoleted?: boolean;
+  stream?: MediaStream;
+}>(({ image, nickname, statusMesg, obsoleted, stream }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+  return (
+    <div className="FaceImages-card" style={{ opacity: obsoleted ? 0.2 : 1 }}>
+      {stream ? (
+        <>
+          <video className="FaceImages-photo" ref={videoRef} autoPlay muted />
+          <div className="FaceImages-live-indicator">&#9673;</div>
+        </>
+      ) : (
+        <img
+          src={image || BLANK_IMAGE}
+          className="FaceImages-photo"
+          alt="myself"
+        />
+      )}
+      <div className="FaceImages-name">{nickname}</div>
+      <div className="FaceImages-mesg">{statusMesg}</div>
+    </div>
+  );
+});
 
 type Props = {
   roomId: string;
@@ -12,6 +46,7 @@ type Props = {
   nickname: string;
   statusMesg: string;
   deviceId?: string;
+  liveMode: boolean;
 };
 
 const FaceImages: React.FC<Props> = ({
@@ -20,6 +55,7 @@ const FaceImages: React.FC<Props> = ({
   nickname,
   statusMesg,
   deviceId,
+  liveMode,
 }) => {
   const { myImage, roomImages } = useFaceImages(
     roomId,
@@ -28,28 +64,25 @@ const FaceImages: React.FC<Props> = ({
     statusMesg,
     deviceId
   );
+  const { myStream, streamMap } = useFaceVideos(roomId, liveMode, deviceId);
 
   return (
     <div className="FaceImage-container">
-      <div className="FaceImages-card">
-        <img
-          src={myImage || BLANK_IMAGE}
-          className="FaceImages-photo"
-          alt="myself"
-        />
-        <div className="FaceImages-name">{nickname}</div>
-        <div className="FaceImages-mesg">{statusMesg}</div>
-      </div>
+      <FaceImage
+        image={myImage}
+        nickname={nickname}
+        statusMesg={statusMesg}
+        stream={myStream || undefined}
+      />
       {roomImages.map((item) => (
-        <div
+        <FaceImage
           key={item.userId}
-          className="FaceImages-card"
-          style={{ opacity: item.obsoleted ? 0.2 : 1 }}
-        >
-          <img src={item.image} className="FaceImages-photo" alt="friend" />
-          <div className="FaceImages-name">{item.info.nickname}</div>
-          <div className="FaceImages-mesg">{item.info.message}</div>
-        </div>
+          image={item.image}
+          nickname={item.info.nickname}
+          statusMesg={item.info.message}
+          obsoleted={item.obsoleted}
+          stream={streamMap[item.userId]}
+        />
       ))}
     </div>
   );
