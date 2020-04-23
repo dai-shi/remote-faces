@@ -350,6 +350,7 @@ const initParams = () => new Promise((resolve) => {
 
 const main = async () => {
   if (!params.roomid || !params.myself) {
+    window.location.href = 'https://github.com/dai-shi/remote-faces';
     return;
     // await initParams();
   }
