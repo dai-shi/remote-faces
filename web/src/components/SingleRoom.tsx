@@ -82,6 +82,8 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
               </select>
             </div>
             <div>
+              {/* FIXME I don't know why this rule complains */
+              /* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
               <label>
                 Live Mode:{" "}
                 <input
