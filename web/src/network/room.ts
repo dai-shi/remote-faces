@@ -263,26 +263,34 @@ export const createRoom = (
     if (!myPeer || myPeer.id === id) return;
     if (!myStream) return;
     if (!connMap.isConnected(id)) return;
-    if (connMap.hasMedia(id)) return;
+    if (connMap.getMedia(id)) return;
     console.log("callPeer", id);
     const media = myPeer.call(id, myStream);
     initMedia(media);
   };
 
   const initMedia = (media: Peer.MediaConnection) => {
-    if (connMap.isMediaStreamReady(media)) {
-      media.close();
-      return false;
+    const prevMedia = connMap.getMedia(media.peer);
+    if (prevMedia) {
+      if (
+        myPeer &&
+        getPeerIdFromPeerJsId(myPeer.id) > getPeerIdFromPeerJsId(media.peer)
+      ) {
+        media.close();
+        return false;
+      }
+      console.log("closing prevMedia", prevMedia);
+      connMap.delMedia(prevMedia);
+      prevMedia.close();
     }
+    console.log("init media", media);
     connMap.setMedia(media);
     media.on("stream", (stream: MediaStream) => {
       console.log("mediaConnection received stream", media);
-      connMap.markMediaStreamReady(media);
       const info = {
         peerId: getPeerIdFromPeerJsId(media.peer),
       };
-      const close = () => media.close();
-      if (receiveStream) receiveStream(stream, info, close);
+      if (receiveStream) receiveStream(stream, info, () => media.close());
     });
     media.on("close", () => {
       console.log("mediaConnection closed", media);
@@ -316,11 +324,11 @@ export const createRoom = (
     }
     liveMode = false;
     myStream = null;
-    receiveStream = null;
     broadcastData(null);
     connMap.forEachLiveConns((_conn, media) => {
       if (media) media.close();
     });
+    receiveStream = null;
   };
 
   const dispose = () => {

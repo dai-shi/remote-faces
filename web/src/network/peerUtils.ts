@@ -21,7 +21,6 @@ export const createConnectionMap = () => {
     connected: boolean;
     live: boolean;
     media?: Peer.MediaConnection;
-    mediaStreamReady?: boolean;
   };
   const map = new Map<string, Value>();
 
@@ -79,37 +78,27 @@ export const createConnectionMap = () => {
     });
   };
 
-  const hasMedia = (peerJsId: string) => {
-    const value = map.get(peerJsId);
-    return value && !!value.media;
-  };
-
-  const markMediaStreamReady = (media: Peer.MediaConnection) => {
-    const value = map.get(media.peer);
-    if (value) {
-      value.mediaStreamReady = true;
-    }
-  };
-
-  const isMediaStreamReady = (media: Peer.MediaConnection) => {
-    const value = map.get(media.peer);
-    return (value && value.mediaStreamReady) || false;
-  };
-
   const setMedia = (media: Peer.MediaConnection) => {
     const value = map.get(media.peer);
-    if (value) {
-      if (value.media && value.media.open) {
-        value.media.close();
-      }
+    if (value && !value.media) {
       value.media = media;
+    } else {
+      console.error("setMedia: invalid value, should not happen");
     }
+  };
+
+  const getMedia = (peerJsId: string) => {
+    const value = map.get(peerJsId);
+    return value && value.media;
   };
 
   const delMedia = (media: Peer.MediaConnection) => {
     const value = map.get(media.peer);
-    if (value) {
+    if (!value) return; // conn is deleted in advance
+    if (value.media === media) {
       delete value.media;
+    } else {
+      console.error("delMedia: invalid value, should not happen");
     }
   };
 
@@ -130,10 +119,8 @@ export const createConnectionMap = () => {
     getLivePeerJsIds,
     forEachConnectedConns,
     forEachLiveConns,
-    hasMedia,
-    markMediaStreamReady,
-    isMediaStreamReady,
     setMedia,
+    getMedia,
     delMedia,
     clearAll,
   };
