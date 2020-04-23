@@ -25,6 +25,10 @@ export const createConnectionMap = () => {
   const map = new Map<string, Value>();
 
   const addConn = (conn: Peer.DataConnection) => {
+    const value = map.get(conn.peer);
+    if (value) {
+      value.conn.close();
+    }
     map.set(conn.peer, { conn, connected: false, live: false });
   };
 
