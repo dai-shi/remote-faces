@@ -167,7 +167,7 @@ export const useRoomData = <Data>(
 };
 
 export const useRoomMedia = (roomId: string, enabled: boolean) => {
-  const [myStream, setMyStream] = useState<MediaStream>();
+  const [myStream, setMyStream] = useState<MediaStream | null>(null);
   const [streamMap, setStreamMap] = useState<{
     [peerId: number]: { stream: MediaStream; attachedData: unknown };
   }>({});
@@ -197,9 +197,12 @@ export const useRoomMedia = (roomId: string, enabled: boolean) => {
         undefined,
         streamListener
       );
-      setMyStream(myStreamToSet);
+      setMyStream(myStreamToSet || null);
       return unregister;
     }
+    // noot enabled
+    setMyStream(null);
+    setStreamMap({});
     return undefined;
   }, [roomId, enabled]);
   return {

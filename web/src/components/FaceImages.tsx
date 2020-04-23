@@ -46,6 +46,7 @@ type Props = {
   nickname: string;
   statusMesg: string;
   deviceId?: string;
+  liveMode: boolean;
 };
 
 const FaceImages: React.FC<Props> = ({
@@ -54,6 +55,7 @@ const FaceImages: React.FC<Props> = ({
   nickname,
   statusMesg,
   deviceId,
+  liveMode,
 }) => {
   const { myImage, roomImages } = useFaceImages(
     roomId,
@@ -62,7 +64,7 @@ const FaceImages: React.FC<Props> = ({
     statusMesg,
     deviceId
   );
-  const { myStream, streamMap } = useFaceVideos(roomId, true, deviceId);
+  const { myStream, streamMap } = useFaceVideos(roomId, liveMode, deviceId);
 
   return (
     <div className="FaceImage-container">
@@ -70,7 +72,7 @@ const FaceImages: React.FC<Props> = ({
         image={myImage}
         nickname={nickname}
         statusMesg={statusMesg}
-        stream={myStream}
+        stream={myStream || undefined}
       />
       {roomImages.map((item) => (
         <FaceImage

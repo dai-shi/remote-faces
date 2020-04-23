@@ -106,6 +106,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
         deviceId={deviceId}
         nickname={nickname}
         statusMesg={statusMesg}
+        liveMode={liveMode}
       />
       <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
     </>
