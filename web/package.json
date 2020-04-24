@@ -74,7 +74,8 @@
         "error",
         "never"
       ],
-      "react/state-in-constructor": "off"
+      "react/state-in-constructor": "off",
+      "jsx-a11y/media-has-caption": "off"
     },
     "overrides": [
       {
