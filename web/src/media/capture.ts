@@ -58,20 +58,3 @@ export const takePhoto = async (deviceId?: string) => {
   track.stop();
   return canvas.toDataURL("image/png");
 };
-
-export const getVideoDeviceInfoList = async () => {
-  type VideoDeviceInfo = {
-    label: string;
-    deviceId: string;
-  };
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const list: VideoDeviceInfo[] = devices
-      .filter(({ kind }) => kind === "videoinput")
-      .map(({ label, deviceId }) => ({ label, deviceId }));
-    return list;
-  } catch (e) {
-    // ignored
-    return [];
-  }
-};

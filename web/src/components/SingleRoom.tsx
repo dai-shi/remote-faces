@@ -4,7 +4,7 @@ import "./SingleRoom.css";
 import { setRoomIdToUrl } from "../utils/url";
 import { setStringItem, getStringItem } from "../utils/storage";
 import { useRoomNetworkStatus } from "../hooks/useRoom";
-import { useVideoDevices } from "../hooks/useVideoDevices";
+import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import FaceImages from "./FaceImages";
 import MomentaryChat from "./MomentaryChat";
 
@@ -22,10 +22,12 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
 
-  const [liveMode, setLiveMode] = useState(false);
-  const [deviceId, setDeviceId] = useState<string>();
-  const [configOpen, setConfigOpen] = useState<boolean>(true);
   const videoDevices = useVideoDevices();
+  const audioDevices = useAudioDevices();
+  const [videoDeviceId, setVideoDeviceId] = useState<string>();
+  const [audioDeviceId, setAudioDeviceId] = useState<string>();
+  const [liveMode, setLiveMode] = useState(false);
+  const [configOpen, setConfigOpen] = useState<boolean>(true);
 
   const networkStatus = useRoomNetworkStatus(roomId);
 
@@ -70,13 +72,26 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             </div>
             <div>
               Select Camera:{" "}
-              <select onChange={(e) => setDeviceId(e.target.value)}>
+              <select onChange={(e) => setVideoDeviceId(e.target.value)}>
                 {videoDevices.map((videoDevice) => (
                   <option
                     key={videoDevice.deviceId}
                     value={videoDevice.deviceId}
                   >
                     {videoDevice.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              Select Mic:{" "}
+              <select onChange={(e) => setAudioDeviceId(e.target.value)}>
+                {audioDevices.map((audioDevice) => (
+                  <option
+                    key={audioDevice.deviceId}
+                    value={audioDevice.deviceId}
+                  >
+                    {audioDevice.label}
                   </option>
                 ))}
               </select>
@@ -103,7 +118,8 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
       <FaceImages
         roomId={roomId}
         userId={userId}
-        deviceId={deviceId}
+        videoDeviceId={videoDeviceId}
+        audioDeviceId={audioDeviceId}
         nickname={nickname}
         statusMesg={statusMesg}
         liveMode={liveMode}

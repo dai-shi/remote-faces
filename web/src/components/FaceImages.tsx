@@ -13,7 +13,8 @@ const FaceImage = React.memo<{
   statusMesg: string;
   obsoleted?: boolean;
   stream?: MediaStream;
-}>(({ image, nickname, statusMesg, obsoleted, stream }) => {
+  unmuted?: boolean;
+}>(({ image, nickname, statusMesg, obsoleted, stream, unmuted }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -23,7 +24,12 @@ const FaceImage = React.memo<{
   return (
     <div className="FaceImages-card" style={{ opacity: obsoleted ? 0.2 : 1 }}>
       {stream ? (
-        <video className="FaceImages-photo" ref={videoRef} autoPlay muted />
+        <video
+          className="FaceImages-photo"
+          ref={videoRef}
+          autoPlay
+          muted={!unmuted}
+        />
       ) : (
         <img
           src={image || BLANK_IMAGE}
@@ -43,8 +49,9 @@ type Props = {
   userId: string;
   nickname: string;
   statusMesg: string;
-  deviceId?: string;
   liveMode: boolean;
+  videoDeviceId?: string;
+  audioDeviceId?: string;
 };
 
 const FaceImages: React.FC<Props> = ({
@@ -52,17 +59,23 @@ const FaceImages: React.FC<Props> = ({
   userId,
   nickname,
   statusMesg,
-  deviceId,
   liveMode,
+  videoDeviceId,
+  audioDeviceId,
 }) => {
   const { myImage, roomImages } = useFaceImages(
     roomId,
     userId,
     nickname,
     statusMesg,
-    deviceId
+    videoDeviceId
   );
-  const { myStream, streamMap } = useFaceVideos(roomId, liveMode, deviceId);
+  const { myStream, streamMap } = useFaceVideos(
+    roomId,
+    liveMode,
+    videoDeviceId,
+    audioDeviceId
+  );
 
   return (
     <div className="FaceImage-container">
