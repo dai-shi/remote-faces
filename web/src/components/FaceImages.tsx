@@ -93,6 +93,7 @@ const FaceImages: React.FC<Props> = ({
           statusMesg={item.info.message}
           obsoleted={item.obsoleted}
           stream={streamMap[item.userId]}
+          unmuted
         />
       ))}
     </div>
