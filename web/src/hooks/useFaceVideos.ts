@@ -6,14 +6,18 @@ import { useRoomMedia } from "./useRoom";
 
 export const useFaceVideos = (
   roomId: string,
-  enabled: boolean,
+  videoEnabled: boolean,
+  audioEnabled: boolean,
   videoDeviceId?: string,
   audioDeviceId?: string
 ) => {
-  const { myStream, streamList } = useRoomMedia(roomId, enabled);
+  const { myStream, streamList } = useRoomMedia(
+    roomId,
+    videoEnabled || audioEnabled
+  );
   useEffect(() => {
     let dispose: (() => void) | null = null;
-    if (enabled && myStream) {
+    if (videoEnabled && myStream) {
       (async () => {
         const {
           stream: videoStream,
@@ -21,6 +25,21 @@ export const useFaceVideos = (
         } = await getVideoStream(videoDeviceId);
         const videoTrack = videoStream.getVideoTracks()[0];
         myStream.addTrack(videoTrack);
+        dispose = () => {
+          myStream.removeTrack(videoTrack);
+          disposeVideo();
+          myStream.dispatchEvent(new Event("customtrack"));
+        };
+      })();
+    }
+    return () => {
+      if (dispose) dispose();
+    };
+  }, [roomId, videoEnabled, videoDeviceId, myStream]);
+  useEffect(() => {
+    let dispose: (() => void) | null = null;
+    if (audioEnabled && myStream) {
+      (async () => {
         const {
           stream: audioStream,
           dispose: disposeAudio,
@@ -29,8 +48,6 @@ export const useFaceVideos = (
         myStream.addTrack(audioTrack);
         myStream.dispatchEvent(new Event("customtrack"));
         dispose = () => {
-          myStream.removeTrack(videoTrack);
-          disposeVideo();
           myStream.removeTrack(audioTrack);
           disposeAudio();
           myStream.dispatchEvent(new Event("customtrack"));
@@ -40,7 +57,7 @@ export const useFaceVideos = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, enabled, videoDeviceId, myStream, audioDeviceId]);
+  }, [roomId, audioEnabled, audioDeviceId, myStream]);
   const streamMap = useMemo(() => {
     const map: { [userId: string]: MediaStream } = {};
     streamList.forEach((item) => {

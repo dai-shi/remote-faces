@@ -8,6 +8,8 @@ import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import FaceImages from "./FaceImages";
 import MomentaryChat from "./MomentaryChat";
 
+type LiveType = "off" | "video" | "video+audio";
+
 type Props = {
   roomId: string;
   userId: string;
@@ -26,7 +28,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const audioDevices = useAudioDevices();
   const [videoDeviceId, setVideoDeviceId] = useState<string>();
   const [audioDeviceId, setAudioDeviceId] = useState<string>();
-  const [liveMode, setLiveMode] = useState(false);
+  const [liveType, setLiveType] = useState<LiveType>("off");
   const [configOpen, setConfigOpen] = useState<boolean>(true);
 
   const networkStatus = useRoomNetworkStatus(roomId);
@@ -97,16 +99,12 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
               </select>
             </div>
             <div>
-              {/* FIXME I don't know why this rule complains */
-              /* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-              <label>
-                Live Mode:{" "}
-                <input
-                  type="checkbox"
-                  checked={liveMode}
-                  onChange={(e) => setLiveMode(e.target.checked)}
-                />
-              </label>
+              Live Type:{" "}
+              <select onChange={(e) => setLiveType(e.target.value as LiveType)}>
+                <option value="off">Off</option>
+                <option value="video">Video Only</option>
+                <option value="video+audio">Video and Audio</option>
+              </select>
             </div>
           </>
         ) : (
@@ -122,7 +120,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
         audioDeviceId={audioDeviceId}
         nickname={nickname}
         statusMesg={statusMesg}
-        liveMode={liveMode}
+        liveType={liveType}
       />
       <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
     </>

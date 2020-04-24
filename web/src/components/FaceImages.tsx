@@ -83,7 +83,7 @@ type Props = {
   userId: string;
   nickname: string;
   statusMesg: string;
-  liveMode: boolean;
+  liveType: "off" | "video" | "video+audio";
   videoDeviceId?: string;
   audioDeviceId?: string;
 };
@@ -93,7 +93,7 @@ const FaceImages: React.FC<Props> = ({
   userId,
   nickname,
   statusMesg,
-  liveMode,
+  liveType,
   videoDeviceId,
   audioDeviceId,
 }) => {
@@ -106,7 +106,8 @@ const FaceImages: React.FC<Props> = ({
   );
   const { myStream, streamMap } = useFaceVideos(
     roomId,
-    liveMode,
+    liveType === "video" || liveType === "video+audio",
+    liveType === "video+audio",
     videoDeviceId,
     audioDeviceId
   );
@@ -117,7 +118,7 @@ const FaceImages: React.FC<Props> = ({
         image={myImage}
         nickname={nickname}
         statusMesg={statusMesg}
-        liveMode={liveMode}
+        liveMode={liveType !== "off"}
         stream={myStream || undefined}
       />
       {roomImages.map((item) => (
