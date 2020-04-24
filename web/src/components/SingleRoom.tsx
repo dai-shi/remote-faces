@@ -4,9 +4,11 @@ import "./SingleRoom.css";
 import { setRoomIdToUrl } from "../utils/url";
 import { setStringItem, getStringItem } from "../utils/storage";
 import { useRoomNetworkStatus } from "../hooks/useRoom";
-import { useVideoDevices } from "../hooks/useVideoDevices";
+import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import FaceImages from "./FaceImages";
 import MomentaryChat from "./MomentaryChat";
+
+type LiveType = "off" | "video" | "video+audio";
 
 type Props = {
   roomId: string;
@@ -22,10 +24,12 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
 
-  const [liveMode, setLiveMode] = useState(false);
-  const [deviceId, setDeviceId] = useState<string>();
-  const [configOpen, setConfigOpen] = useState<boolean>(true);
   const videoDevices = useVideoDevices();
+  const audioDevices = useAudioDevices();
+  const [videoDeviceId, setVideoDeviceId] = useState<string>();
+  const [audioDeviceId, setAudioDeviceId] = useState<string>();
+  const [liveType, setLiveType] = useState<LiveType>("off");
+  const [configOpen, setConfigOpen] = useState<boolean>(true);
 
   const networkStatus = useRoomNetworkStatus(roomId);
 
@@ -70,7 +74,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             </div>
             <div>
               Select Camera:{" "}
-              <select onChange={(e) => setDeviceId(e.target.value)}>
+              <select onChange={(e) => setVideoDeviceId(e.target.value)}>
                 {videoDevices.map((videoDevice) => (
                   <option
                     key={videoDevice.deviceId}
@@ -82,16 +86,25 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
               </select>
             </div>
             <div>
-              {/* FIXME I don't know why this rule complains */
-              /* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-              <label>
-                Live Mode:{" "}
-                <input
-                  type="checkbox"
-                  checked={liveMode}
-                  onChange={(e) => setLiveMode(e.target.checked)}
-                />
-              </label>
+              Select Mic:{" "}
+              <select onChange={(e) => setAudioDeviceId(e.target.value)}>
+                {audioDevices.map((audioDevice) => (
+                  <option
+                    key={audioDevice.deviceId}
+                    value={audioDevice.deviceId}
+                  >
+                    {audioDevice.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              Live Type:{" "}
+              <select onChange={(e) => setLiveType(e.target.value as LiveType)}>
+                <option value="off">Off</option>
+                <option value="video">Video Only</option>
+                <option value="video+audio">Video and Audio</option>
+              </select>
             </div>
           </>
         ) : (
@@ -103,10 +116,11 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
       <FaceImages
         roomId={roomId}
         userId={userId}
-        deviceId={deviceId}
+        videoDeviceId={videoDeviceId}
+        audioDeviceId={audioDeviceId}
         nickname={nickname}
         statusMesg={statusMesg}
-        liveMode={liveMode}
+        liveType={liveType}
       />
       <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
     </>
