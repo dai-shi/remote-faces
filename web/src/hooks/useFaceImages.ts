@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 
 import { takePhoto } from "../media/capture";
-import { useRoomData, useBroadcastData } from "./useRoom";
+import { useRoomData, getDataInfo, useBroadcastData } from "./useRoom";
 
 type ImageUrl = string;
 type FaceInfo = {
@@ -16,6 +16,7 @@ type ImageData = {
 type RoomImage = ImageData & {
   received: number; // in milliseconds
   obsoleted: boolean;
+  liveMode: boolean;
 };
 
 const isFaceInfo = (x: unknown): x is FaceInfo =>
@@ -56,6 +57,7 @@ export const useFaceImages = (
         ...imageData,
         received: Date.now(),
         obsoleted: false,
+        liveMode: !!getDataInfo(imageData)?.liveMode,
       },
     [imageData]
   );

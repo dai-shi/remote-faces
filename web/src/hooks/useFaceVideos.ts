@@ -19,16 +19,21 @@ export const useFaceVideos = (
           stream: videoStream,
           dispose: disposeVideo,
         } = await getVideoStream(videoDeviceId);
-        myStream.addTrack(videoStream.getVideoTracks()[0]);
+        const videoTrack = videoStream.getVideoTracks()[0];
+        myStream.addTrack(videoTrack);
         const {
           stream: audioStream,
           dispose: disposeAudio,
         } = await getAudioStream(audioDeviceId);
-        myStream.addTrack(audioStream.getAudioTracks()[0]);
+        const audioTrack = audioStream.getAudioTracks()[0];
+        myStream.addTrack(audioTrack);
+        myStream.dispatchEvent(new Event("customtrack"));
         dispose = () => {
-          // TODO delete track
+          myStream.removeTrack(videoTrack);
           disposeVideo();
+          myStream.removeTrack(audioTrack);
           disposeAudio();
+          myStream.dispatchEvent(new Event("customtrack"));
         };
       })();
     }

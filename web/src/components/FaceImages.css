@@ -42,6 +42,7 @@
   font-size: 8px;
   line-height: 8px;
   font-family: sans-serif;
+  cursor: default;
   animation: FaceImagesBlink 1.5s infinite;
 }
 

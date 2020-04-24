@@ -23,10 +23,8 @@ export type NetworkStatus =
 
 type UpdateNetworkStatus = (status: NetworkStatus) => void;
 
-type ReceiveData = (
-  data: unknown,
-  info: { peerId: number; liveMode: boolean }
-) => void;
+export type DataInfo = { peerId: number; liveMode: boolean };
+type ReceiveData = (data: unknown, info: DataInfo) => void;
 type ReceiveStream = (
   stream: MediaStream | null, // null for removing stream
   info: { peerId: number },
@@ -81,7 +79,7 @@ export const createRoom = (
     if (disposed) return;
     try {
       if (payload && typeof payload === "object") {
-        const info = {
+        const info: DataInfo = {
           peerId: getPeerIdFromConn(conn),
           liveMode: !!(payload as { liveMode?: unknown }).liveMode,
         };

@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 
-import { createRoom, NetworkStatus } from "../network/room";
+import { DataInfo, createRoom, NetworkStatus } from "../network/room";
 
 type NetworkStatusListener = (status: NetworkStatus) => void;
-type DataListener = (data: unknown) => boolean;
+type DataListener = (data: unknown, info: DataInfo) => boolean;
 type StreamListener = (
   peerId: number,
   stream: MediaStream | null, // null for removing stream
@@ -39,9 +39,9 @@ const register = (
         listener(status);
       });
     };
-    const receiveData = (data: unknown, info: { peerId: number }) => {
+    const receiveData = (data: unknown, info: DataInfo) => {
       dataListeners.forEach((listener) => {
-        const attachToMedia = listener(data);
+        const attachToMedia = listener(data, info);
         if (attachToMedia) {
           mediaAttachedData.set(info.peerId, data);
         }
@@ -146,6 +146,22 @@ export const useBroadcastData = (roomId: string) => {
   return broadcastData;
 };
 
+const dataInfoMap = new WeakMap<object, DataInfo>();
+export const getDataInfo = (data: unknown) => {
+  try {
+    return dataInfoMap.get(data as object);
+  } catch (e) {
+    return undefined;
+  }
+};
+const setDataInfo = (data: unknown, info: DataInfo) => {
+  try {
+    dataInfoMap.set(data as object, info);
+  } catch (e) {
+    // ignore
+  }
+};
+
 export const useRoomData = <Data>(
   roomId: string,
   isValidData: (data: unknown) => boolean,
@@ -153,8 +169,9 @@ export const useRoomData = <Data>(
 ) => {
   const [data, setData] = useState<Data>();
   useEffect(() => {
-    const dataListener = (unknownData: unknown) => {
+    const dataListener = (unknownData: unknown, info: DataInfo) => {
       if (isValidData(unknownData)) {
+        setDataInfo(unknownData, info);
         setData(unknownData as Data);
         return !!attachToMedia;
       }
