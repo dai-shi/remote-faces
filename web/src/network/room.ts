@@ -183,6 +183,7 @@ export const createRoom = (
     peer.on("error", (err) => {
       if (err.type === "unavailable-id") {
         myPeer = null;
+        lastBroadcastData = null;
         peer.destroy();
         initMyPeer(index + 1);
       } else if (err.type === "peer-unavailable") {
@@ -231,6 +232,7 @@ export const createRoom = (
       if (myPeer === peer) {
         console.log("initMyPeer closed, re-initializing", index);
         myPeer = null;
+        lastBroadcastData = null;
         setTimeout(initMyPeer, 10 * 1000);
       } else {
         console.log("initMyPeer closed, ignoring", index);
@@ -255,6 +257,7 @@ export const createRoom = (
     }
     const oldPeer = myPeer;
     myPeer = null;
+    lastBroadcastData = null;
     oldPeer.destroy();
     initMyPeer();
   };
@@ -313,7 +316,7 @@ export const createRoom = (
     liveMode = true;
     myStream = stream;
     receiveStream = recvStream;
-    broadcastData(null);
+    broadcastData(lastBroadcastData);
     connMap.forEachLiveConns((conn) => {
       callPeer(conn.peer);
     });
@@ -327,7 +330,7 @@ export const createRoom = (
     liveMode = false;
     myStream = null;
     receiveStream = null;
-    broadcastData(null);
+    broadcastData(lastBroadcastData);
     connMap.closeAllMedia();
   };
 
