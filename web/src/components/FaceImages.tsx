@@ -130,7 +130,7 @@ const FaceImages: React.FC<Props> = ({
           obsoleted={item.obsoleted}
           liveMode={item.liveMode}
           stream={streamMap[item.userId]}
-          unmuted
+          unmuted={liveType === "video+audio"}
         />
       ))}
     </div>
