@@ -25,6 +25,7 @@ export const useFaceVideos = (
         } = await getVideoStream(videoDeviceId);
         const videoTrack = videoStream.getVideoTracks()[0];
         myStream.addTrack(videoTrack);
+        myStream.dispatchEvent(new Event("customtrack"));
         dispose = () => {
           myStream.removeTrack(videoTrack);
           disposeVideo();

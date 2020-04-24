@@ -6,7 +6,6 @@ type DeviceInfo = {
 export const getVideoDeviceInfoList = async () => {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
-    console.log(devices);
     const list: DeviceInfo[] = devices
       .filter(({ kind }) => kind === "videoinput")
       .map(({ label, deviceId }) => ({ label, deviceId }));
