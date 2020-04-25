@@ -19,6 +19,7 @@ export const createConnectionMap = () => {
   type Value = {
     conn: Peer.DataConnection;
     connected: boolean;
+    userId?: string;
     live: boolean;
     media?: Peer.MediaConnection;
   };
@@ -42,6 +43,18 @@ export const createConnectionMap = () => {
   const isConnected = (peerId: string) => {
     const value = map.get(peerId);
     return value ? value.connected : false;
+  };
+
+  const setUserId = (peerId: string, userId: string) => {
+    const value = map.get(peerId);
+    if (value) {
+      value.userId = userId;
+    }
+  };
+
+  const getUserId = (peerId: string) => {
+    const value = map.get(peerId);
+    return value && value.userId;
   };
 
   const hasConn = (peerId: string) => map.has(peerId);
@@ -125,6 +138,8 @@ export const createConnectionMap = () => {
     addConn,
     markConnected,
     isConnected,
+    setUserId,
+    getUserId,
     hasConn,
     delConn,
     getConnectedPeerIds,

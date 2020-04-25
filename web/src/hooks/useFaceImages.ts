@@ -28,7 +28,6 @@ const isFaceInfo = (x: unknown): x is FaceInfo =>
 const isImageData = (x: unknown): x is ImageData =>
   x &&
   typeof x === "object" &&
-  typeof (x as { userId: unknown }).userId === "string" &&
   typeof (x as { image: unknown }).image === "string" &&
   isFaceInfo((x as { info: unknown }).info);
 

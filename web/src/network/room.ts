@@ -61,10 +61,7 @@ export const createRoom = (
     if (!myPeer || myPeer.id === id) return;
     if (connMap.hasConn(id)) return;
     console.log("connectPeer", id);
-    const conn = myPeer.connect(id, {
-      serialization: "json",
-      metadata: { userId },
-    });
+    const conn = myPeer.connect(id, { serialization: "json" });
     initConnection(conn);
   };
 
@@ -77,7 +74,7 @@ export const createRoom = (
     const livePeers = connMap.getLivePeerIds();
     connMap.forEachConnectedConns((conn) => {
       try {
-        conn.send({ data, peers, liveMode, livePeers });
+        conn.send({ userId, data, peers, liveMode, livePeers });
       } catch (e) {
         console.error("broadcastData", e);
       }
@@ -88,12 +85,18 @@ export const createRoom = (
     if (disposed) return;
     try {
       if (payload && typeof payload === "object") {
-        const info: PeerInfo = {
-          userId: String(conn.metadata.userId),
-          peerIndex: getPeerIndexFromConn(conn),
-          liveMode: !!(payload as { liveMode?: unknown }).liveMode,
-        };
-        receiveData((payload as { data: unknown }).data, info);
+        if (typeof (payload as { userId: unknown }).userId === "string") {
+          connMap.setUserId(conn.peer, (payload as { userId: string }).userId);
+        }
+        const connUserId = connMap.getUserId(conn.peer);
+        if (connUserId) {
+          const info: PeerInfo = {
+            userId: connUserId,
+            peerIndex: getPeerIndexFromConn(conn),
+            liveMode: !!(payload as { liveMode?: unknown }).liveMode,
+          };
+          receiveData((payload as { data: unknown }).data, info);
+        }
         if (Array.isArray((payload as { peers: unknown }).peers)) {
           (payload as { peers: unknown[] }).peers.forEach((peer) => {
             if (isValidPeerId(roomId, peer)) {
@@ -102,7 +105,10 @@ export const createRoom = (
           });
         }
         if (liveMode) {
-          if (info.liveMode && isValidPeerId(roomId, conn.peer)) {
+          if (
+            (payload as { liveMode?: unknown }).liveMode &&
+            isValidPeerId(roomId, conn.peer)
+          ) {
             setTimeout(() => {
               // XXX I don't know why it only works with setTimeout
               callPeer(conn.peer);
@@ -133,6 +139,7 @@ export const createRoom = (
       showConnectedStatus();
       if (lastBroadcastData) {
         conn.send({
+          userId,
           data: lastBroadcastData,
           peers: connMap.getConnectedPeerIds(),
           liveMode,
@@ -283,7 +290,7 @@ export const createRoom = (
     if (!connMap.isConnected(id)) return;
     if (connMap.getMedia(id)) return;
     console.log("callPeer", id);
-    const media = myPeer.call(id, myStream, { metadata: { userId } });
+    const media = myPeer.call(id, myStream);
     initMedia(media);
   };
 
@@ -306,19 +313,28 @@ export const createRoom = (
     connMap.setMedia(media);
     media.on("stream", (stream: MediaStream) => {
       console.log("mediaConnection received stream", media);
-      const info = {
-        userId: String(media.metadata.userId),
-        peerIndex: getPeerIndexFromPeerId(media.peer),
-      };
-      receiveStream(stream, info);
+      const connUserId = connMap.getUserId(media.peer);
+      if (connUserId) {
+        const info = {
+          userId: connUserId,
+          peerIndex: getPeerIndexFromPeerId(media.peer),
+        };
+        receiveStream(stream, info);
+      } else {
+        console.warn("No conn userId, closing media");
+        media.close();
+      }
     });
     media.on("close", () => {
       console.log("mediaConnection closed", media);
-      const info = {
-        userId: String(media.metadata.userId),
-        peerIndex: getPeerIndexFromPeerId(media.peer),
-      };
-      receiveStream(null, info);
+      const connUserId = connMap.getUserId(media.peer);
+      if (connUserId) {
+        const info = {
+          userId: connUserId,
+          peerIndex: getPeerIndexFromPeerId(media.peer),
+        };
+        receiveStream(null, info);
+      }
       connMap.delMedia(media);
     });
     return true;
