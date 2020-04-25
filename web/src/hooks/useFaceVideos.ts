@@ -27,11 +27,15 @@ export const useFaceVideos = (
         } = await getVideoStream(videoDeviceId);
         const videoTrack = videoStream.getVideoTracks()[0];
         myStream.addTrack(videoTrack);
-        myStream.dispatchEvent(new Event("customtrack"));
+        const addTrackEvent = new Event("addtrack");
+        (addTrackEvent as any).track = videoTrack;
+        myStream.dispatchEvent(addTrackEvent);
         dispose = () => {
           myStream.removeTrack(videoTrack);
           disposeVideo();
-          myStream.dispatchEvent(new Event("customtrack"));
+          const removeTrackEvent = new Event("removetrack");
+          (removeTrackEvent as any).track = videoTrack;
+          myStream.dispatchEvent(removeTrackEvent);
         };
       })();
     }
@@ -49,11 +53,15 @@ export const useFaceVideos = (
         } = await getAudioStream(audioDeviceId);
         const audioTrack = audioStream.getAudioTracks()[0];
         myStream.addTrack(audioTrack);
-        myStream.dispatchEvent(new Event("customtrack"));
+        const addTrackEvent = new Event("addtrack");
+        (addTrackEvent as any).track = audioTrack;
+        myStream.dispatchEvent(addTrackEvent);
         dispose = () => {
           myStream.removeTrack(audioTrack);
           disposeAudio();
-          myStream.dispatchEvent(new Event("customtrack"));
+          const removeTrackEvent = new Event("removetrack");
+          (removeTrackEvent as any).track = audioTrack;
+          myStream.dispatchEvent(removeTrackEvent);
         };
       })();
     }

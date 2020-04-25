@@ -30,14 +30,12 @@ const FaceImage = React.memo<{
     if (stream) {
       stream.addEventListener("addtrack", checkStream);
       stream.addEventListener("removetrack", checkStream);
-      stream.addEventListener("customtrack", checkStream);
     }
     checkStream();
     return () => {
       if (stream) {
         stream.removeEventListener("addtrack", checkStream);
         stream.removeEventListener("removetrack", checkStream);
-        stream.removeEventListener("customtrack", checkStream);
       }
     };
   }, [stream]);
@@ -59,12 +57,12 @@ const FaceImage = React.memo<{
       )}
       <div className="FaceImages-name">{nickname}</div>
       <div className="FaceImages-mesg">{statusMesg}</div>
-      {hasVideo && hasAudio && (
+      {liveMode && hasVideo && hasAudio && (
         <div className="FaceImages-live-indicator" title="Video/Audio On">
           &#9672;
         </div>
       )}
-      {hasVideo && !hasAudio && (
+      {liveMode && hasVideo && !hasAudio && (
         <div className="FaceImages-live-indicator" title="Video On">
           &#9673;
         </div>
