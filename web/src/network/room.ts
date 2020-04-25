@@ -81,50 +81,80 @@ export const createRoom = (
     });
   };
 
+  const sendSDP = (conn: Peer.DataConnection, sdp: unknown) => {
+    conn.send({ SDP: sdp });
+  };
+
+  const handleSDP = async (conn: Peer.DataConnection, sdp: unknown) => {
+    if (!sdp || typeof sdp !== "object") return;
+    if (typeof (sdp as { offer: unknown }).offer === "object") {
+      const { offer } = sdp as { offer: object };
+      try {
+        await conn.peerConnection.setRemoteDescription(offer as any);
+        const answer = await conn.peerConnection.createAnswer();
+        await conn.peerConnection.setLocalDescription(answer);
+        sendSDP(conn, { answer });
+      } catch (e) {
+        console.log("handleSDP offer failed", e);
+      }
+    } else if (typeof (sdp as { answer: unknown }).answer === "object") {
+      const { answer } = sdp as { answer: object };
+      try {
+        await conn.peerConnection.setRemoteDescription(answer as any);
+      } catch (e) {
+        console.log("handleSDP answer failed", e);
+      }
+    } else {
+      console.warn("unkonwn SDP", sdp);
+    }
+  };
+
+  const handleUserId = (conn: Peer.DataConnection, payloadUserId: unknown) => {
+    if (typeof payloadUserId === "string") {
+      connMap.setUserId(conn, payloadUserId as string);
+    }
+  };
+
+  const handleLiveMode = (
+    conn: Peer.DataConnection,
+    payloadLiveMode: unknown
+  ) => {
+    if (typeof payloadLiveMode === "boolean") {
+      connMap.setLiveMode(conn, payloadLiveMode as boolean);
+      if (payloadLiveMode) {
+        addAllStreamTracks(conn);
+      }
+    }
+  };
+
   const handlePayload = (conn: Peer.DataConnection, payload: unknown) => {
     if (disposed) return;
-    try {
-      if (payload && typeof payload === "object") {
-        if (typeof (payload as { userId: unknown }).userId === "string") {
-          connMap.setUserId(conn.peer, (payload as { userId: string }).userId);
+    if (!payload && typeof payload !== "object") return;
+
+    handleSDP(conn, (payload as { SDP?: unknown }).SDP);
+    handleUserId(conn, (payload as { userId?: unknown }).userId);
+    handleLiveMode(conn, (payload as { liveMode?: unknown }).liveMode);
+
+    if (Array.isArray((payload as { peers?: unknown }).peers)) {
+      (payload as { peers: unknown[] }).peers.forEach((peer) => {
+        if (isValidPeerId(roomId, peer)) {
+          connectPeer(peer);
         }
-        const connUserId = connMap.getUserId(conn.peer);
-        if (connUserId) {
-          const info: PeerInfo = {
-            userId: connUserId,
-            peerIndex: getPeerIndexFromConn(conn),
-            liveMode: !!(payload as { liveMode?: unknown }).liveMode,
-          };
-          receiveData((payload as { data: unknown }).data, info);
-        }
-        if (Array.isArray((payload as { peers: unknown }).peers)) {
-          (payload as { peers: unknown[] }).peers.forEach((peer) => {
-            if (isValidPeerId(roomId, peer)) {
-              connectPeer(peer);
-            }
-          });
-        }
-        if (liveMode) {
-          if (
-            (payload as { liveMode?: unknown }).liveMode &&
-            isValidPeerId(roomId, conn.peer)
-          ) {
-            setTimeout(() => {
-              // XXX I don't know why it only works with setTimeout
-              callPeer(conn.peer);
-            }, 1000);
-          }
-          if (Array.isArray((payload as { livePeers: unknown }).livePeers)) {
-            (payload as { livePeers: unknown[] }).livePeers.forEach((peer) => {
-              if (isValidPeerId(roomId, peer)) {
-                callPeer(peer);
-              }
-            });
-          }
-        }
+      });
+    }
+
+    const connUserId = connMap.getUserId(conn);
+    if (connUserId) {
+      const info: PeerInfo = {
+        userId: connUserId,
+        peerIndex: getPeerIndexFromConn(conn),
+        liveMode: connMap.getLiveMode(conn),
+      };
+      try {
+        receiveData((payload as { data: unknown }).data, info);
+      } catch (e) {
+        console.error("receiveData", e);
       }
-    } catch (e) {
-      console.error("handlePayload", e);
     }
   };
 
@@ -148,6 +178,18 @@ export const createRoom = (
       }
     });
     conn.on("data", (payload: unknown) => handlePayload(conn, payload));
+    // eslint-disable-next-line no-param-reassign
+    conn.peerConnection.ontrack = (event: RTCTrackEvent) => {
+      const stream = event.streams[0];
+      const connUserId = connMap.getUserId(conn);
+      if (connUserId) {
+        const info = {
+          userId: connUserId,
+          peerIndex: getPeerIndexFromPeerId(conn.peer),
+        };
+        receiveStream(stream, info);
+      }
+    };
     conn.on("close", () => {
       connMap.delConn(conn);
       console.log("dataConnection closed", conn);
@@ -184,7 +226,7 @@ export const createRoom = (
     updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex });
     const id = generatePeerId(roomId, peerIndex);
     console.log("initMyPeer start", index, id);
-    const peer = new Peer(id);
+    const peer = new Peer(id, { debug: 3 });
     myPeer = peer;
     peer.on("open", () => {
       myPeer = peer;
@@ -224,16 +266,6 @@ export const createRoom = (
         peerIndex: getPeerIndexFromConn(conn),
       });
       initConnection(conn);
-    });
-    peer.on("call", (media) => {
-      if (myPeer !== peer || !liveMode) {
-        media.close();
-        return;
-      }
-      console.log("new media received", media);
-      if (initMedia(media)) {
-        media.answer(myStream);
-      }
     });
     peer.on("disconnected", () => {
       console.log("initMyPeer disconnected", index);
@@ -283,61 +315,51 @@ export const createRoom = (
     initMyPeer();
   };
 
-  const callPeer = (id: string) => {
-    if (disposed) return;
-    if (!myPeer || myPeer.id === id) return;
-    if (!liveMode) return;
-    if (!connMap.isConnected(id)) return;
-    if (connMap.getMedia(id)) return;
-    console.log("callPeer", id);
-    const media = myPeer.call(id, myStream);
-    initMedia(media);
-  };
+  myStream.addEventListener("addtrack", (event) => {
+    connMap.forEachLiveConns(async (conn) => {
+      try {
+        conn.peerConnection.addTrack(event.track, myStream);
+        const offer = await conn.peerConnection.createOffer();
+        await conn.peerConnection.setLocalDescription(offer);
+        sendSDP(conn, { offer });
+      } catch (e) {
+        if (e.name === "InvalidAccessError") {
+          // ignore
+        } else {
+          throw e;
+        }
+      }
+    });
+  });
 
-  const initMedia = (media: Peer.MediaConnection) => {
-    const prevMedia = connMap.getMedia(media.peer);
-    if (prevMedia) {
-      if (
-        myPeer &&
-        getPeerIndexFromPeerId(myPeer.id) > getPeerIndexFromPeerId(media.peer)
-      ) {
-        console.log("my peer id is bigger, closing media", media);
-        media.close();
-        return false;
-      }
-      console.log("closing prevMedia", prevMedia);
-      connMap.delMedia(prevMedia);
-      prevMedia.close();
-    }
-    console.log("init media", media);
-    connMap.setMedia(media);
-    media.on("stream", (stream: MediaStream) => {
-      console.log("mediaConnection received stream", media);
-      const connUserId = connMap.getUserId(media.peer);
-      if (connUserId) {
-        const info = {
-          userId: connUserId,
-          peerIndex: getPeerIndexFromPeerId(media.peer),
-        };
-        receiveStream(stream, info);
-      } else {
-        console.warn("No conn userId, closing media");
-        media.close();
+  myStream.addEventListener("removetrack", (event) => {
+    connMap.forEachLiveConns(async (conn) => {
+      const senders = conn.peerConnection.getSenders();
+      const sender = senders.find((s) => s.track === event.track);
+      if (sender) {
+        conn.peerConnection.removeTrack(sender);
       }
     });
-    media.on("close", () => {
-      console.log("mediaConnection closed", media);
-      const connUserId = connMap.getUserId(media.peer);
-      if (connUserId) {
-        const info = {
-          userId: connUserId,
-          peerIndex: getPeerIndexFromPeerId(media.peer),
-        };
-        receiveStream(null, info);
+  });
+
+  const addAllStreamTracks = async (conn: Peer.DataConnection) => {
+    let modified = false;
+    myStream.getTracks().forEach((track) => {
+      try {
+        conn.peerConnection.addTrack(track, myStream);
+        modified = true;
+      } catch (e) {
+        if (e.name === "InvalidAccessError") {
+          // ignore
+        } else {
+          throw e;
+        }
       }
-      connMap.delMedia(media);
     });
-    return true;
+    if (!modified) return;
+    const offer = await conn.peerConnection.createOffer();
+    await conn.peerConnection.setLocalDescription(offer);
+    sendSDP(conn, { offer });
   };
 
   const enableLiveMode = () => {
@@ -347,9 +369,6 @@ export const createRoom = (
     }
     liveMode = true;
     broadcastData(lastBroadcastData);
-    connMap.forEachLiveConns((conn) => {
-      callPeer(conn.peer);
-    });
   };
 
   const disableLiveMode = () => {
@@ -359,7 +378,6 @@ export const createRoom = (
     }
     liveMode = false;
     broadcastData(lastBroadcastData);
-    connMap.closeAllMedia();
   };
 
   const dispose = () => {

@@ -30,14 +30,12 @@ const FaceImage = React.memo<{
     if (stream) {
       stream.addEventListener("addtrack", checkStream);
       stream.addEventListener("removetrack", checkStream);
-      stream.addEventListener("customtrack", checkStream);
     }
     checkStream();
     return () => {
       if (stream) {
         stream.removeEventListener("addtrack", checkStream);
         stream.removeEventListener("removetrack", checkStream);
-        stream.removeEventListener("customtrack", checkStream);
       }
     };
   }, [stream]);

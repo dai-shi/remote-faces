@@ -18,10 +18,9 @@ export const getPeerIndexFromConn = (conn: Peer.DataConnection) =>
 export const createConnectionMap = () => {
   type Value = {
     conn: Peer.DataConnection;
-    connected: boolean;
+    connected?: boolean;
     userId?: string;
-    live: boolean;
-    media?: Peer.MediaConnection;
+    liveMode?: boolean;
   };
   const map = new Map<string, Value>();
 
@@ -30,7 +29,7 @@ export const createConnectionMap = () => {
     if (value) {
       value.conn.close();
     }
-    map.set(conn.peer, { conn, connected: false, live: false });
+    map.set(conn.peer, { conn });
   };
 
   const markConnected = (conn: Peer.DataConnection) => {
@@ -42,19 +41,31 @@ export const createConnectionMap = () => {
 
   const isConnected = (peerId: string) => {
     const value = map.get(peerId);
-    return value ? value.connected : false;
+    return (value && value.connected) || false;
   };
 
-  const setUserId = (peerId: string, userId: string) => {
-    const value = map.get(peerId);
+  const setUserId = (conn: Peer.DataConnection, userId: string) => {
+    const value = map.get(conn.peer);
     if (value) {
       value.userId = userId;
     }
   };
 
-  const getUserId = (peerId: string) => {
-    const value = map.get(peerId);
+  const getUserId = (conn: Peer.DataConnection) => {
+    const value = map.get(conn.peer);
     return value && value.userId;
+  };
+
+  const setLiveMode = (conn: Peer.DataConnection, liveMode: boolean) => {
+    const value = map.get(conn.peer);
+    if (value) {
+      value.liveMode = liveMode;
+    }
+  };
+
+  const getLiveMode = (conn: Peer.DataConnection) => {
+    const value = map.get(conn.peer);
+    return (value && value.liveMode) || false;
   };
 
   const hasConn = (peerId: string) => map.has(peerId);
@@ -72,7 +83,7 @@ export const createConnectionMap = () => {
   const getLivePeerIds = () =>
     Array.from(map.keys()).filter((k) => {
       const value = map.get(k);
-      return value && value.connected && value.live;
+      return value && value.connected && value.liveMode;
     });
 
   const forEachConnectedConns = (
@@ -87,42 +98,8 @@ export const createConnectionMap = () => {
 
   const forEachLiveConns = (callback: (conn: Peer.DataConnection) => void) => {
     Array.from(map.values()).forEach((value) => {
-      if (value.connected && value.live) {
+      if (value.connected && value.liveMode) {
         callback(value.conn);
-      }
-    });
-  };
-
-  const setMedia = (media: Peer.MediaConnection) => {
-    const value = map.get(media.peer);
-    if (value && !value.media) {
-      value.media = media;
-    } else {
-      console.error("setMedia: invalid value, should not happen");
-    }
-  };
-
-  const getMedia = (peerId: string) => {
-    const value = map.get(peerId);
-    return value && value.media;
-  };
-
-  const delMedia = (media: Peer.MediaConnection) => {
-    const value = map.get(media.peer);
-    if (!value) return; // conn is deleted in advance
-    if (value.media === media) {
-      delete value.media;
-    } else {
-      console.error("delMedia: invalid value, should not happen", media);
-    }
-  };
-
-  const closeAllMedia = () => {
-    Array.from(map.values()).forEach((value) => {
-      if (value.media) {
-        value.media.close();
-        const valueToModify = value;
-        delete valueToModify.media;
       }
     });
   };
@@ -140,16 +117,14 @@ export const createConnectionMap = () => {
     isConnected,
     setUserId,
     getUserId,
+    setLiveMode,
+    getLiveMode,
     hasConn,
     delConn,
     getConnectedPeerIds,
     getLivePeerIds,
     forEachConnectedConns,
     forEachLiveConns,
-    setMedia,
-    getMedia,
-    delMedia,
-    closeAllMedia,
     clearAll,
   };
 };
