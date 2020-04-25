@@ -57,12 +57,12 @@ const FaceImage = React.memo<{
       )}
       <div className="FaceImages-name">{nickname}</div>
       <div className="FaceImages-mesg">{statusMesg}</div>
-      {hasVideo && hasAudio && (
+      {liveMode && hasVideo && hasAudio && (
         <div className="FaceImages-live-indicator" title="Video/Audio On">
           &#9672;
         </div>
       )}
-      {hasVideo && !hasAudio && (
+      {liveMode && hasVideo && !hasAudio && (
         <div className="FaceImages-live-indicator" title="Video On">
           &#9673;
         </div>

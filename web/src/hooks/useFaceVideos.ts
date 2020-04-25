@@ -35,7 +35,7 @@ export const useFaceVideos = (
           disposeVideo();
           const removeTrackEvent = new Event("removetrack");
           (removeTrackEvent as any).track = videoTrack;
-          myStream.dispatchEvent(addTrackEvent);
+          myStream.dispatchEvent(removeTrackEvent);
         };
       })();
     }
@@ -61,7 +61,7 @@ export const useFaceVideos = (
           disposeAudio();
           const removeTrackEvent = new Event("removetrack");
           (removeTrackEvent as any).track = audioTrack;
-          myStream.dispatchEvent(addTrackEvent);
+          myStream.dispatchEvent(removeTrackEvent);
         };
       })();
     }

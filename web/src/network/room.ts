@@ -123,6 +123,8 @@ export const createRoom = (
       connMap.setLiveMode(conn, payloadLiveMode as boolean);
       if (payloadLiveMode) {
         addAllStreamTracks(conn);
+      } else {
+        removeAllStreamTracks(conn);
       }
     }
   };
@@ -180,9 +182,16 @@ export const createRoom = (
     conn.on("data", (payload: unknown) => handlePayload(conn, payload));
     // eslint-disable-next-line no-param-reassign
     conn.peerConnection.ontrack = (event: RTCTrackEvent) => {
+      const { track } = event;
       const stream = event.streams[0];
       const connUserId = connMap.getUserId(conn);
       if (connUserId) {
+        track.addEventListener("ended", () => {
+          stream.removeTrack(track);
+          const removeTrackEvent = new Event("removetrack");
+          (removeTrackEvent as any).track = track;
+          stream.dispatchEvent(removeTrackEvent);
+        });
         const info = {
           userId: connUserId,
           peerIndex: getPeerIndexFromPeerId(conn.peer),
@@ -226,7 +235,7 @@ export const createRoom = (
     updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex });
     const id = generatePeerId(roomId, peerIndex);
     console.log("initMyPeer start", index, id);
-    const peer = new Peer(id, { debug: 3 });
+    const peer = new Peer(id, { debug: 2 });
     myPeer = peer;
     peer.on("open", () => {
       myPeer = peer;
@@ -360,6 +369,15 @@ export const createRoom = (
     const offer = await conn.peerConnection.createOffer();
     await conn.peerConnection.setLocalDescription(offer);
     sendSDP(conn, { offer });
+  };
+
+  const removeAllStreamTracks = async (conn: Peer.DataConnection) => {
+    const senders = conn.peerConnection.getSenders();
+    senders.forEach((sender) => {
+      if (sender.track) {
+        conn.peerConnection.removeTrack(sender);
+      }
+    });
   };
 
   const enableLiveMode = () => {
