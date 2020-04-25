@@ -1,62 +1,76 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
-import { DataInfo, createRoom, NetworkStatus } from "../network/room";
+import {
+  PeerInfo,
+  ReceiveStream,
+  createRoom,
+  NetworkStatus,
+} from "../network/room";
 
 type NetworkStatusListener = (status: NetworkStatus) => void;
-type DataListener = (data: unknown, info: DataInfo) => boolean;
+type DataListener = (data: unknown, info: PeerInfo) => void;
 type StreamListener = (
-  peerId: number,
   stream: MediaStream | null, // null for removing stream
-  attachedData: unknown
+  info: Parameters<ReceiveStream>[1]
 ) => void;
 type RoomEntry = {
   room: ReturnType<typeof createRoom>;
   networkStatusListeners: Set<NetworkStatusListener>;
   dataListeners: Set<DataListener>;
-  mediaAttachedData: Map<number, unknown>;
   streamListeners: Set<StreamListener>;
-  myStream?: MediaStream;
+  myStream: MediaStream;
   count: number;
 };
 const roomEntryMap = new Map<string, RoomEntry>();
 const register = (
   roomId: string,
+  userId: string,
   networkStatusListener?: NetworkStatusListener,
   dataListener?: DataListener,
   streamListener?: StreamListener
 ) => {
-  let entry = roomEntryMap.get(roomId);
+  const roomEntryKey = `${roomId}_${userId}`;
+  let entry = roomEntryMap.get(roomEntryKey);
   if (!entry) {
     const networkStatusListeners = new Set<NetworkStatusListener>();
     const dataListeners = new Set<DataListener>();
-    const mediaAttachedData = new Map<number, unknown>();
     const streamListeners = new Set<StreamListener>();
+    const myStream = new MediaStream();
     const updateNetworkStatus = (status: NetworkStatus) => {
-      if (status.type === "CONNECTION_CLOSED") {
-        mediaAttachedData.delete(status.peerId);
-      }
       networkStatusListeners.forEach((listener) => {
         listener(status);
       });
     };
-    const receiveData = (data: unknown, info: DataInfo) => {
+    const receiveData = (data: unknown, info: PeerInfo) => {
       dataListeners.forEach((listener) => {
-        const attachToMedia = listener(data, info);
-        if (attachToMedia) {
-          mediaAttachedData.set(info.peerId, data);
-        }
+        listener(data, info);
       });
     };
-    const room = createRoom(roomId, updateNetworkStatus, receiveData);
+    const receiveStream = (
+      stream: MediaStream | null,
+      info: Parameters<ReceiveStream>[1]
+    ) => {
+      streamListeners.forEach((listener) => {
+        listener(stream, info);
+      });
+    };
+    const room = createRoom(
+      roomId,
+      userId,
+      myStream,
+      updateNetworkStatus,
+      receiveData,
+      receiveStream
+    );
     entry = {
       room,
       networkStatusListeners,
       dataListeners,
-      mediaAttachedData,
       streamListeners,
+      myStream,
       count: 0,
     };
-    roomEntryMap.set(roomId, entry);
+    roomEntryMap.set(roomEntryKey, entry);
   }
   if (networkStatusListener) {
     entry.networkStatusListeners.add(networkStatusListener);
@@ -67,22 +81,7 @@ const register = (
   if (streamListener) {
     entry.streamListeners.add(streamListener);
     if (entry.streamListeners.size === 1) {
-      entry.myStream = new MediaStream();
-      entry.room.enableLiveMode(entry.myStream, (stream, { peerId }, close) => {
-        if (
-          stream &&
-          close &&
-          !(entry as RoomEntry).mediaAttachedData.has(peerId)
-        ) {
-          console.warn("stream received too early, closing media:", peerId);
-          close();
-          return;
-        }
-        const attachedData = (entry as RoomEntry).mediaAttachedData.get(peerId);
-        (entry as RoomEntry).streamListeners.forEach((listener) => {
-          listener(peerId, stream, attachedData);
-        });
-      });
+      entry.room.enableLiveMode();
     }
   }
   entry.count += 1;
@@ -96,14 +95,13 @@ const register = (
     if (streamListener) {
       (entry as RoomEntry).streamListeners.delete(streamListener);
       if ((entry as RoomEntry).streamListeners.size === 0) {
-        delete (entry as RoomEntry).myStream;
         (entry as RoomEntry).room.disableLiveMode();
       }
     }
     (entry as RoomEntry).count -= 1;
     if ((entry as RoomEntry).count <= 0) {
       (entry as RoomEntry).room.dispose();
-      roomEntryMap.delete(roomId);
+      roomEntryMap.delete(roomEntryKey);
     }
   };
   return {
@@ -113,21 +111,21 @@ const register = (
   };
 };
 
-export const useRoomNetworkStatus = (roomId: string) => {
+export const useRoomNetworkStatus = (roomId: string, userId: string) => {
   const [networkStatus, updateNetworkStatus] = useState<NetworkStatus>();
   if (networkStatus && networkStatus.type === "UNKNOWN_ERROR") {
     throw new Error("Network Error");
   }
   useEffect(() => {
-    const { unregister } = register(roomId, updateNetworkStatus);
+    const { unregister } = register(roomId, userId, updateNetworkStatus);
     return unregister;
-  }, [roomId]);
+  }, [roomId, userId]);
   return networkStatus;
 };
 
 type BroadcastData = ReturnType<typeof createRoom>["broadcastData"];
 
-export const useBroadcastData = (roomId: string) => {
+export const useBroadcastData = (roomId: string, userId: string) => {
   const broadcastDataRef = useRef<BroadcastData>();
   const broadcastData = useCallback((...args: Parameters<BroadcastData>) => {
     if (broadcastDataRef.current) {
@@ -138,78 +136,57 @@ export const useBroadcastData = (roomId: string) => {
   }, []);
   useEffect(() => {
     const { broadcastData: broadcastDataByRegister, unregister } = register(
-      roomId
+      roomId,
+      userId
     );
     broadcastDataRef.current = broadcastDataByRegister;
     return unregister;
-  }, [roomId]);
+  }, [roomId, userId]);
   return broadcastData;
-};
-
-const dataInfoMap = new WeakMap<object, DataInfo>();
-export const getDataInfo = (data: unknown) => {
-  try {
-    return dataInfoMap.get(data as object);
-  } catch (e) {
-    return undefined;
-  }
-};
-const setDataInfo = (data: unknown, info: DataInfo) => {
-  try {
-    dataInfoMap.set(data as object, info);
-  } catch (e) {
-    // ignore
-  }
 };
 
 export const useRoomData = <Data>(
   roomId: string,
-  isValidData: (data: unknown) => boolean,
-  attachToMedia?: boolean
+  userId: string,
+  isValidData: (data: unknown) => boolean
 ) => {
-  const [data, setData] = useState<Data>();
+  const [result, setResult] = useState<{ data: Data; info: PeerInfo }>();
   useEffect(() => {
-    const dataListener = (unknownData: unknown, info: DataInfo) => {
-      if (isValidData(unknownData)) {
-        setDataInfo(unknownData, info);
-        setData(unknownData as Data);
-        return !!attachToMedia;
+    const dataListener = (data: unknown, info: PeerInfo) => {
+      if (isValidData(data)) {
+        setResult({ data: data as Data, info });
       }
       return false;
     };
-    const { unregister } = register(roomId, undefined, dataListener);
+    const { unregister } = register(roomId, userId, undefined, dataListener);
     return unregister;
-  }, [roomId, isValidData, attachToMedia]);
-  return data;
+  }, [roomId, userId, isValidData]);
+  return result;
 };
 
-export const useRoomMedia = (roomId: string, enabled: boolean) => {
+export const useRoomMedia = (
+  roomId: string,
+  userId: string,
+  enabled: boolean
+) => {
   const [myStream, setMyStream] = useState<MediaStream | null>(null);
-  const [streamMap, setStreamMap] = useState<{
-    [peerId: number]: { stream: MediaStream; attachedData: unknown };
-  }>({});
+  const [streamList, setStreamList] = useState<
+    { stream: MediaStream; info: Parameters<ReceiveStream>[1] }[]
+  >([]);
   useEffect(() => {
     if (enabled) {
       const streamListener = (
-        peerId: number,
         stream: MediaStream | null,
-        attachedData: unknown
+        info: Parameters<ReceiveStream>[1]
       ) => {
-        if (stream) {
-          setStreamMap((prev) => ({
-            ...prev,
-            [peerId]: { stream, attachedData },
-          }));
-        } else {
-          // remove stream
-          setStreamMap((prev) => {
-            const { [peerId]: removed, ...rest } = prev;
-            return rest;
-          });
-        }
+        setStreamList((prev) => [
+          ...prev.filter((item) => item.info.userId !== info.userId),
+          ...(stream ? [{ stream, info }] : []),
+        ]);
       };
       const { myStream: myStreamToSet, unregister } = register(
         roomId,
+        userId,
         undefined,
         undefined,
         streamListener
@@ -219,11 +196,11 @@ export const useRoomMedia = (roomId: string, enabled: boolean) => {
     }
     // noot enabled
     setMyStream(null);
-    setStreamMap({});
+    setStreamList([]);
     return undefined;
-  }, [roomId, enabled]);
+  }, [roomId, userId, enabled]);
   return {
     myStream,
-    streamList: useMemo(() => Object.values(streamMap), [streamMap]),
+    streamList,
   };
 };

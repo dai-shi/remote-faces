@@ -2,52 +2,58 @@ import Peer from "peerjs";
 
 import { rand4 } from "../utils/crypto";
 import {
-  isValidPeerJsId,
-  generatePeerJsId,
-  getPeerIdFromPeerJsId,
-  getPeerIdFromConn,
+  isValidPeerId,
+  generatePeerId,
+  getPeerIndexFromPeerId,
+  getPeerIndexFromConn,
   createConnectionMap,
 } from "./peerUtils";
 
-const SEED_PEERS = 5; // config
-const guessSeed = (id: string) => getPeerIdFromPeerJsId(id) < SEED_PEERS;
+const MIN_SEED_PEER_INDEX = 10; // config
+const MAX_SEED_PEER_INDEX = 14; // config
+const guessSeed = (id: string) => {
+  const peerIndex = getPeerIndexFromPeerId(id);
+  return MIN_SEED_PEER_INDEX <= peerIndex && peerIndex <= MAX_SEED_PEER_INDEX;
+};
 
 export type NetworkStatus =
   | { type: "CONNECTING_SEED_PEERS" }
-  | { type: "NEW_CONNECTION"; peerId: number }
-  | { type: "CONNECTION_CLOSED"; peerId: number }
-  | { type: "INITIALIZING_PEER"; index: number }
+  | { type: "NEW_CONNECTION"; peerIndex: number }
+  | { type: "CONNECTION_CLOSED"; peerIndex: number }
+  | { type: "INITIALIZING_PEER"; peerIndex: number }
   | { type: "RECONNECTING" }
   | { type: "UNKNOWN_ERROR" }
-  | { type: "CONNECTED_PEERS"; peerIds: number[] };
+  | { type: "CONNECTED_PEERS"; peerIndexList: number[] };
 
 type UpdateNetworkStatus = (status: NetworkStatus) => void;
 
-export type DataInfo = { peerId: number; liveMode: boolean };
-type ReceiveData = (data: unknown, info: DataInfo) => void;
-type ReceiveStream = (
+export type PeerInfo = { userId: string; peerIndex: number; liveMode: boolean };
+type ReceiveData = (data: unknown, info: PeerInfo) => void;
+export type ReceiveStream = (
   stream: MediaStream | null, // null for removing stream
-  info: { peerId: number },
-  close?: () => void
+  info: Omit<PeerInfo, "liveMode">
 ) => void;
 
 export const createRoom = (
   roomId: string,
+  userId: string,
+  myStream: MediaStream,
   updateNetworkStatus: UpdateNetworkStatus,
-  receiveData: ReceiveData
+  receiveData: ReceiveData,
+  receiveStream: ReceiveStream
 ) => {
   let disposed = false;
   let myPeer: Peer | null = null;
   let lastBroadcastData: unknown | null = null;
   const connMap = createConnectionMap();
   let liveMode = false;
-  let myStream: MediaStream | null = null;
-  let receiveStream: ReceiveStream | null = null;
 
   const showConnectedStatus = () => {
     if (disposed) return;
-    const peerIds = connMap.getConnectedPeerJsIds().map(getPeerIdFromPeerJsId);
-    updateNetworkStatus({ type: "CONNECTED_PEERS", peerIds });
+    const peerIndexList = connMap
+      .getConnectedPeerIds()
+      .map(getPeerIndexFromPeerId);
+    updateNetworkStatus({ type: "CONNECTED_PEERS", peerIndexList });
   };
 
   const connectPeer = (id: string) => {
@@ -64,11 +70,11 @@ export const createRoom = (
     if (replaceLastData) {
       lastBroadcastData = data;
     }
-    const peers = connMap.getConnectedPeerJsIds();
-    const livePeers = connMap.getLivePeerJsIds();
+    const peers = connMap.getConnectedPeerIds();
+    const livePeers = connMap.getLivePeerIds();
     connMap.forEachConnectedConns((conn) => {
       try {
-        conn.send({ data, peers, liveMode, livePeers });
+        conn.send({ userId, data, peers, liveMode, livePeers });
       } catch (e) {
         console.error("broadcastData", e);
       }
@@ -79,20 +85,30 @@ export const createRoom = (
     if (disposed) return;
     try {
       if (payload && typeof payload === "object") {
-        const info: DataInfo = {
-          peerId: getPeerIdFromConn(conn),
-          liveMode: !!(payload as { liveMode?: unknown }).liveMode,
-        };
-        receiveData((payload as { data: unknown }).data, info);
+        if (typeof (payload as { userId: unknown }).userId === "string") {
+          connMap.setUserId(conn.peer, (payload as { userId: string }).userId);
+        }
+        const connUserId = connMap.getUserId(conn.peer);
+        if (connUserId) {
+          const info: PeerInfo = {
+            userId: connUserId,
+            peerIndex: getPeerIndexFromConn(conn),
+            liveMode: !!(payload as { liveMode?: unknown }).liveMode,
+          };
+          receiveData((payload as { data: unknown }).data, info);
+        }
         if (Array.isArray((payload as { peers: unknown }).peers)) {
           (payload as { peers: unknown[] }).peers.forEach((peer) => {
-            if (isValidPeerJsId(roomId, peer)) {
+            if (isValidPeerId(roomId, peer)) {
               connectPeer(peer);
             }
           });
         }
         if (liveMode) {
-          if (info.liveMode && isValidPeerJsId(roomId, conn.peer)) {
+          if (
+            (payload as { liveMode?: unknown }).liveMode &&
+            isValidPeerId(roomId, conn.peer)
+          ) {
             setTimeout(() => {
               // XXX I don't know why it only works with setTimeout
               callPeer(conn.peer);
@@ -100,7 +116,7 @@ export const createRoom = (
           }
           if (Array.isArray((payload as { livePeers: unknown }).livePeers)) {
             (payload as { livePeers: unknown[] }).livePeers.forEach((peer) => {
-              if (isValidPeerJsId(roomId, peer)) {
+              if (isValidPeerId(roomId, peer)) {
                 callPeer(peer);
               }
             });
@@ -123,10 +139,11 @@ export const createRoom = (
       showConnectedStatus();
       if (lastBroadcastData) {
         conn.send({
+          userId,
           data: lastBroadcastData,
-          peers: connMap.getConnectedPeerJsIds(),
+          peers: connMap.getConnectedPeerIds(),
           liveMode,
-          livePeers: connMap.getLivePeerJsIds(),
+          livePeers: connMap.getLivePeerIds(),
         });
       }
     });
@@ -136,10 +153,10 @@ export const createRoom = (
       console.log("dataConnection closed", conn);
       updateNetworkStatus({
         type: "CONNECTION_CLOSED",
-        peerId: getPeerIdFromConn(conn),
+        peerIndex: getPeerIndexFromConn(conn),
       });
       showConnectedStatus();
-      if (connMap.getConnectedPeerJsIds().length === 0) {
+      if (connMap.getConnectedPeerIds().length === 0) {
         reInitMyPeer(true);
       } else if (
         guessSeed(conn.peer) &&
@@ -149,7 +166,7 @@ export const createRoom = (
       ) {
         const waitSec = 30 + Math.floor(Math.random() * 60);
         console.log(
-          `Disconnected seed peer: ${getPeerIdFromPeerJsId(
+          `Disconnected seed peer: ${getPeerIndexFromPeerId(
             conn.peer
           )}, reinit in ${waitSec}sec...`
         );
@@ -158,14 +175,14 @@ export const createRoom = (
     });
   };
 
-  const initMyPeer = (index = 0) => {
+  const initMyPeer = (index = MIN_SEED_PEER_INDEX) => {
     if (disposed) return;
     if (myPeer) return;
     connMap.clearAll();
-    updateNetworkStatus({ type: "INITIALIZING_PEER", index });
-    const isSeed = index < SEED_PEERS;
-    const peerId = isSeed ? index : rand4();
-    const id = generatePeerJsId(roomId, peerId);
+    const isSeed = MIN_SEED_PEER_INDEX <= index && index <= MAX_SEED_PEER_INDEX;
+    const peerIndex = isSeed ? index : rand4();
+    updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex });
+    const id = generatePeerId(roomId, peerIndex);
     console.log("initMyPeer start", index, id);
     const peer = new Peer(id);
     myPeer = peer;
@@ -175,8 +192,8 @@ export const createRoom = (
         (window as any).myPeer = myPeer;
       }
       updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
-      for (let i = 0; i < SEED_PEERS; i += 1) {
-        const seedId = generatePeerJsId(roomId, i);
+      for (let i = MIN_SEED_PEER_INDEX; i <= MAX_SEED_PEER_INDEX; i += 1) {
+        const seedId = generatePeerId(roomId, i);
         connectPeer(seedId);
       }
     });
@@ -204,12 +221,12 @@ export const createRoom = (
       console.log("new connection received", conn);
       updateNetworkStatus({
         type: "NEW_CONNECTION",
-        peerId: getPeerIdFromConn(conn),
+        peerIndex: getPeerIndexFromConn(conn),
       });
       initConnection(conn);
     });
     peer.on("call", (media) => {
-      if (myPeer !== peer || !myStream) {
+      if (myPeer !== peer || !liveMode) {
         media.close();
         return;
       }
@@ -246,10 +263,14 @@ export const createRoom = (
     if (myPeer.disconnected) return; // should already be handled
     if (!force) {
       if (guessSeed(myPeer.id)) return;
-      const existsAllSeeds = Array.from(Array(SEED_PEERS).keys()).every((i) => {
-        const id = generatePeerJsId(roomId, i);
-        return connMap.isConnected(id);
-      });
+      let existsAllSeeds = true;
+      for (let i = MIN_SEED_PEER_INDEX; i <= MAX_SEED_PEER_INDEX; i += 1) {
+        const id = generatePeerId(roomId, i);
+        if (!connMap.isConnected(id)) {
+          existsAllSeeds = false;
+          break;
+        }
+      }
       if (existsAllSeeds) {
         showConnectedStatus();
         return;
@@ -265,7 +286,7 @@ export const createRoom = (
   const callPeer = (id: string) => {
     if (disposed) return;
     if (!myPeer || myPeer.id === id) return;
-    if (!myStream) return;
+    if (!liveMode) return;
     if (!connMap.isConnected(id)) return;
     if (connMap.getMedia(id)) return;
     console.log("callPeer", id);
@@ -278,7 +299,7 @@ export const createRoom = (
     if (prevMedia) {
       if (
         myPeer &&
-        getPeerIdFromPeerJsId(myPeer.id) > getPeerIdFromPeerJsId(media.peer)
+        getPeerIndexFromPeerId(myPeer.id) > getPeerIndexFromPeerId(media.peer)
       ) {
         console.log("my peer id is bigger, closing media", media);
         media.close();
@@ -292,30 +313,39 @@ export const createRoom = (
     connMap.setMedia(media);
     media.on("stream", (stream: MediaStream) => {
       console.log("mediaConnection received stream", media);
-      const info = {
-        peerId: getPeerIdFromPeerJsId(media.peer),
-      };
-      if (receiveStream) receiveStream(stream, info, () => media.close());
+      const connUserId = connMap.getUserId(media.peer);
+      if (connUserId) {
+        const info = {
+          userId: connUserId,
+          peerIndex: getPeerIndexFromPeerId(media.peer),
+        };
+        receiveStream(stream, info);
+      } else {
+        console.warn("No conn userId, closing media");
+        media.close();
+      }
     });
     media.on("close", () => {
       console.log("mediaConnection closed", media);
-      const info = {
-        peerId: getPeerIdFromPeerJsId(media.peer),
-      };
-      if (receiveStream) receiveStream(null, info);
+      const connUserId = connMap.getUserId(media.peer);
+      if (connUserId) {
+        const info = {
+          userId: connUserId,
+          peerIndex: getPeerIndexFromPeerId(media.peer),
+        };
+        receiveStream(null, info);
+      }
       connMap.delMedia(media);
     });
     return true;
   };
 
-  const enableLiveMode = (stream: MediaStream, recvStream: ReceiveStream) => {
+  const enableLiveMode = () => {
     if (liveMode) {
       console.warn("liveMode already enabled");
       return;
     }
     liveMode = true;
-    myStream = stream;
-    receiveStream = recvStream;
     broadcastData(lastBroadcastData);
     connMap.forEachLiveConns((conn) => {
       callPeer(conn.peer);
@@ -328,8 +358,6 @@ export const createRoom = (
       return;
     }
     liveMode = false;
-    myStream = null;
-    receiveStream = null;
     broadcastData(lastBroadcastData);
     connMap.closeAllMedia();
   };

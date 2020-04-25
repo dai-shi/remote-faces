@@ -106,6 +106,7 @@ const FaceImages: React.FC<Props> = ({
   );
   const { myStream, streamMap } = useFaceVideos(
     roomId,
+    userId,
     liveType === "video" || liveType === "video+audio",
     liveType === "video+audio",
     videoDeviceId,
