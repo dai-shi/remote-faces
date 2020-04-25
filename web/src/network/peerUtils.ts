@@ -1,19 +1,19 @@
 import Peer from "peerjs";
 
-export const isValidPeerJsId = (
+export const isValidPeerId = (
   roomId: string,
-  peerJsId: unknown
-): peerJsId is string =>
-  typeof peerJsId === "string" && peerJsId.startsWith(`${roomId}_`);
+  peerId: unknown
+): peerId is string =>
+  typeof peerId === "string" && peerId.startsWith(`${roomId}_`);
 
-export const generatePeerJsId = (roomId: string, peerId: number) =>
-  `${roomId}_${peerId}`;
+export const generatePeerId = (roomId: string, peerIndex: number) =>
+  `${roomId}_${peerIndex}`;
 
-export const getPeerIdFromPeerJsId = (peerJsId: string) =>
-  Number(peerJsId.split("_")[1]);
+export const getPeerIndexFromPeerId = (peerId: string) =>
+  Number(peerId.split("_")[1]);
 
-export const getPeerIdFromConn = (conn: Peer.DataConnection) =>
-  getPeerIdFromPeerJsId(conn.peer);
+export const getPeerIndexFromConn = (conn: Peer.DataConnection) =>
+  getPeerIndexFromPeerId(conn.peer);
 
 export const createConnectionMap = () => {
   type Value = {
@@ -39,12 +39,12 @@ export const createConnectionMap = () => {
     }
   };
 
-  const isConnected = (peerJsId: string) => {
-    const value = map.get(peerJsId);
+  const isConnected = (peerId: string) => {
+    const value = map.get(peerId);
     return value ? value.connected : false;
   };
 
-  const hasConn = (peerJsId: string) => map.has(peerJsId);
+  const hasConn = (peerId: string) => map.has(peerId);
 
   const delConn = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
@@ -53,10 +53,10 @@ export const createConnectionMap = () => {
     }
   };
 
-  const getConnectedPeerJsIds = () =>
+  const getConnectedPeerIds = () =>
     Array.from(map.keys()).filter((k) => map.get(k)?.connected);
 
-  const getLivePeerJsIds = () =>
+  const getLivePeerIds = () =>
     Array.from(map.keys()).filter((k) => {
       const value = map.get(k);
       return value && value.connected && value.live;
@@ -89,8 +89,8 @@ export const createConnectionMap = () => {
     }
   };
 
-  const getMedia = (peerJsId: string) => {
-    const value = map.get(peerJsId);
+  const getMedia = (peerId: string) => {
+    const value = map.get(peerId);
     return value && value.media;
   };
 
@@ -100,7 +100,7 @@ export const createConnectionMap = () => {
     if (value.media === media) {
       delete value.media;
     } else {
-      console.error("delMedia: invalid value, should not happen");
+      console.error("delMedia: invalid value, should not happen", media);
     }
   };
 
@@ -127,8 +127,8 @@ export const createConnectionMap = () => {
     isConnected,
     hasConn,
     delConn,
-    getConnectedPeerJsIds,
-    getLivePeerJsIds,
+    getConnectedPeerIds,
+    getLivePeerIds,
     forEachConnectedConns,
     forEachLiveConns,
     setMedia,

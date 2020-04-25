@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 
 import { takePhoto } from "../media/capture";
-import { useRoomData, getDataInfo, useBroadcastData } from "./useRoom";
+import { useRoomData, useBroadcastData } from "./useRoom";
 
 type ImageUrl = string;
 type FaceInfo = {
@@ -9,11 +9,11 @@ type FaceInfo = {
   message: string;
 };
 type ImageData = {
-  userId: string;
   image: ImageUrl;
   info: FaceInfo;
 };
 type RoomImage = ImageData & {
+  userId: string;
   received: number; // in milliseconds
   obsoleted: boolean;
   liveMode: boolean;
@@ -49,17 +49,18 @@ export const useFaceImages = (
     throw fatalError;
   }
 
-  const broadcastData = useBroadcastData(roomId);
-  const imageData = useRoomData<ImageData>(roomId, isImageData, true);
-  const roomImage = useMemo(
+  const broadcastData = useBroadcastData(roomId, userId);
+  const result = useRoomData<ImageData>(roomId, userId, isImageData);
+  const roomImage: RoomImage | undefined = useMemo(
     () =>
-      imageData && {
-        ...imageData,
+      result && {
+        ...result.data,
+        userId: result.info.userId,
         received: Date.now(),
         obsoleted: false,
-        liveMode: !!getDataInfo(imageData)?.liveMode,
+        liveMode: result.info.liveMode,
       },
-    [imageData]
+    [result]
   );
   if (roomImage) {
     const found = roomImages.find((item) => item.userId === roomImage.userId);

@@ -6,6 +6,7 @@ import { useRoomMedia } from "./useRoom";
 
 export const useFaceVideos = (
   roomId: string,
+  userId: string,
   videoEnabled: boolean,
   audioEnabled: boolean,
   videoDeviceId?: string,
@@ -13,6 +14,7 @@ export const useFaceVideos = (
 ) => {
   const { myStream, streamList } = useRoomMedia(
     roomId,
+    userId,
     videoEnabled || audioEnabled
   );
   useEffect(() => {
@@ -62,12 +64,7 @@ export const useFaceVideos = (
   const streamMap = useMemo(() => {
     const map: { [userId: string]: MediaStream } = {};
     streamList.forEach((item) => {
-      if (typeof item.attachedData === "object") {
-        const { userId } = item.attachedData as { userId: unknown };
-        if (typeof userId === "string") {
-          map[userId] = item.stream;
-        }
-      }
+      map[item.info.userId] = item.stream;
     });
     return map;
   }, [streamList]);

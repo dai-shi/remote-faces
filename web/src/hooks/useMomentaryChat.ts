@@ -93,11 +93,11 @@ export const useMomentaryChat = (
     }
   }, []);
 
-  const broadcastData = useBroadcastData(roomId);
-  const chatData = useRoomData<ChatData>(roomId, isChatData);
+  const broadcastData = useBroadcastData(roomId, userId);
+  const result = useRoomData<ChatData>(roomId, userId, isChatData);
   useEffect(() => {
-    if (chatData) {
-      addChatItem(chatData);
+    if (result) {
+      addChatItem(result.data);
     }
   });
 

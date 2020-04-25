@@ -31,7 +31,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const [liveType, setLiveType] = useState<LiveType>("off");
   const [configOpen, setConfigOpen] = useState<boolean>(true);
 
-  const networkStatus = useRoomNetworkStatus(roomId);
+  const networkStatus = useRoomNetworkStatus(roomId, userId);
 
   const appLink = `remote-faces://${window.location.href.replace(
     /^https:\/\//,
