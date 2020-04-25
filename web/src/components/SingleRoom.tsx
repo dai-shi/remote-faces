@@ -7,6 +7,7 @@ import { useRoomNetworkStatus } from "../hooks/useRoom";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import FaceImages from "./FaceImages";
 import MomentaryChat from "./MomentaryChat";
+import ScreenShare from "./ScreenShare";
 
 type LiveType = "off" | "video" | "video+audio";
 
@@ -123,6 +124,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
         liveType={liveType}
       />
       <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
+      <ScreenShare roomId={roomId} userId={userId} nickname={nickname} />
     </>
   );
 };

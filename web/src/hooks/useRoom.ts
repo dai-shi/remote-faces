@@ -194,7 +194,7 @@ export const useRoomMedia = (
       setMyStream(myStreamToSet || null);
       return unregister;
     }
-    // noot enabled
+    // not enabled
     setMyStream(null);
     setStreamList([]);
     return undefined;
