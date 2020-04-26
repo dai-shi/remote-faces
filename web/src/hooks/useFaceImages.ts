@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 
 import { takePhoto } from "../media/capture";
-import { useRoomData, useBroadcastData } from "./useRoom";
+import { useRoomData, useBroadcastData, useRoomNetworkStatus } from "./useRoom";
 
 type ImageUrl = string;
 type FaceInfo = {
@@ -17,6 +17,7 @@ type RoomImage = ImageData & {
   received: number; // in milliseconds
   obsoleted: boolean;
   liveMode: boolean;
+  peerIndex: number;
 };
 
 const isFaceInfo = (x: unknown): x is FaceInfo =>
@@ -58,6 +59,7 @@ export const useFaceImages = (
         received: Date.now(),
         obsoleted: false,
         liveMode: latestData.info.liveMode,
+        peerIndex: latestData.info.peerIndex,
       };
       setRoomImages((prev) => {
         const found = prev.find((item) => item.userId === roomImage.userId);
@@ -70,6 +72,24 @@ export const useFaceImages = (
       });
     }
   }, [latestData]);
+
+  const networkStatus = useRoomNetworkStatus(roomId, userId);
+  useEffect(() => {
+    if (networkStatus && networkStatus.type === "CONNECTION_CLOSED") {
+      const { peerIndex } = networkStatus;
+      setRoomImages((prev) => {
+        let changed = false;
+        const next = prev.map((item) => {
+          if (item.peerIndex === peerIndex) {
+            changed = true;
+            return { ...item, obsoleted: true };
+          }
+          return item;
+        });
+        return changed ? next : prev;
+      });
+    }
+  }, [networkStatus]);
 
   useEffect(() => {
     const checkObsoletedImage = () => {

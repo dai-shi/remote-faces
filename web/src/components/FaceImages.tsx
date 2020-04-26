@@ -52,7 +52,7 @@ const FaceImage = React.memo<{
           &#9673;
         </div>
       )}
-      {liveMode && !hasVideo && !hasAudio && (
+      {!obsoleted && liveMode && !stream && (
         <div className="FaceImages-live-indicator" title="Video On">
           &#9678;
         </div>
