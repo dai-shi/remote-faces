@@ -80,12 +80,6 @@ export const createConnectionMap = () => {
   const getConnectedPeerIds = () =>
     Array.from(map.keys()).filter((k) => map.get(k)?.connected);
 
-  const getLivePeerIds = () =>
-    Array.from(map.keys()).filter((k) => {
-      const value = map.get(k);
-      return value && value.connected && value.liveMode;
-    });
-
   const forEachConnectedConns = (
     callback: (conn: Peer.DataConnection) => void
   ) => {
@@ -122,7 +116,6 @@ export const createConnectionMap = () => {
     hasConn,
     delConn,
     getConnectedPeerIds,
-    getLivePeerIds,
     forEachConnectedConns,
     forEachLiveConns,
     clearAll,

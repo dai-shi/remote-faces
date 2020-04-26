@@ -1,7 +1,7 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { takePhoto } from "../media/capture";
-import { useRoomData, useBroadcastData } from "./useRoom";
+import { useRoomData, useBroadcastData, useRoomNetworkStatus } from "./useRoom";
 
 type ImageUrl = string;
 type FaceInfo = {
@@ -17,6 +17,7 @@ type RoomImage = ImageData & {
   received: number; // in milliseconds
   obsoleted: boolean;
   liveMode: boolean;
+  peerIndex: number;
 };
 
 const isFaceInfo = (x: unknown): x is FaceInfo =>
@@ -49,30 +50,46 @@ export const useFaceImages = (
   }
 
   const broadcastData = useBroadcastData(roomId, userId);
-  const result = useRoomData<ImageData>(roomId, userId, isImageData);
-  const roomImage: RoomImage | undefined = useMemo(
-    () =>
-      result && {
-        ...result.data,
-        userId: result.info.userId,
+  const latestData = useRoomData<ImageData>(roomId, userId, isImageData);
+  useEffect(() => {
+    if (latestData) {
+      const roomImage = {
+        ...latestData.data,
+        userId: latestData.info.userId,
         received: Date.now(),
         obsoleted: false,
-        liveMode: result.info.liveMode,
-      },
-    [result]
-  );
-  if (roomImage) {
-    const found = roomImages.find((item) => item.userId === roomImage.userId);
-    if (!found) {
-      setRoomImages([...roomImages, roomImage]);
-    } else if (found.received !== roomImage.received) {
-      setRoomImages(
-        roomImages.map((item) =>
+        liveMode: latestData.info.liveMode,
+        peerIndex: latestData.info.peerIndex,
+      };
+      setRoomImages((prev) => {
+        const found = prev.find((item) => item.userId === roomImage.userId);
+        if (!found) {
+          return [...prev, roomImage];
+        }
+        return prev.map((item) =>
           item.userId === roomImage.userId ? roomImage : item
-        )
-      );
+        );
+      });
     }
-  }
+  }, [latestData]);
+
+  const networkStatus = useRoomNetworkStatus(roomId, userId);
+  useEffect(() => {
+    if (networkStatus && networkStatus.type === "CONNECTION_CLOSED") {
+      const { peerIndex } = networkStatus;
+      setRoomImages((prev) => {
+        let changed = false;
+        const next = prev.map((item) => {
+          if (item.peerIndex === peerIndex) {
+            changed = true;
+            return { ...item, obsoleted: true };
+          }
+          return item;
+        });
+        return changed ? next : prev;
+      });
+    }
+  }, [networkStatus]);
 
   useEffect(() => {
     const checkObsoletedImage = () => {
