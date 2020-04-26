@@ -68,10 +68,9 @@ export const createRoom = (
       lastBroadcastData = data;
     }
     const peers = connMap.getConnectedPeerIds();
-    const livePeers = connMap.getLivePeerIds();
     connMap.forEachConnectedConns((conn) => {
       try {
-        conn.send({ userId, data, peers, liveMode, livePeers });
+        conn.send({ userId, data, peers, liveMode });
       } catch (e) {
         console.error("broadcastData", e);
       }
@@ -180,7 +179,6 @@ export const createRoom = (
           data: lastBroadcastData,
           peers: connMap.getConnectedPeerIds(),
           liveMode,
-          livePeers: connMap.getLivePeerIds(),
         });
       }
     });
