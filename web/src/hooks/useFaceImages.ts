@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { takePhoto } from "../media/capture";
 import { useRoomData, useBroadcastData } from "./useRoom";
@@ -50,29 +50,26 @@ export const useFaceImages = (
 
   const broadcastData = useBroadcastData(roomId, userId);
   const latestData = useRoomData<ImageData>(roomId, userId, isImageData);
-  const roomImage: RoomImage | undefined = useMemo(
-    () =>
-      latestData && {
+  useEffect(() => {
+    if (latestData) {
+      const roomImage = {
         ...latestData.data,
         userId: latestData.info.userId,
         received: Date.now(),
         obsoleted: false,
         liveMode: latestData.info.liveMode,
-      },
-    [latestData]
-  );
-  if (roomImage) {
-    const found = roomImages.find((item) => item.userId === roomImage.userId);
-    if (!found) {
-      setRoomImages([...roomImages, roomImage]);
-    } else if (found.received !== roomImage.received) {
-      setRoomImages(
-        roomImages.map((item) =>
+      };
+      setRoomImages((prev) => {
+        const found = prev.find((item) => item.userId === roomImage.userId);
+        if (!found) {
+          return [...prev, roomImage];
+        }
+        return prev.map((item) =>
           item.userId === roomImage.userId ? roomImage : item
-        )
-      );
+        );
+      });
     }
-  }
+  }, [latestData]);
 
   useEffect(() => {
     const checkObsoletedImage = () => {
