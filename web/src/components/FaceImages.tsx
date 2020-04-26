@@ -41,7 +41,7 @@ const FaceImage = React.memo<{
   }, [stream]);
   return (
     <div className="FaceImages-card" style={{ opacity: obsoleted ? 0.2 : 1 }}>
-      {stream ? (
+      {liveMode && stream ? (
         <video
           className="FaceImages-photo"
           ref={videoRef}

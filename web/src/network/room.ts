@@ -124,7 +124,11 @@ export const createRoom = (
       if (payloadLiveMode) {
         addAllStreamTracks(conn);
       } else {
-        removeAllStreamTracks(conn);
+        // We need to delay because negotiation is in progress
+        // FIXME there should be better way than timeout
+        setTimeout(() => {
+          removeAllStreamTracks(conn);
+        }, 3000);
       }
     }
   };
@@ -180,8 +184,13 @@ export const createRoom = (
       }
     });
     conn.on("data", (payload: unknown) => handlePayload(conn, payload));
-    // eslint-disable-next-line no-param-reassign
-    conn.peerConnection.ontrack = (event: RTCTrackEvent) => {
+    conn.peerConnection.addEventListener("negotiationneeded", async () => {
+      if (!connMap.isConnected(conn.peer)) return;
+      const offer = await conn.peerConnection.createOffer();
+      await conn.peerConnection.setLocalDescription(offer);
+      sendSDP(conn, { offer });
+    });
+    conn.peerConnection.addEventListener("track", (event: RTCTrackEvent) => {
       const { track } = event;
       const stream = event.streams[0];
       const connUserId = connMap.getUserId(conn);
@@ -198,7 +207,7 @@ export const createRoom = (
         };
         receiveStream(stream, info);
       }
-    };
+    });
     conn.on("close", () => {
       connMap.delConn(conn);
       console.log("dataConnection closed", conn);
@@ -328,9 +337,6 @@ export const createRoom = (
     connMap.forEachLiveConns(async (conn) => {
       try {
         conn.peerConnection.addTrack(event.track, myStream);
-        const offer = await conn.peerConnection.createOffer();
-        await conn.peerConnection.setLocalDescription(offer);
-        sendSDP(conn, { offer });
       } catch (e) {
         if (e.name === "InvalidAccessError") {
           // ignore
@@ -352,11 +358,9 @@ export const createRoom = (
   });
 
   const addAllStreamTracks = async (conn: Peer.DataConnection) => {
-    let modified = false;
     myStream.getTracks().forEach((track) => {
       try {
         conn.peerConnection.addTrack(track, myStream);
-        modified = true;
       } catch (e) {
         if (e.name === "InvalidAccessError") {
           // ignore
@@ -365,10 +369,6 @@ export const createRoom = (
         }
       }
     });
-    if (!modified) return;
-    const offer = await conn.peerConnection.createOffer();
-    await conn.peerConnection.setLocalDescription(offer);
-    sendSDP(conn, { offer });
   };
 
   const removeAllStreamTracks = async (conn: Peer.DataConnection) => {
