@@ -35,6 +35,7 @@ export const getVideoStream = async (deviceId?: string) => {
     video.style.display = "none";
     clearInterval(timer);
     track.stop();
+    canvasStream.getVideoTracks()[0].stop();
   };
   return {
     stream: canvasStream,
