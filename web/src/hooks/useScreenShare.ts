@@ -1,12 +1,12 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { getScreenStream } from "../media/screen";
 import { useRoomMedia } from "./useRoom";
 
-const hasScreenTrack = (stream: MediaStream) => {
-  console.log(stream.getVideoTracks());
+const isScreenTrack = (track: MediaStreamTrack) => {
+  console.log(track, track.getSettings());
   // TODO
-  return false;
+  return true;
 };
 
 export const useScreenShare = (
@@ -15,11 +15,68 @@ export const useScreenShare = (
   enabled: boolean,
   setEnabled: (enabled: boolean) => void
 ) => {
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const { myStream, streamList } = useRoomMedia(roomId, userId, true);
+  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
+  const [screenStreamMap, setScreenStreamMap] = useState<{
+    [userId: string]: MediaStream | null;
+  }>({});
+  const { addTrack, removeTrack, latestTrack } = useRoomMedia(
+    roomId,
+    userId,
+    true
+  );
+
+  type CleanupFn = () => void;
+  const cleanupFns = useRef<CleanupFn[]>([]);
+  useEffect(() => {
+    const cleanup = () => {
+      cleanupFns.current.forEach((fn) => fn());
+    };
+    return cleanup;
+  }, []);
+
+  useEffect(() => {
+    if (!latestTrack) return;
+    const { track, info } = latestTrack;
+    if (!isScreenTrack(track)) return;
+    setScreenStreamMap((prev) => ({
+      ...prev,
+      [info.userId]: new MediaStream([track]),
+    }));
+    const onended = () => {
+      setScreenStreamMap((prev) => ({
+        ...prev,
+        [info.userId]: null,
+      }));
+    };
+    track.addEventListener("ended", onended);
+    // XXX we don't get "ended" event with removeTrack,
+    // so a workaround with "mute" but "mute" is dispatched occasionally,
+    // so use this timeout hack
+    let timeout: NodeJS.Timeout;
+    const onmute = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        setScreenStreamMap((prev) => ({
+          ...prev,
+          [info.userId]: null,
+        }));
+      }, 3000);
+    };
+    track.addEventListener("mute", onmute);
+    const onunmute = () => {
+      clearTimeout(timeout);
+    };
+    track.addEventListener("unmute", onunmute);
+    cleanupFns.current.push(() => {
+      track.removeEventListener("ended", onended);
+      track.removeEventListener("mute", onmute);
+      track.removeEventListener("unmute", onunmute);
+    });
+  }, [latestTrack]);
+
   useEffect(() => {
     let dispose: (() => void) | null = null;
-    if (enabled && myStream) {
+    if (enabled && addTrack && removeTrack) {
       (async () => {
         const result = await getScreenStream();
         if (!result) {
@@ -28,18 +85,12 @@ export const useScreenShare = (
         }
         const track = result.stream.getVideoTracks()[0];
         (track as any).contentHint = "screen";
-        myStream.addTrack(track);
-        const addTrackEvent = new Event("addtrack");
-        (addTrackEvent as any).track = track;
-        myStream.dispatchEvent(addTrackEvent);
-        setStream(result.stream);
+        addTrack(track);
+        setScreenStream(result.stream);
         dispose = () => {
-          myStream.removeTrack(track);
+          removeTrack(track);
           result.dispose();
-          const removeTrackEvent = new Event("removetrack");
-          (removeTrackEvent as any).track = track;
-          myStream.dispatchEvent(removeTrackEvent);
-          setStream(null);
+          setScreenStream(null);
           setEnabled(false);
         };
         track.addEventListener("ended", () => {
@@ -51,12 +102,7 @@ export const useScreenShare = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, enabled, setEnabled, myStream]);
-  return {
-    myStream: stream,
-    streamList: useMemo(
-      () => streamList.filter((x) => hasScreenTrack(x.stream)),
-      [streamList]
-    ),
-  };
+  }, [roomId, enabled, setEnabled, addTrack, removeTrack]);
+
+  return { screenStream, screenStreamMap };
 };

@@ -30,7 +30,7 @@ type Props = {
 
 const ScreenShare: React.FC<Props> = ({ roomId, userId, nickname }) => {
   const [enabled, setEnabled] = useState(false);
-  const { myStream, streamList } = useScreenShare(
+  const { screenStream, screenStreamMap } = useScreenShare(
     roomId,
     userId,
     enabled,
@@ -43,14 +43,18 @@ const ScreenShare: React.FC<Props> = ({ roomId, userId, nickname }) => {
       <button type="button" onClick={() => setEnabled(!enabled)}>
         {enabled ? "Stop screen share" : "Start screen share"}
       </button>
-      {myStream && <Screen nickname={nickname} stream={myStream} />}
-      {streamList.map((item) => (
-        <Screen
-          key={item.info.userId}
-          nickname={nicknameMap[item.info.userId] || "No Name"}
-          stream={item.stream}
-        />
-      ))}
+      {screenStream && <Screen nickname={nickname} stream={screenStream} />}
+      {Object.keys(screenStreamMap).map((screenUserId) => {
+        const stream = screenStreamMap[screenUserId];
+        if (!stream) return null;
+        return (
+          <Screen
+            key={screenUserId}
+            nickname={nicknameMap[screenUserId] || "No Name"}
+            stream={stream}
+          />
+        );
+      })}
     </div>
   );
 };
