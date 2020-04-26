@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 
 import "./FaceImages.css";
 import { useFaceImages } from "../hooks/useFaceImages";
@@ -16,29 +16,14 @@ const FaceImage = React.memo<{
   stream?: MediaStream;
   unmuted?: boolean;
 }>(({ image, nickname, statusMesg, obsoleted, liveMode, stream, unmuted }) => {
-  const [hasVideo, setHasVideo] = useState(false);
-  const [hasAudio, setHasAudio] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     if (stream && videoRef.current) {
       videoRef.current.srcObject = stream;
     }
-    const checkStream = () => {
-      setHasVideo(!!stream && stream.getVideoTracks().length > 0);
-      setHasAudio(!!stream && stream.getAudioTracks().length > 0);
-    };
-    if (stream) {
-      stream.addEventListener("addtrack", checkStream);
-      stream.addEventListener("removetrack", checkStream);
-    }
-    checkStream();
-    return () => {
-      if (stream) {
-        stream.removeEventListener("addtrack", checkStream);
-        stream.removeEventListener("removetrack", checkStream);
-      }
-    };
   }, [stream]);
+  const hasVideo = !!stream && stream.getVideoTracks().length > 0;
+  const hasAudio = !!stream && stream.getAudioTracks().length > 0;
   return (
     <div className="FaceImages-card" style={{ opacity: obsoleted ? 0.2 : 1 }}>
       {liveMode && stream ? (
@@ -102,7 +87,7 @@ const FaceImages: React.FC<Props> = ({
     statusMesg,
     videoDeviceId
   );
-  const { myStream, streamMap } = useFaceVideos(
+  const { faceStream, faceStreamMap } = useFaceVideos(
     roomId,
     userId,
     liveType === "video" || liveType === "video+audio",
@@ -118,7 +103,7 @@ const FaceImages: React.FC<Props> = ({
         nickname={nickname}
         statusMesg={statusMesg}
         liveMode={liveType !== "off"}
-        stream={myStream || undefined}
+        stream={faceStream || undefined}
       />
       {roomImages.map((item) => (
         <FaceImage
@@ -128,7 +113,7 @@ const FaceImages: React.FC<Props> = ({
           statusMesg={item.info.message}
           obsoleted={item.obsoleted}
           liveMode={item.liveMode}
-          stream={streamMap[item.userId]}
+          stream={faceStreamMap[item.userId] || undefined}
           unmuted={liveType === "video+audio"}
         />
       ))}

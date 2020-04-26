@@ -29,24 +29,21 @@ type UpdateNetworkStatus = (status: NetworkStatus) => void;
 
 export type PeerInfo = { userId: string; peerIndex: number; liveMode: boolean };
 type ReceiveData = (data: unknown, info: PeerInfo) => void;
-export type ReceiveStream = (
-  stream: MediaStream | null, // null for removing stream
-  info: Omit<PeerInfo, "liveMode">
-) => void;
+type ReceiveTrack = (track: MediaStreamTrack, info: PeerInfo) => void;
 
 export const createRoom = (
   roomId: string,
   userId: string,
-  myStream: MediaStream,
   updateNetworkStatus: UpdateNetworkStatus,
   receiveData: ReceiveData,
-  receiveStream: ReceiveStream
+  receiveTrack: ReceiveTrack
 ) => {
   let disposed = false;
   let myPeer: Peer | null = null;
   let lastBroadcastData: unknown | null = null;
   const connMap = createConnectionMap();
   let liveMode = false;
+  let localStream: MediaStream | null = null;
 
   const showConnectedStatus = () => {
     if (disposed) return;
@@ -122,7 +119,11 @@ export const createRoom = (
     if (typeof payloadLiveMode === "boolean") {
       connMap.setLiveMode(conn, payloadLiveMode as boolean);
       if (payloadLiveMode) {
-        addAllStreamTracks(conn);
+        // We need to delay because negotiation is in progress
+        // FIXME there should be better way than timeout
+        setTimeout(() => {
+          addAllStreamTracks(conn);
+        }, 3000);
       } else {
         // We need to delay because negotiation is in progress
         // FIXME there should be better way than timeout
@@ -191,21 +192,14 @@ export const createRoom = (
       sendSDP(conn, { offer });
     });
     conn.peerConnection.addEventListener("track", (event: RTCTrackEvent) => {
-      const { track } = event;
-      const stream = event.streams[0];
       const connUserId = connMap.getUserId(conn);
       if (connUserId) {
-        track.addEventListener("ended", () => {
-          stream.removeTrack(track);
-          const removeTrackEvent = new Event("removetrack");
-          (removeTrackEvent as any).track = track;
-          stream.dispatchEvent(removeTrackEvent);
-        });
         const info = {
           userId: connUserId,
           peerIndex: getPeerIndexFromPeerId(conn.peer),
+          liveMode: connMap.getLiveMode(conn),
         };
-        receiveStream(stream, info);
+        receiveTrack(event.track, info);
       }
     });
     conn.on("close", () => {
@@ -333,10 +327,33 @@ export const createRoom = (
     initMyPeer();
   };
 
-  myStream.addEventListener("addtrack", (event) => {
+  const enableLiveMode = () => {
+    if (liveMode) {
+      console.warn("liveMode already enabled");
+      return;
+    }
+    liveMode = true;
+    localStream = new MediaStream();
+    broadcastData(lastBroadcastData);
+  };
+
+  const disableLiveMode = () => {
+    if (!liveMode) {
+      console.warn("liveMode already disabled");
+      return;
+    }
+    liveMode = false;
+    localStream = null;
+    broadcastData(lastBroadcastData);
+  };
+
+  const addTrack = (track: MediaStreamTrack) => {
+    if (!localStream) return;
+    localStream.addTrack(track);
     connMap.forEachLiveConns(async (conn) => {
       try {
-        conn.peerConnection.addTrack(event.track, myStream);
+        if (!localStream) return;
+        conn.peerConnection.addTrack(track, localStream);
       } catch (e) {
         if (e.name === "InvalidAccessError") {
           // ignore
@@ -345,22 +362,26 @@ export const createRoom = (
         }
       }
     });
-  });
+  };
 
-  myStream.addEventListener("removetrack", (event) => {
+  const removeTrack = (track: MediaStreamTrack) => {
+    if (!localStream) return;
+    localStream.removeTrack(track);
     connMap.forEachLiveConns(async (conn) => {
       const senders = conn.peerConnection.getSenders();
-      const sender = senders.find((s) => s.track === event.track);
+      const sender = senders.find((s) => s.track === track);
       if (sender) {
         conn.peerConnection.removeTrack(sender);
       }
     });
-  });
+  };
 
   const addAllStreamTracks = async (conn: Peer.DataConnection) => {
-    myStream.getTracks().forEach((track) => {
+    if (!localStream) return;
+    localStream.getTracks().forEach((track) => {
       try {
-        conn.peerConnection.addTrack(track, myStream);
+        if (!localStream) return;
+        conn.peerConnection.addTrack(track, localStream);
       } catch (e) {
         if (e.name === "InvalidAccessError") {
           // ignore
@@ -380,24 +401,6 @@ export const createRoom = (
     });
   };
 
-  const enableLiveMode = () => {
-    if (liveMode) {
-      console.warn("liveMode already enabled");
-      return;
-    }
-    liveMode = true;
-    broadcastData(lastBroadcastData);
-  };
-
-  const disableLiveMode = () => {
-    if (!liveMode) {
-      console.warn("liveMode already disabled");
-      return;
-    }
-    liveMode = false;
-    broadcastData(lastBroadcastData);
-  };
-
   const dispose = () => {
     disposed = true;
     if (myPeer) {
@@ -409,6 +412,8 @@ export const createRoom = (
     broadcastData,
     enableLiveMode,
     disableLiveMode,
+    addTrack,
+    removeTrack,
     dispose,
   };
 };
