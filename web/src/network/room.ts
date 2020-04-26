@@ -374,7 +374,7 @@ export const createRoom = (
     });
   };
 
-  const addAllStreamTracks = async (conn: Peer.DataConnection) => {
+  const addAllStreamTracks = (conn: Peer.DataConnection) => {
     if (!localStream) return;
     localStream.getTracks().forEach((track) => {
       try {
@@ -390,7 +390,7 @@ export const createRoom = (
     });
   };
 
-  const removeAllStreamTracks = async (conn: Peer.DataConnection) => {
+  const removeAllStreamTracks = (conn: Peer.DataConnection) => {
     const senders = conn.peerConnection.getSenders();
     senders.forEach((sender) => {
       if (sender.track) {

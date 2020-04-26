@@ -59,8 +59,15 @@ export const useFaceVideos = (
       ...prev,
       [info.userId]: addTrackWithNewStream(track, prev[info.userId]),
     }));
-    // XXX we don't get "ended" event, so a workaround with "mute"
-    // but "mute" is dispatched occasionally, so timeout hack
+    track.addEventListener("ended", () => {
+      setFaceStreamMap((prev) => ({
+        ...prev,
+        [info.userId]: removeTrackWithNewStream(track, prev[info.userId]),
+      }));
+    });
+    // XXX we don't get "ended" event with removeTrack,
+    // so a workaround with "mute" but "mute" is dispatched occasionally,
+    // so use this timeout hack
     let timeout: NodeJS.Timeout;
     track.addEventListener("mute", () => {
       clearTimeout(timeout);
