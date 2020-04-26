@@ -49,17 +49,17 @@ export const useFaceImages = (
   }
 
   const broadcastData = useBroadcastData(roomId, userId);
-  const result = useRoomData<ImageData>(roomId, userId, isImageData);
+  const latestData = useRoomData<ImageData>(roomId, userId, isImageData);
   const roomImage: RoomImage | undefined = useMemo(
     () =>
-      result && {
-        ...result.data,
-        userId: result.info.userId,
+      latestData && {
+        ...latestData.data,
+        userId: latestData.info.userId,
         received: Date.now(),
         obsoleted: false,
-        liveMode: result.info.liveMode,
+        liveMode: latestData.info.liveMode,
       },
-    [result]
+    [latestData]
   );
   if (roomImage) {
     const found = roomImages.find((item) => item.userId === roomImage.userId);

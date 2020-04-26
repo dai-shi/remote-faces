@@ -254,7 +254,6 @@ export const createRoom = (
     peer.on("error", (err) => {
       if (err.type === "unavailable-id") {
         myPeer = null;
-        lastBroadcastData = null;
         peer.destroy();
         initMyPeer(index + 1);
       } else if (err.type === "peer-unavailable") {
@@ -293,7 +292,6 @@ export const createRoom = (
       if (myPeer === peer) {
         console.log("initMyPeer closed, re-initializing", index);
         myPeer = null;
-        lastBroadcastData = null;
         setTimeout(initMyPeer, 10 * 1000);
       } else {
         console.log("initMyPeer closed, ignoring", index);
@@ -322,7 +320,6 @@ export const createRoom = (
     }
     const oldPeer = myPeer;
     myPeer = null;
-    lastBroadcastData = null;
     oldPeer.destroy();
     initMyPeer();
   };
@@ -365,8 +362,9 @@ export const createRoom = (
   };
 
   const removeTrack = (track: MediaStreamTrack) => {
-    if (!localStream) return;
-    localStream.removeTrack(track);
+    if (localStream) {
+      localStream.removeTrack(track);
+    }
     connMap.forEachLiveConns(async (conn) => {
       const senders = conn.peerConnection.getSenders();
       const sender = senders.find((s) => s.track === track);
