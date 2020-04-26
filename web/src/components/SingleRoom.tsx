@@ -6,10 +6,15 @@ import { setStringItem, getStringItem } from "../utils/storage";
 import { useRoomNetworkStatus } from "../hooks/useRoom";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import FaceImages from "./FaceImages";
+import { LiveType, LIVE_TYPES } from "../hooks/useFaceImages";
 import MomentaryChat from "./MomentaryChat";
 import ScreenShare from "./ScreenShare";
 
-type LiveType = "off" | "video" | "video+audio";
+const LiveTypeLabels: { [lt in LiveType]: string } = {
+  off: "Off",
+  video: "Video Only",
+  "video+audio": "Video and Audio",
+};
 
 type Props = {
   roomId: string;
@@ -102,9 +107,11 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             <div>
               Live Type:{" "}
               <select onChange={(e) => setLiveType(e.target.value as LiveType)}>
-                <option value="off">Off</option>
-                <option value="video">Video Only</option>
-                <option value="video+audio">Video and Audio</option>
+                {LIVE_TYPES.map((lt) => (
+                  <option key={lt} value={lt}>
+                    {LiveTypeLabels[lt as LiveType]}
+                  </option>
+                ))}
               </select>
             </div>
           </>

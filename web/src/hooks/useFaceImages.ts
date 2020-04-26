@@ -3,10 +3,13 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { takePhoto } from "../media/capture";
 import { useRoomData, useBroadcastData, useRoomNetworkStatus } from "./useRoom";
 
+export const LIVE_TYPES = ["off", "video", "video+audio"];
+export type LiveType = typeof LIVE_TYPES[number];
 type ImageUrl = string;
 type FaceInfo = {
   nickname: string;
   message: string;
+  liveType: LiveType;
 };
 type ImageData = {
   image: ImageUrl;
@@ -24,7 +27,8 @@ const isFaceInfo = (x: unknown): x is FaceInfo =>
   x &&
   typeof x === "object" &&
   typeof (x as { nickname: unknown }).nickname === "string" &&
-  typeof (x as { message: unknown }).message === "string";
+  typeof (x as { message: unknown }).message === "string" &&
+  LIVE_TYPES.includes((x as { liveType: string }).liveType);
 
 const isImageData = (x: unknown): x is ImageData =>
   x &&
@@ -37,13 +41,18 @@ export const useFaceImages = (
   userId: string,
   nickname: string,
   statusMesg: string,
+  liveType: LiveType,
   deviceId?: string
 ) => {
   const [myImage, setMyImage] = useState<ImageUrl>();
   const [roomImages, setRoomImages] = useState<RoomImage[]>([]);
   const [fatalError, setFatalError] = useState<Error>();
-  const faceInfo = useRef({ nickname, message: statusMesg });
-  faceInfo.current = { nickname, message: statusMesg };
+  const faceInfo = useRef<FaceInfo>({
+    nickname,
+    message: statusMesg,
+    liveType,
+  });
+  faceInfo.current = { nickname, message: statusMesg, liveType };
 
   if (fatalError) {
     throw fatalError;
