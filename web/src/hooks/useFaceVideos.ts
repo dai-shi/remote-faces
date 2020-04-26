@@ -17,6 +17,7 @@ const removeTrackWithNewStream = (
   track: MediaStreamTrack,
   stream: MediaStream | null
 ) => {
+  // XXX removeTrack doesn't remove from the result... a workaround
   // const newStream = stream ? stream.clone() : new MediaStream();
   // newStream.removeTrack(track);
   const newStream = new MediaStream();
