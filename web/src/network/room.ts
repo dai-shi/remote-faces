@@ -391,6 +391,7 @@ export const createRoom = (
   };
 
   const removeAllStreamTracks = (conn: Peer.DataConnection) => {
+    if (!localStream) return;
     const senders = conn.peerConnection.getSenders();
     senders.forEach((sender) => {
       if (sender.track) {

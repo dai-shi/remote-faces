@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 
 import { useRoomData, useBroadcastData } from "./useRoom";
 
@@ -94,12 +94,17 @@ export const useMomentaryChat = (
   }, []);
 
   const broadcastData = useBroadcastData(roomId, userId);
-  const result = useRoomData<ChatData>(roomId, userId, isChatData);
-  useEffect(() => {
-    if (result) {
-      addChatItem(result.data);
-    }
-  });
+  useRoomData(
+    roomId,
+    userId,
+    useCallback(
+      (data) => {
+        if (!isChatData(data)) return;
+        addChatItem(data);
+      },
+      [addChatItem]
+    )
+  );
 
   const sendChat = useCallback(
     (text: string) => {

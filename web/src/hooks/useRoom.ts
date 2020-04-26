@@ -97,15 +97,22 @@ const register = (
   };
 };
 
-export const useRoomNetworkStatus = (roomId: string, userId: string) => {
+export const useRoomNetworkStatus = (
+  roomId: string,
+  userId: string,
+  onNetworkStatus?: (networkStatus: NetworkStatus) => void
+) => {
   const [networkStatus, updateNetworkStatus] = useState<NetworkStatus>();
   if (networkStatus && networkStatus.type === "UNKNOWN_ERROR") {
     throw new Error("Network Error");
   }
   useEffect(() => {
-    const { unregister } = register(roomId, userId, updateNetworkStatus);
+    const { unregister } = register(roomId, userId, (ns: NetworkStatus) => {
+      updateNetworkStatus(ns);
+      if (onNetworkStatus) onNetworkStatus(ns);
+    });
     return unregister;
-  }, [roomId, userId]);
+  }, [roomId, userId, onNetworkStatus]);
   return networkStatus;
 };
 
@@ -121,63 +128,37 @@ export const useBroadcastData = (roomId: string, userId: string) => {
     }
   }, []);
   useEffect(() => {
-    const { broadcastData: broadcastDataByRegister, unregister } = register(
-      roomId,
-      userId
-    );
-    broadcastDataRef.current = broadcastDataByRegister;
-    return unregister;
+    const registered = register(roomId, userId);
+    broadcastDataRef.current = registered.broadcastData;
+    return registered.unregister;
   }, [roomId, userId]);
   return broadcastData;
 };
 
-export const useRoomData = <Data>(
+export const useRoomData = (
   roomId: string,
   userId: string,
-  isValidData: (data: unknown) => boolean
+  onRoomData: (data: unknown, info: PeerInfo) => void
 ) => {
-  const [latestData, setLatestData] = useState<{
-    data: Data;
-    info: PeerInfo;
-  }>();
   useEffect(() => {
-    const dataListener = (data: unknown, info: PeerInfo) => {
-      if (isValidData(data)) {
-        setLatestData({ data: data as Data, info });
-      }
-      return false;
-    };
-    const { unregister } = register(roomId, userId, undefined, dataListener);
+    const { unregister } = register(roomId, userId, undefined, onRoomData);
     return unregister;
-  }, [roomId, userId, isValidData]);
-  return latestData;
+  }, [roomId, userId, onRoomData]);
 };
 
 export const useRoomMedia = (
   roomId: string,
   userId: string,
-  enabled: boolean
+  enabled: boolean,
+  onTrack: (track: MediaStreamTrack, info: PeerInfo) => void
 ) => {
   const [functions, setFunctions] = useState<{
     addTrack?: (track: MediaStreamTrack) => void;
     removeTrack?: (track: MediaStreamTrack) => void;
   }>({});
-  const [latestTrack, setLatestTrack] = useState<{
-    track: MediaStreamTrack;
-    info: PeerInfo;
-  } | null>(null);
   useEffect(() => {
     if (enabled) {
-      const trackListener = (track: MediaStreamTrack, info: PeerInfo) => {
-        setLatestTrack({ track, info });
-      };
-      const result = register(
-        roomId,
-        userId,
-        undefined,
-        undefined,
-        trackListener
-      );
+      const result = register(roomId, userId, undefined, undefined, onTrack);
       setFunctions({
         addTrack: result.addTrack,
         removeTrack: result.removeTrack,
@@ -187,9 +168,7 @@ export const useRoomMedia = (
         result.unregister();
       };
     }
-    // not enabled
-    setLatestTrack(null);
     return undefined;
-  }, [roomId, userId, enabled]);
-  return { ...functions, latestTrack };
+  }, [roomId, userId, enabled, onTrack]);
+  return functions;
 };
