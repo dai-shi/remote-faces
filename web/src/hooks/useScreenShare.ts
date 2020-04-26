@@ -69,6 +69,7 @@ export const useScreenShare = (
     track.addEventListener("unmute", onunmute);
     cleanupFns.current.push(() => {
       track.removeEventListener("ended", onended);
+      clearTimeout(timeout);
       track.removeEventListener("mute", onmute);
       track.removeEventListener("unmute", onunmute);
     });
