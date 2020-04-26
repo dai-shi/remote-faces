@@ -52,10 +52,11 @@ export const useFaceVideos = (
     videoEnabled || audioEnabled
   );
 
-  const didCleanup = useRef(false);
+  type CleanupFn = () => void;
+  const cleanupFns = useRef<CleanupFn[]>([]);
   useEffect(() => {
     const cleanup = () => {
-      didCleanup.current = true;
+      cleanupFns.current.forEach((fn) => fn());
     };
     return cleanup;
   }, []);
@@ -67,29 +68,36 @@ export const useFaceVideos = (
       ...prev,
       [info.userId]: addTrackWithNewStream(track, prev[info.userId]),
     }));
-    track.addEventListener("ended", () => {
-      if (didCleanup.current) return;
+    const onended = () => {
       setFaceStreamMap((prev) => ({
         ...prev,
         [info.userId]: removeTrackWithNewStream(track, prev[info.userId]),
       }));
-    });
+    };
+    track.addEventListener("ended", onended);
     // XXX we don't get "ended" event with removeTrack,
     // so a workaround with "mute" but "mute" is dispatched occasionally,
     // so use this timeout hack
     let timeout: NodeJS.Timeout;
-    track.addEventListener("mute", () => {
+    const onmute = () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        if (didCleanup.current) return;
         setFaceStreamMap((prev) => ({
           ...prev,
           [info.userId]: removeTrackWithNewStream(track, prev[info.userId]),
         }));
       }, 3000);
-    });
-    track.addEventListener("unmute", () => {
+    };
+    track.addEventListener("mute", onmute);
+    const onunmute = () => {
       clearTimeout(timeout);
+    };
+    track.addEventListener("unmute", onunmute);
+    cleanupFns.current.push(() => {
+      track.removeEventListener("ended", onended);
+      clearTimeout(timeout);
+      track.removeEventListener("mute", onmute);
+      track.removeEventListener("unmute", onunmute);
     });
   }, [latestTrack]);
 
