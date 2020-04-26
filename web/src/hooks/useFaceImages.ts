@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 
 import { takePhoto } from "../media/capture";
 import { useRoomData, useBroadcastData, useRoomNetworkStatus } from "./useRoom";
@@ -50,16 +50,18 @@ export const useFaceImages = (
   }
 
   const broadcastData = useBroadcastData(roomId, userId);
-  const latestData = useRoomData<ImageData>(roomId, userId, isImageData);
-  useEffect(() => {
-    if (latestData) {
+  useRoomData(
+    roomId,
+    userId,
+    useCallback((data, info) => {
+      if (!isImageData(data)) return;
       const roomImage = {
-        ...latestData.data,
-        userId: latestData.info.userId,
+        ...data,
+        userId: info.userId,
         received: Date.now(),
         obsoleted: false,
-        liveMode: latestData.info.liveMode,
-        peerIndex: latestData.info.peerIndex,
+        liveMode: info.liveMode,
+        peerIndex: info.peerIndex,
       };
       setRoomImages((prev) => {
         const found = prev.find((item) => item.userId === roomImage.userId);
@@ -70,26 +72,29 @@ export const useFaceImages = (
           item.userId === roomImage.userId ? roomImage : item
         );
       });
-    }
-  }, [latestData]);
+    }, [])
+  );
 
-  const networkStatus = useRoomNetworkStatus(roomId, userId);
-  useEffect(() => {
-    if (networkStatus && networkStatus.type === "CONNECTION_CLOSED") {
-      const { peerIndex } = networkStatus;
-      setRoomImages((prev) => {
-        let changed = false;
-        const next = prev.map((item) => {
-          if (item.peerIndex === peerIndex) {
-            changed = true;
-            return { ...item, obsoleted: true };
-          }
-          return item;
+  useRoomNetworkStatus(
+    roomId,
+    userId,
+    useCallback((networkStatus) => {
+      if (networkStatus && networkStatus.type === "CONNECTION_CLOSED") {
+        const { peerIndex } = networkStatus;
+        setRoomImages((prev) => {
+          let changed = false;
+          const next = prev.map((item) => {
+            if (item.peerIndex === peerIndex) {
+              changed = true;
+              return { ...item, obsoleted: true };
+            }
+            return item;
+          });
+          return changed ? next : prev;
         });
-        return changed ? next : prev;
-      });
-    }
-  }, [networkStatus]);
+      }
+    }, [])
+  );
 
   useEffect(() => {
     const checkObsoletedImage = () => {
