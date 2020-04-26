@@ -7,6 +7,7 @@ type ImageUrl = string;
 type FaceInfo = {
   nickname: string;
   message: string;
+  emojiJson: string;
 };
 type ImageData = {
   image: ImageUrl;
@@ -36,13 +37,14 @@ export const useFaceImages = (
   userId: string,
   nickname: string,
   statusMesg: string,
+  emojiJson: string,
   deviceId?: string
 ) => {
   const [myImage, setMyImage] = useState<ImageUrl>();
   const [roomImages, setRoomImages] = useState<RoomImage[]>([]);
   const [fatalError, setFatalError] = useState<Error>();
-  const faceInfo = useRef({ nickname, message: statusMesg });
-  faceInfo.current = { nickname, message: statusMesg };
+  const faceInfo = useRef({ nickname, message: statusMesg, emojiJson });
+  faceInfo.current = { nickname, message: statusMesg, emojiJson };
 
   if (fatalError) {
     throw fatalError;

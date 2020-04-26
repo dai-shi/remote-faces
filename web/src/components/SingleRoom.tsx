@@ -7,6 +7,7 @@ import { useRoomNetworkStatus } from "../hooks/useRoom";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import FaceImages from "./FaceImages";
 import MomentaryChat from "./MomentaryChat";
+import { Emoji, EmojiPicker, EmojiDataType } from "../utils/emoji";
 
 type LiveType = "off" | "video" | "video+audio";
 
@@ -20,6 +21,8 @@ const initialNickname = getStringItem("nickname");
 const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const [nickname, setNickname] = useState(initialNickname);
   const [statusMesg, setStatusMesg] = useState("");
+  const [emoji, setEmoji] = useState<EmojiDataType | null>(null);
+  const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
   useEffect(() => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
@@ -72,6 +75,34 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
                 placeholder="Enter status message"
               />
             </div>
+            <div className="SingleRoom-emoji">
+              Your Emoji:{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setOpenEmojiPicker(!openEmojiPicker);
+                }}
+              >
+                {emoji ? <Emoji emoji={emoji} size={16} /> : "(Not Set)"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmoji(null);
+                  setOpenEmojiPicker(false);
+                }}
+              >
+                Clear
+              </button>
+            </div>
+            {openEmojiPicker && (
+              <EmojiPicker
+                onSelect={(e) => {
+                  setEmoji(e);
+                  setOpenEmojiPicker(false);
+                }}
+              />
+            )}
             <div>
               Select Camera:{" "}
               <select onChange={(e) => setVideoDeviceId(e.target.value)}>
@@ -120,6 +151,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
         audioDeviceId={audioDeviceId}
         nickname={nickname}
         statusMesg={statusMesg}
+        emojiJson={emoji ? JSON.stringify(emoji) : "{}"}
         liveType={liveType}
       />
       <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
