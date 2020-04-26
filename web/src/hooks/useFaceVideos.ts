@@ -88,9 +88,9 @@ export const useFaceVideos = (
         addTrack(videoTrack);
         setFaceStream((prev) => addTrackWithNewStream(videoTrack, prev));
         dispose = () => {
-          disposeVideo();
-          removeTrack(videoTrack);
           setFaceStream((prev) => removeTrackWithNewStream(videoTrack, prev));
+          removeTrack(videoTrack);
+          disposeVideo();
         };
       })();
     }
@@ -111,9 +111,9 @@ export const useFaceVideos = (
         addTrack(audioTrack);
         setFaceStream((prev) => addTrackWithNewStream(audioTrack, prev));
         dispose = () => {
-          disposeAudio();
-          removeTrack(audioTrack);
           setFaceStream((prev) => removeTrackWithNewStream(audioTrack, prev));
+          removeTrack(audioTrack);
+          disposeAudio();
         };
       })();
     }

@@ -340,6 +340,9 @@ export const createRoom = (
       return;
     }
     liveMode = false;
+    if (localStream) {
+      localStream.getTracks().forEach(removeTrack);
+    }
     localStream = null;
     broadcastData(lastBroadcastData);
   };
@@ -362,9 +365,8 @@ export const createRoom = (
   };
 
   const removeTrack = (track: MediaStreamTrack) => {
-    if (localStream) {
-      localStream.removeTrack(track);
-    }
+    if (!localStream) return;
+    localStream.removeTrack(track);
     connMap.forEachLiveConns(async (conn) => {
       const senders = conn.peerConnection.getSenders();
       const sender = senders.find((s) => s.track === track);
