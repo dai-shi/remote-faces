@@ -1,12 +1,11 @@
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 
 import { getScreenStream } from "../media/screen";
 import { useRoomMedia } from "./useRoom";
 
-const isScreenTrack = (track: MediaStreamTrack) => {
-  console.log(track, track.getSettings());
-  // TODO
-  return true;
+const isScreenTrack = async (track: MediaStreamTrack) => {
+  if (track.kind !== "video") return false;
+  return false;
 };
 
 export const useScreenShare = (
@@ -19,11 +18,6 @@ export const useScreenShare = (
   const [screenStreamMap, setScreenStreamMap] = useState<{
     [userId: string]: MediaStream | null;
   }>({});
-  const { addTrack, removeTrack, latestTrack } = useRoomMedia(
-    roomId,
-    userId,
-    true
-  );
 
   type CleanupFn = () => void;
   const cleanupFns = useRef<CleanupFn[]>([]);
@@ -34,46 +28,49 @@ export const useScreenShare = (
     return cleanup;
   }, []);
 
-  useEffect(() => {
-    if (!latestTrack) return;
-    const { track, info } = latestTrack;
-    if (!isScreenTrack(track)) return;
-    setScreenStreamMap((prev) => ({
-      ...prev,
-      [info.userId]: new MediaStream([track]),
-    }));
-    const onended = () => {
+  const { addTrack, removeTrack } = useRoomMedia(
+    roomId,
+    userId,
+    true,
+    useCallback(async (track, info) => {
+      if (!(await isScreenTrack(track))) return;
       setScreenStreamMap((prev) => ({
         ...prev,
-        [info.userId]: null,
+        [info.userId]: new MediaStream([track]),
       }));
-    };
-    track.addEventListener("ended", onended);
-    // XXX we don't get "ended" event with removeTrack,
-    // so a workaround with "mute" but "mute" is dispatched occasionally,
-    // so use this timeout hack
-    let timeout: NodeJS.Timeout;
-    const onmute = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
+      const onended = () => {
         setScreenStreamMap((prev) => ({
           ...prev,
           [info.userId]: null,
         }));
-      }, 3000);
-    };
-    track.addEventListener("mute", onmute);
-    const onunmute = () => {
-      clearTimeout(timeout);
-    };
-    track.addEventListener("unmute", onunmute);
-    cleanupFns.current.push(() => {
-      track.removeEventListener("ended", onended);
-      clearTimeout(timeout);
-      track.removeEventListener("mute", onmute);
-      track.removeEventListener("unmute", onunmute);
-    });
-  }, [latestTrack]);
+      };
+      track.addEventListener("ended", onended);
+      // XXX we don't get "ended" event with removeTrack,
+      // so a workaround with "mute" but "mute" is dispatched occasionally,
+      // so use this timeout hack
+      let timeout: NodeJS.Timeout;
+      const onmute = () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          setScreenStreamMap((prev) => ({
+            ...prev,
+            [info.userId]: null,
+          }));
+        }, 3000);
+      };
+      track.addEventListener("mute", onmute);
+      const onunmute = () => {
+        clearTimeout(timeout);
+      };
+      track.addEventListener("unmute", onunmute);
+      cleanupFns.current.push(() => {
+        track.removeEventListener("ended", onended);
+        clearTimeout(timeout);
+        track.removeEventListener("mute", onmute);
+        track.removeEventListener("unmute", onunmute);
+      });
+    }, [])
+  );
 
   useEffect(() => {
     let dispose: (() => void) | null = null;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { useRoomData } from "./useRoom";
 
@@ -28,14 +28,16 @@ export const useNicknameMap = (roomId: string, userId: string) => {
   const [nicknameMap, setNicknameMap] = useState<{
     [userId: string]: string;
   }>({});
-  const result = useRoomData<ImageData>(roomId, userId, isImageData);
-  useEffect(() => {
-    if (result) {
+  useRoomData(
+    roomId,
+    userId,
+    useCallback((data, info) => {
+      if (!isImageData(data)) return;
       setNicknameMap((prev) => ({
         ...prev,
-        [result.info.userId]: result.data.info.nickname,
+        [info.userId]: data.info.nickname,
       }));
-    }
-  }, [result]);
+    }, [])
+  );
   return nicknameMap;
 };
