@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { getVideoStream } from "../media/video";
 import { getAudioStream } from "../media/audio";
@@ -52,6 +52,14 @@ export const useFaceVideos = (
     videoEnabled || audioEnabled
   );
 
+  const didCleanup = useRef(false);
+  useEffect(() => {
+    const cleanup = () => {
+      didCleanup.current = true;
+    };
+    return cleanup;
+  }, []);
+
   useEffect(() => {
     if (!latestTrack) return;
     const { track, info } = latestTrack;
@@ -60,6 +68,7 @@ export const useFaceVideos = (
       [info.userId]: addTrackWithNewStream(track, prev[info.userId]),
     }));
     track.addEventListener("ended", () => {
+      if (didCleanup.current) return;
       setFaceStreamMap((prev) => ({
         ...prev,
         [info.userId]: removeTrackWithNewStream(track, prev[info.userId]),
@@ -72,6 +81,7 @@ export const useFaceVideos = (
     track.addEventListener("mute", () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
+        if (didCleanup.current) return;
         setFaceStreamMap((prev) => ({
           ...prev,
           [info.userId]: removeTrackWithNewStream(track, prev[info.userId]),
