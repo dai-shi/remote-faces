@@ -1,24 +1,15 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 
-import {
-  PeerInfo,
-  ReceiveStream,
-  createRoom,
-  NetworkStatus,
-} from "../network/room";
+import { PeerInfo, createRoom, NetworkStatus } from "../network/room";
 
 type NetworkStatusListener = (status: NetworkStatus) => void;
 type DataListener = (data: unknown, info: PeerInfo) => void;
-type StreamListener = (
-  stream: MediaStream | null, // null for removing stream
-  info: Parameters<ReceiveStream>[1]
-) => void;
+type TrackListener = (track: MediaStreamTrack, info: PeerInfo) => void;
 type RoomEntry = {
   room: ReturnType<typeof createRoom>;
   networkStatusListeners: Set<NetworkStatusListener>;
   dataListeners: Set<DataListener>;
-  streamListeners: Set<StreamListener>;
-  myStream: MediaStream;
+  trackListeners: Set<TrackListener>;
   count: number;
 };
 const roomEntryMap = new Map<string, RoomEntry>();
@@ -27,15 +18,14 @@ const register = (
   userId: string,
   networkStatusListener?: NetworkStatusListener,
   dataListener?: DataListener,
-  streamListener?: StreamListener
+  trackListener?: TrackListener
 ) => {
   const roomEntryKey = `${roomId}_${userId}`;
   let entry = roomEntryMap.get(roomEntryKey);
   if (!entry) {
     const networkStatusListeners = new Set<NetworkStatusListener>();
     const dataListeners = new Set<DataListener>();
-    const streamListeners = new Set<StreamListener>();
-    const myStream = new MediaStream();
+    const trackListeners = new Set<TrackListener>();
     const updateNetworkStatus = (status: NetworkStatus) => {
       networkStatusListeners.forEach((listener) => {
         listener(status);
@@ -46,28 +36,23 @@ const register = (
         listener(data, info);
       });
     };
-    const receiveStream = (
-      stream: MediaStream | null,
-      info: Parameters<ReceiveStream>[1]
-    ) => {
-      streamListeners.forEach((listener) => {
-        listener(stream, info);
+    const receiveTrack = (track: MediaStreamTrack, info: PeerInfo) => {
+      trackListeners.forEach((listener) => {
+        listener(track, info);
       });
     };
     const room = createRoom(
       roomId,
       userId,
-      myStream,
       updateNetworkStatus,
       receiveData,
-      receiveStream
+      receiveTrack
     );
     entry = {
       room,
       networkStatusListeners,
       dataListeners,
-      streamListeners,
-      myStream,
+      trackListeners,
       count: 0,
     };
     roomEntryMap.set(roomEntryKey, entry);
@@ -78,9 +63,9 @@ const register = (
   if (dataListener) {
     entry.dataListeners.add(dataListener);
   }
-  if (streamListener) {
-    entry.streamListeners.add(streamListener);
-    if (entry.streamListeners.size === 1) {
+  if (trackListener) {
+    entry.trackListeners.add(trackListener);
+    if (entry.trackListeners.size === 1) {
       entry.room.enableLiveMode();
     }
   }
@@ -92,9 +77,9 @@ const register = (
     if (dataListener) {
       (entry as RoomEntry).dataListeners.delete(dataListener);
     }
-    if (streamListener) {
-      (entry as RoomEntry).streamListeners.delete(streamListener);
-      if ((entry as RoomEntry).streamListeners.size === 0) {
+    if (trackListener) {
+      (entry as RoomEntry).trackListeners.delete(trackListener);
+      if ((entry as RoomEntry).trackListeners.size === 0) {
         (entry as RoomEntry).room.disableLiveMode();
       }
     }
@@ -106,7 +91,8 @@ const register = (
   };
   return {
     broadcastData: entry.room.broadcastData,
-    myStream: entry.myStream,
+    addTrack: entry.room.addTrack,
+    removeTrack: entry.room.removeTrack,
     unregister,
   };
 };
@@ -150,18 +136,21 @@ export const useRoomData = <Data>(
   userId: string,
   isValidData: (data: unknown) => boolean
 ) => {
-  const [result, setResult] = useState<{ data: Data; info: PeerInfo }>();
+  const [latestData, setLatestData] = useState<{
+    data: Data;
+    info: PeerInfo;
+  }>();
   useEffect(() => {
     const dataListener = (data: unknown, info: PeerInfo) => {
       if (isValidData(data)) {
-        setResult({ data: data as Data, info });
+        setLatestData({ data: data as Data, info });
       }
       return false;
     };
     const { unregister } = register(roomId, userId, undefined, dataListener);
     return unregister;
   }, [roomId, userId, isValidData]);
-  return result;
+  return latestData;
 };
 
 export const useRoomMedia = (
@@ -169,38 +158,38 @@ export const useRoomMedia = (
   userId: string,
   enabled: boolean
 ) => {
-  const [myStream, setMyStream] = useState<MediaStream | null>(null);
-  const [streamList, setStreamList] = useState<
-    { stream: MediaStream; info: Parameters<ReceiveStream>[1] }[]
-  >([]);
+  const [functions, setFunctions] = useState<{
+    addTrack?: (track: MediaStreamTrack) => void;
+    removeTrack?: (track: MediaStreamTrack) => void;
+  }>({});
+  const [latestTrack, setLatestTrack] = useState<{
+    track: MediaStreamTrack;
+    info: PeerInfo;
+  } | null>(null);
   useEffect(() => {
     if (enabled) {
-      const streamListener = (
-        stream: MediaStream | null,
-        info: Parameters<ReceiveStream>[1]
-      ) => {
-        setStreamList((prev) => [
-          ...prev.filter((item) => item.info.userId !== info.userId),
-          ...(stream ? [{ stream, info }] : []),
-        ]);
+      const trackListener = (track: MediaStreamTrack, info: PeerInfo) => {
+        setLatestTrack({ track, info });
       };
-      const { myStream: myStreamToSet, unregister } = register(
+      const result = register(
         roomId,
         userId,
         undefined,
         undefined,
-        streamListener
+        trackListener
       );
-      setMyStream(myStreamToSet || null);
-      return unregister;
+      setFunctions({
+        addTrack: result.addTrack,
+        removeTrack: result.removeTrack,
+      });
+      return () => {
+        setFunctions({});
+        result.unregister();
+      };
     }
     // not enabled
-    setMyStream(null);
-    setStreamList([]);
+    setLatestTrack(null);
     return undefined;
   }, [roomId, userId, enabled]);
-  return {
-    myStream,
-    streamList,
-  };
+  return { ...functions, latestTrack };
 };
