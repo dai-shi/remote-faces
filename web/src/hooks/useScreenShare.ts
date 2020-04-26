@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 
+import { isVideoTrackFaceSize } from "../media/video";
 import { getScreenStream } from "../media/screen";
 import { useRoomMedia } from "./useRoom";
 
 const isScreenTrack = async (track: MediaStreamTrack) => {
   if (track.kind !== "video") return false;
-  return false;
+  const isFaceSize = await isVideoTrackFaceSize(track);
+  return !isFaceSize;
 };
 
 export const useScreenShare = (

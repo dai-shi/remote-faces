@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 
-import { getVideoStream } from "../media/video";
+import { getVideoStream, isVideoTrackFaceSize } from "../media/video";
 import { getAudioStream } from "../media/audio";
 import { useRoomMedia } from "./useRoom";
 
@@ -60,7 +60,10 @@ export const useFaceVideos = (
     roomId,
     userId,
     videoEnabled || audioEnabled,
-    useCallback((track, info) => {
+    useCallback(async (track, info) => {
+      if (track.kind === "video" && !(await isVideoTrackFaceSize(track))) {
+        return;
+      }
       setFaceStreamMap((prev) => ({
         ...prev,
         [info.userId]: addTrackWithNewStream(track, prev[info.userId]),
