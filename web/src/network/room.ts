@@ -321,7 +321,7 @@ export const createRoom = (
     initMyPeer();
   };
 
-  const setMediaTypes = (mTypes: string[]) => {
+  const acceptMediaTypes = (mTypes: string[]) => {
     mediaTypes = mTypes;
     if (mediaTypes.length) {
       if (!localStream) {
@@ -368,6 +368,7 @@ export const createRoom = (
 
   const syncTracks = (conn: Peer.DataConnection) => {
     const senders = conn.peerConnection.getSenders();
+    console.log("syncTracks: senders", senders.length, conn);
     const mTypes = connMap.getMediaTypes(conn);
     if (localStream) {
       localStream.getTracks().forEach((track) => {
@@ -401,7 +402,7 @@ export const createRoom = (
 
   return {
     broadcastData,
-    setMediaTypes,
+    acceptMediaTypes,
     addTrack,
     removeTrack,
     dispose,

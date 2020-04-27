@@ -74,7 +74,7 @@ const register = (
     entry.trackListeners.add(trackListener);
     mediaTypeSet.add(trackListener.mediaType);
     if (prevSize !== mediaTypeSet.size) {
-      entry.room.setMediaTypes(Array.from(mediaTypeSet));
+      entry.room.acceptMediaTypes(Array.from(mediaTypeSet));
     }
   }
   entry.count += 1;
@@ -96,7 +96,7 @@ const register = (
         Array.from(definedEntry.trackListeners).map((x) => x.mediaType)
       );
       if (prevSize !== mediaTypeSet.size) {
-        definedEntry.room.setMediaTypes(Array.from(mediaTypeSet));
+        definedEntry.room.acceptMediaTypes(Array.from(mediaTypeSet));
       }
     }
     definedEntry.count -= 1;
