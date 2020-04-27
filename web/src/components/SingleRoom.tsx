@@ -64,6 +64,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const [liveMode, setLiveMode] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(false);
+  const [screenShareMode, setScreenShareMode] = useState(false);
   const [configOpen, setConfigOpen] = useState<boolean>(true);
 
   const networkStatus = useRoomNetworkStatus(roomId, userId);
@@ -165,6 +166,17 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
                 </>
               )}
             </div>
+            <div>
+              Screen Share:{" "}
+              <button
+                type="button"
+                onClick={() => setScreenShareMode((x) => !x)}
+              >
+                {screenShareMode
+                  ? "Disable Screen Share (currently on)"
+                  : "Enable Screen Share (currently off)"}
+              </button>
+            </div>
           </>
         ) : (
           <button type="button" onClick={() => setConfigOpen(true)}>
@@ -184,7 +196,9 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
         speakerOn={speakerOn}
       />
       <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
-      <ScreenShare roomId={roomId} userId={userId} nickname={nickname} />
+      {screenShareMode && (
+        <ScreenShare roomId={roomId} userId={userId} nickname={nickname} />
+      )}
     </>
   );
 };
