@@ -8,8 +8,15 @@ const addTrackWithNewStream = (
   track: MediaStreamTrack,
   stream: MediaStream | null
 ) => {
-  const newStream = stream ? stream.clone() : new MediaStream();
+  const prevVideoTrack = stream && stream.getVideoTracks()[0];
+  const prevAudioTrack = stream && stream.getAudioTracks()[0];
+  const newStream = new MediaStream();
   newStream.addTrack(track);
+  if (track.kind === "video" && prevAudioTrack) {
+    newStream.addTrack(prevAudioTrack);
+  } else if (track.kind === "audio" && prevVideoTrack) {
+    newStream.addTrack(prevVideoTrack);
+  }
   return newStream;
 };
 
@@ -17,16 +24,13 @@ const removeTrackWithNewStream = (
   track: MediaStreamTrack,
   stream: MediaStream | null
 ) => {
-  // XXX removeTrack doesn't remove from the result... a workaround
-  // const newStream = stream ? stream.clone() : new MediaStream();
-  // newStream.removeTrack(track);
+  const prevVideoTrack = stream && stream.getVideoTracks()[0];
+  const prevAudioTrack = stream && stream.getAudioTracks()[0];
   const newStream = new MediaStream();
-  if (stream) {
-    stream.getTracks().forEach((t) => {
-      if (t !== track) {
-        newStream.addTrack(t);
-      }
-    });
+  if (track.kind === "video" && prevAudioTrack) {
+    newStream.addTrack(prevAudioTrack);
+  } else if (track.kind === "audio" && prevVideoTrack) {
+    newStream.addTrack(prevVideoTrack);
   }
   if (newStream.getTracks().length > 0) {
     return newStream;
@@ -39,6 +43,7 @@ export const useFaceVideos = (
   userId: string,
   videoEnabled: boolean,
   audioEnabled: boolean,
+  micOn: boolean,
   videoDeviceId?: string,
   audioDeviceId?: string
 ) => {
@@ -71,29 +76,8 @@ export const useFaceVideos = (
       }));
     };
     track.addEventListener("ended", onended);
-    // XXX we don't get "ended" event with removeTrack,
-    // so a workaround with "mute" but "mute" is dispatched occasionally,
-    // so use this timeout hack
-    let timeout: NodeJS.Timeout;
-    const onmute = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        setFaceStreamMap((prev) => ({
-          ...prev,
-          [info.userId]: removeTrackWithNewStream(track, prev[info.userId]),
-        }));
-      }, 3000);
-    };
-    track.addEventListener("mute", onmute);
-    const onunmute = () => {
-      clearTimeout(timeout);
-    };
-    track.addEventListener("unmute", onunmute);
     cleanupFns.current.push(() => {
       track.removeEventListener("ended", onended);
-      clearTimeout(timeout);
-      track.removeEventListener("mute", onmute);
-      track.removeEventListener("unmute", onunmute);
     });
   }, []);
 
@@ -162,6 +146,14 @@ export const useFaceVideos = (
       if (dispose) dispose();
     };
   }, [roomId, audioEnabled, audioDeviceId, addAudioTrack, removeAudioTrack]);
+  useEffect(() => {
+    if (faceStream) {
+      const audioTrack = faceStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = micOn;
+      }
+    }
+  }, [faceStream, micOn]);
 
   return { faceStream, faceStreamMap };
 };

@@ -75,7 +75,8 @@
         "never"
       ],
       "react/state-in-constructor": "off",
-      "jsx-a11y/media-has-caption": "off"
+      "jsx-a11y/media-has-caption": "off",
+      "jsx-a11y/label-has-associated-control": "off"
     },
     "overrides": [
       {
