@@ -124,21 +124,11 @@ export const createRoom = (
       payloadMediaTypes.every((x) => typeof x === "string")
     ) {
       connMap.setMediaTypes(conn, payloadMediaTypes as string[]);
-      /*
-      if (payloadMediaTypes.length) {
-        // We need to delay because negotiation is in progress
-        // FIXME there should be better way than timeout
-        setTimeout(() => {
-          addAllStreamTracks(conn);
-        }, 3000);
-      } else {
-        // We need to delay because negotiation is in progress
-        // FIXME there should be better way than timeout
-        setTimeout(() => {
-          removeAllStreamTracks(conn);
-        }, 3000);
-      }
-      */
+      // We need to delay because negotiation is in progress
+      // FIXME there should be better way than timeout
+      setTimeout(() => {
+        syncTracks(conn);
+      }, 3000);
     }
   };
 
@@ -340,11 +330,14 @@ export const createRoom = (
     } else {
       localStream = null;
     }
-    broadcastData(lastBroadcastData);
+    broadcastData(null);
   };
+
+  const trackMediaTypeMap = new WeakMap<MediaStreamTrack, string>();
 
   const addTrack = (mediaType: string, track: MediaStreamTrack) => {
     if (!localStream) return;
+    trackMediaTypeMap.set(track, mediaType);
     localStream.addTrack(track);
     connMap.forEachConnsAcceptingMedia(mediaType, async (conn) => {
       try {
@@ -361,8 +354,9 @@ export const createRoom = (
   };
 
   const removeTrack = (mediaType: string, track: MediaStreamTrack) => {
-    if (!localStream) return;
-    localStream.removeTrack(track);
+    if (localStream) {
+      localStream.removeTrack(track);
+    }
     connMap.forEachConnsAcceptingMedia(mediaType, async (conn) => {
       const senders = conn.peerConnection.getSenders();
       const sender = senders.find((s) => s.track === track);
@@ -372,33 +366,31 @@ export const createRoom = (
     });
   };
 
-  /*
-  const addAllStreamTracks = (conn: Peer.DataConnection) => {
-    if (!localStream) return;
-    localStream.getTracks().forEach((track) => {
-      try {
-        if (!localStream) return;
-        conn.peerConnection.addTrack(track, localStream);
-      } catch (e) {
-        if (e.name === "InvalidAccessError") {
-          // ignore
-        } else {
-          throw e;
+  const syncTracks = (conn: Peer.DataConnection) => {
+    const senders = conn.peerConnection.getSenders();
+    const mTypes = connMap.getMediaTypes(conn);
+    if (localStream) {
+      localStream.getTracks().forEach((track) => {
+        const mType = trackMediaTypeMap.get(track);
+        if (
+          localStream &&
+          mType &&
+          mTypes.includes(mType) &&
+          senders.every((sender) => sender.track !== track)
+        ) {
+          conn.peerConnection.addTrack(track, localStream);
+        }
+      });
+    }
+    senders.forEach((sender) => {
+      if (sender.track) {
+        const mType = trackMediaTypeMap.get(sender.track);
+        if (!mType || !mTypes.includes(mType)) {
+          conn.peerConnection.removeTrack(sender);
         }
       }
     });
   };
-
-  const removeAllStreamTracks = (conn: Peer.DataConnection) => {
-    if (!localStream) return;
-    const senders = conn.peerConnection.getSenders();
-    senders.forEach((sender) => {
-      if (sender.track) {
-        conn.peerConnection.removeTrack(sender);
-      }
-    });
-  };
-  */
 
   const dispose = () => {
     disposed = true;

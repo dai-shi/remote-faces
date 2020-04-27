@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React from "react";
 
 import "./FaceImages.css";
 import { useFaceImages } from "../hooks/useFaceImages";
@@ -20,12 +20,6 @@ const FaceImage = React.memo<{
   speakerOn?: boolean;
 }>(
   ({ image, nickname, statusMesg, obsoleted, liveMode, stream, speakerOn }) => {
-    const videoRef = useRef<HTMLVideoElement>(null);
-    useEffect(() => {
-      if (stream && videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    }, [stream]);
     const hasVideo = !!stream && isTrackEffective(stream.getVideoTracks()[0]);
     const hasAudio = !!stream && isTrackEffective(stream.getAudioTracks()[0]);
     return (
@@ -33,7 +27,12 @@ const FaceImage = React.memo<{
         {liveMode && stream ? (
           <video
             className="FaceImages-photo"
-            ref={videoRef}
+            ref={(videoEle) => {
+              if (videoEle) {
+                // eslint-disable-next-line no-param-reassign
+                videoEle.srcObject = stream;
+              }
+            }}
             autoPlay
             muted={!speakerOn}
           />
