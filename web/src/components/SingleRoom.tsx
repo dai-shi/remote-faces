@@ -8,6 +8,12 @@ import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import FaceImages from "./FaceImages";
 import MomentaryChat from "./MomentaryChat";
 import ScreenShare from "./ScreenShare";
+import {
+  Emoji,
+  EmojiPicker,
+  EmojiDataType,
+  isEmojiDataType,
+} from "../utils/emoji";
 
 type Props = {
   roomId: string;
@@ -53,6 +59,8 @@ const TextField = React.memo<{
 const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const [nickname, setNickname] = useState(initialNickname);
   const [statusMesg, setStatusMesg] = useState("");
+  const [emoji, setEmoji] = useState<EmojiDataType | null>(null);
+  const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
   useEffect(() => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
@@ -112,6 +120,36 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
                 buttonLabel="Set"
               />
             </div>
+            <div className="SingleRoom-emoji">
+              Your Emoji:{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setOpenEmojiPicker(!openEmojiPicker);
+                }}
+              >
+                {emoji ? <Emoji emoji={emoji} size={16} /> : "(Not Set)"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmoji(null);
+                  setOpenEmojiPicker(false);
+                }}
+              >
+                Clear
+              </button>
+            </div>
+            {openEmojiPicker && (
+              <EmojiPicker
+                onSelect={(e) => {
+                  if (isEmojiDataType(e)) {
+                    setEmoji(e);
+                  }
+                  setOpenEmojiPicker(false);
+                }}
+              />
+            )}
             <div>
               Select Camera:{" "}
               <select onChange={(e) => setVideoDeviceId(e.target.value)}>
@@ -190,7 +228,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
         videoDeviceId={videoDeviceId}
         audioDeviceId={audioDeviceId}
         nickname={nickname}
-        statusMesg={statusMesg}
+        statusMesg={`${emoji?.native || ""}${statusMesg}`}
         liveMode={liveMode}
         micOn={micOn}
         speakerOn={speakerOn}
