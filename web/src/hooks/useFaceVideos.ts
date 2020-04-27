@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 
-import { getVideoStream } from "../media/video";
+import { getVideoStream, isVideoTrackFaceSize } from "../media/video";
 import { getAudioStream } from "../media/audio";
 import { useRoomMedia } from "./useRoom";
 
@@ -8,8 +8,15 @@ const addTrackWithNewStream = (
   track: MediaStreamTrack,
   stream: MediaStream | null
 ) => {
-  const newStream = stream ? stream.clone() : new MediaStream();
+  const prevVideoTrack = stream && stream.getVideoTracks()[0];
+  const prevAudioTrack = stream && stream.getAudioTracks()[0];
+  const newStream = new MediaStream();
   newStream.addTrack(track);
+  if (track.kind === "video" && prevAudioTrack) {
+    newStream.addTrack(prevAudioTrack);
+  } else if (track.kind === "audio" && prevVideoTrack) {
+    newStream.addTrack(prevVideoTrack);
+  }
   return newStream;
 };
 
@@ -17,16 +24,13 @@ const removeTrackWithNewStream = (
   track: MediaStreamTrack,
   stream: MediaStream | null
 ) => {
-  // XXX removeTrack doesn't remove from the result... a workaround
-  // const newStream = stream ? stream.clone() : new MediaStream();
-  // newStream.removeTrack(track);
+  const prevVideoTrack = stream && stream.getVideoTracks()[0];
+  const prevAudioTrack = stream && stream.getAudioTracks()[0];
   const newStream = new MediaStream();
-  if (stream) {
-    stream.getTracks().forEach((t) => {
-      if (t !== track) {
-        newStream.addTrack(t);
-      }
-    });
+  if (track.kind === "video" && prevAudioTrack) {
+    newStream.addTrack(prevAudioTrack);
+  } else if (track.kind === "audio" && prevVideoTrack) {
+    newStream.addTrack(prevVideoTrack);
   }
   if (newStream.getTracks().length > 0) {
     return newStream;
@@ -39,6 +43,7 @@ export const useFaceVideos = (
   userId: string,
   videoEnabled: boolean,
   audioEnabled: boolean,
+  micOn: boolean,
   videoDeviceId?: string,
   audioDeviceId?: string
 ) => {
@@ -56,63 +61,60 @@ export const useFaceVideos = (
     return cleanup;
   }, []);
 
-  const { addTrack, removeTrack } = useRoomMedia(
-    roomId,
-    userId,
-    videoEnabled || audioEnabled,
-    useCallback((track, info) => {
+  const onTrack = useCallback(async (track, info) => {
+    if (track.kind === "video" && !(await isVideoTrackFaceSize(track))) {
+      return;
+    }
+    setFaceStreamMap((prev) => ({
+      ...prev,
+      [info.userId]: addTrackWithNewStream(track, prev[info.userId]),
+    }));
+    const onended = () => {
       setFaceStreamMap((prev) => ({
         ...prev,
-        [info.userId]: addTrackWithNewStream(track, prev[info.userId]),
+        [info.userId]: removeTrackWithNewStream(track, prev[info.userId]),
       }));
-      const onended = () => {
-        setFaceStreamMap((prev) => ({
-          ...prev,
-          [info.userId]: removeTrackWithNewStream(track, prev[info.userId]),
-        }));
-      };
-      track.addEventListener("ended", onended);
-      // XXX we don't get "ended" event with removeTrack,
-      // so a workaround with "mute" but "mute" is dispatched occasionally,
-      // so use this timeout hack
-      let timeout: NodeJS.Timeout;
-      const onmute = () => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          setFaceStreamMap((prev) => ({
-            ...prev,
-            [info.userId]: removeTrackWithNewStream(track, prev[info.userId]),
-          }));
-        }, 3000);
-      };
-      track.addEventListener("mute", onmute);
-      const onunmute = () => {
-        clearTimeout(timeout);
-      };
-      track.addEventListener("unmute", onunmute);
-      cleanupFns.current.push(() => {
-        track.removeEventListener("ended", onended);
-        clearTimeout(timeout);
-        track.removeEventListener("mute", onmute);
-        track.removeEventListener("unmute", onunmute);
-      });
-    }, [])
+    };
+    track.addEventListener("ended", onended);
+    cleanupFns.current.push(() => {
+      track.removeEventListener("ended", onended);
+    });
+  }, []);
+
+  const {
+    addTrack: addVideoTrack,
+    removeTrack: removeVideoTrack,
+  } = useRoomMedia(
+    roomId,
+    userId,
+    onTrack,
+    videoEnabled ? "faceVideo" : undefined
+  );
+
+  const {
+    addTrack: addAudioTrack,
+    removeTrack: removeAudioTrack,
+  } = useRoomMedia(
+    roomId,
+    userId,
+    onTrack,
+    audioEnabled ? "faceAudio" : undefined
   );
 
   useEffect(() => {
     let dispose: (() => void) | null = null;
-    if (videoEnabled && addTrack && removeTrack) {
+    if (videoEnabled && addVideoTrack && removeVideoTrack) {
       (async () => {
         const {
           stream: videoStream,
           dispose: disposeVideo,
         } = await getVideoStream(videoDeviceId);
         const videoTrack = videoStream.getVideoTracks()[0];
-        addTrack(videoTrack);
+        addVideoTrack(videoTrack);
         setFaceStream((prev) => addTrackWithNewStream(videoTrack, prev));
         dispose = () => {
           setFaceStream((prev) => removeTrackWithNewStream(videoTrack, prev));
-          removeTrack(videoTrack);
+          removeVideoTrack(videoTrack);
           disposeVideo();
         };
       })();
@@ -120,22 +122,22 @@ export const useFaceVideos = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, videoEnabled, videoDeviceId, addTrack, removeTrack]);
+  }, [roomId, videoEnabled, videoDeviceId, addVideoTrack, removeVideoTrack]);
 
   useEffect(() => {
     let dispose: (() => void) | null = null;
-    if (audioEnabled && addTrack && removeTrack) {
+    if (audioEnabled && addAudioTrack && removeAudioTrack) {
       (async () => {
         const {
           stream: audioStream,
           dispose: disposeAudio,
         } = await getAudioStream(audioDeviceId);
         const audioTrack = audioStream.getAudioTracks()[0];
-        addTrack(audioTrack);
+        addAudioTrack(audioTrack);
         setFaceStream((prev) => addTrackWithNewStream(audioTrack, prev));
         dispose = () => {
           setFaceStream((prev) => removeTrackWithNewStream(audioTrack, prev));
-          removeTrack(audioTrack);
+          removeAudioTrack(audioTrack);
           disposeAudio();
         };
       })();
@@ -143,7 +145,15 @@ export const useFaceVideos = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, audioEnabled, audioDeviceId, addTrack, removeTrack]);
+  }, [roomId, audioEnabled, audioDeviceId, addAudioTrack, removeAudioTrack]);
+  useEffect(() => {
+    if (faceStream) {
+      const audioTrack = faceStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = micOn;
+      }
+    }
+  }, [faceStream, micOn]);
 
   return { faceStream, faceStreamMap };
 };

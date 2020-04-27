@@ -7,8 +7,7 @@ import { useRoomNetworkStatus } from "../hooks/useRoom";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import FaceImages from "./FaceImages";
 import MomentaryChat from "./MomentaryChat";
-
-type LiveType = "off" | "video" | "video+audio";
+import ScreenShare from "./ScreenShare";
 
 type Props = {
   roomId: string;
@@ -16,6 +15,40 @@ type Props = {
 };
 
 const initialNickname = getStringItem("nickname");
+
+const TextField = React.memo<{
+  initialText: string;
+  onUpdate: (text: string) => void;
+  buttonLabel?: string;
+  placeholder?: string;
+  clearOnUpdate?: boolean;
+}>(({ initialText, onUpdate, buttonLabel, placeholder, clearOnUpdate }) => {
+  const [text, setText] = useState(initialText);
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (text) {
+      onUpdate(text);
+      if (clearOnUpdate) {
+        setText("");
+      }
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit}>
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder={placeholder}
+      />
+      {buttonLabel && (
+        <button type="submit" disabled={!text}>
+          {buttonLabel}
+        </button>
+      )}
+    </form>
+  );
+});
 
 const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const [nickname, setNickname] = useState(initialNickname);
@@ -28,7 +61,10 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const audioDevices = useAudioDevices();
   const [videoDeviceId, setVideoDeviceId] = useState<string>();
   const [audioDeviceId, setAudioDeviceId] = useState<string>();
-  const [liveType, setLiveType] = useState<LiveType>("off");
+  const [liveMode, setLiveMode] = useState(false);
+  const [micOn, setMicOn] = useState(false);
+  const [speakerOn, setSpeakerOn] = useState(false);
+  const [screenShareMode, setScreenShareMode] = useState(false);
   const [configOpen, setConfigOpen] = useState<boolean>(true);
 
   const networkStatus = useRoomNetworkStatus(roomId, userId);
@@ -55,21 +91,25 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             </div>
             <div className="SingleRoom-nickname">
               Your Name:{" "}
-              <input
-                defaultValue={initialNickname}
-                onChange={(e) => {
-                  setNickname(e.target.value);
-                  setStringItem("nickname", e.target.value);
+              <TextField
+                initialText={initialNickname}
+                onUpdate={(text) => {
+                  setNickname(text);
+                  setStringItem("nickname", text);
                 }}
+                placeholder="Enter your name"
+                buttonLabel="Set"
               />
             </div>
             <div className="SingleRoom-statusmesg">
               Your Status:{" "}
-              <input
-                onChange={(e) => {
-                  setStatusMesg(e.target.value);
+              <TextField
+                initialText=""
+                onUpdate={(text) => {
+                  setStatusMesg(text);
                 }}
                 placeholder="Enter status message"
+                buttonLabel="Set"
               />
             </div>
             <div>
@@ -99,12 +139,43 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
               </select>
             </div>
             <div>
-              Live Type:{" "}
-              <select onChange={(e) => setLiveType(e.target.value as LiveType)}>
-                <option value="off">Off</option>
-                <option value="video">Video Only</option>
-                <option value="video+audio">Video and Audio</option>
-              </select>
+              Live Mode:{" "}
+              <button type="button" onClick={() => setLiveMode((x) => !x)}>
+                {liveMode
+                  ? "Disable Live Mode (currently on)"
+                  : "Enable Live Mode (currently off)"}
+              </button>
+              {liveMode && (
+                <>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={micOn}
+                      onChange={(e) => setMicOn(e.target.checked)}
+                    />
+                    Mic On
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={speakerOn}
+                      onChange={(e) => setSpeakerOn(e.target.checked)}
+                    />
+                    Speaker On
+                  </label>
+                </>
+              )}
+            </div>
+            <div>
+              Screen Share:{" "}
+              <button
+                type="button"
+                onClick={() => setScreenShareMode((x) => !x)}
+              >
+                {screenShareMode
+                  ? "Disable Screen Share (currently on)"
+                  : "Enable Screen Share (currently off)"}
+              </button>
             </div>
           </>
         ) : (
@@ -120,9 +191,14 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
         audioDeviceId={audioDeviceId}
         nickname={nickname}
         statusMesg={statusMesg}
-        liveType={liveType}
+        liveMode={liveMode}
+        micOn={micOn}
+        speakerOn={speakerOn}
       />
       <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
+      {screenShareMode && (
+        <ScreenShare roomId={roomId} userId={userId} nickname={nickname} />
+      )}
     </>
   );
 };

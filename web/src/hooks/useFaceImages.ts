@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { takePhoto } from "../media/capture";
 import { useRoomData, useBroadcastData, useRoomNetworkStatus } from "./useRoom";
@@ -7,6 +7,7 @@ type ImageUrl = string;
 type FaceInfo = {
   nickname: string;
   message: string;
+  liveMode: boolean;
 };
 type ImageData = {
   image: ImageUrl;
@@ -16,7 +17,6 @@ type RoomImage = ImageData & {
   userId: string;
   received: number; // in milliseconds
   obsoleted: boolean;
-  liveMode: boolean;
   peerIndex: number;
 };
 
@@ -24,7 +24,8 @@ const isFaceInfo = (x: unknown): x is FaceInfo =>
   x &&
   typeof x === "object" &&
   typeof (x as { nickname: unknown }).nickname === "string" &&
-  typeof (x as { message: unknown }).message === "string";
+  typeof (x as { message: unknown }).message === "string" &&
+  typeof (x as { liveMode: unknown }).liveMode === "boolean";
 
 const isImageData = (x: unknown): x is ImageData =>
   x &&
@@ -37,13 +38,12 @@ export const useFaceImages = (
   userId: string,
   nickname: string,
   statusMesg: string,
+  liveMode: boolean,
   deviceId?: string
 ) => {
   const [myImage, setMyImage] = useState<ImageUrl>();
   const [roomImages, setRoomImages] = useState<RoomImage[]>([]);
   const [fatalError, setFatalError] = useState<Error>();
-  const faceInfo = useRef({ nickname, message: statusMesg });
-  faceInfo.current = { nickname, message: statusMesg };
 
   if (fatalError) {
     throw fatalError;
@@ -60,7 +60,6 @@ export const useFaceImages = (
         userId: info.userId,
         received: Date.now(),
         obsoleted: false,
-        liveMode: info.liveMode,
         peerIndex: info.peerIndex,
       };
       setRoomImages((prev) => {
@@ -124,10 +123,11 @@ export const useFaceImages = (
         checkObsoletedImage();
         const image = await takePhoto(deviceId);
         setMyImage(image);
+        const info: FaceInfo = { nickname, message: statusMesg, liveMode };
         const data = {
           userId,
           image,
-          info: faceInfo.current,
+          info,
         };
         broadcastData(data, true);
       } catch (e) {
@@ -140,7 +140,7 @@ export const useFaceImages = (
     return () => {
       clearTimeout(timer);
     };
-  }, [roomId, userId, deviceId, broadcastData]);
+  }, [roomId, userId, deviceId, nickname, statusMesg, liveMode, broadcastData]);
 
   return {
     myImage,
