@@ -17,3 +17,7 @@
 .SingleRoom-statusmesg {
   -webkit-app-region: no-drag
 }
+
+.SingleRoom-emoji {
+  -webkit-app-region: no-drag;
+}
