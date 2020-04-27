@@ -1,6 +1,7 @@
 import Peer from "peerjs";
 
 import { rand4 } from "../utils/crypto";
+import { getServerConfigFromUrl } from "../utils/url";
 import {
   isValidPeerId,
   generatePeerId,
@@ -74,7 +75,7 @@ export const createRoom = (
     const peers = connMap.getConnectedPeerIds();
     connMap.forEachConnectedConns((conn) => {
       try {
-        conn.send({ userId, data, peers, mediaTypes });
+        conn.send({ roomId, userId, data, peers, mediaTypes });
       } catch (e) {
         console.error("broadcastData", e);
       }
@@ -82,7 +83,7 @@ export const createRoom = (
   };
 
   const sendSDP = (conn: Peer.DataConnection, sdp: unknown) => {
-    conn.send({ SDP: sdp });
+    conn.send({ roomId, SDP: sdp });
   };
 
   const handleSDP = async (conn: Peer.DataConnection, sdp: unknown) => {
@@ -135,6 +136,7 @@ export const createRoom = (
   const handlePayload = (conn: Peer.DataConnection, payload: unknown) => {
     if (disposed) return;
     if (!payload && typeof payload !== "object") return;
+    if ((payload as { roomId?: unknown }).roomId !== roomId) return;
 
     handleSDP(conn, (payload as { SDP?: unknown }).SDP);
     handleUserId(conn, (payload as { userId?: unknown }).userId);
@@ -174,6 +176,7 @@ export const createRoom = (
       showConnectedStatus();
       if (lastBroadcastData) {
         conn.send({
+          roomId,
           userId,
           data: lastBroadcastData,
           peers: connMap.getConnectedPeerIds(),
@@ -235,7 +238,10 @@ export const createRoom = (
     updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex });
     const id = generatePeerId(roomId, peerIndex);
     console.log("initMyPeer start", index, id);
-    const peer = new Peer(id, { debug: 2 });
+    const peer = new Peer(id, {
+      ...(getServerConfigFromUrl() || {}),
+      debug: 2,
+    });
     myPeer = peer;
     peer.on("open", () => {
       myPeer = peer;
