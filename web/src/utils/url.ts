@@ -20,3 +20,23 @@ export const setRoomIdToUrl = (roomId: string) => {
   searchParams.set("roomId", roomId);
   window.location.hash = searchParams.toString();
 };
+
+export const getServerConfigFromUrl = () => {
+  const hash = window.location.hash.slice(1);
+  const searchParams = new URLSearchParams(hash);
+  const server = searchParams.get("server");
+  try {
+    const url = new URL(server || "");
+    const secure = url.protocol === "https:";
+    const defaultPort = secure ? 443 : 80;
+    return {
+      host: url.host.split(":")[0],
+      port: url.port ? Number(url.port) : defaultPort,
+      path: url.pathname,
+      secure,
+    };
+  } catch (e) {
+    // ignore
+  }
+  return null;
+};

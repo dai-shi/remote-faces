@@ -4,13 +4,13 @@ export const isValidPeerId = (
   roomId: string,
   peerId: unknown
 ): peerId is string =>
-  typeof peerId === "string" && peerId.startsWith(`${roomId}_`);
+  typeof peerId === "string" && peerId.startsWith(`${roomId.slice(0, 32)} `);
 
 export const generatePeerId = (roomId: string, peerIndex: number) =>
-  `${roomId}_${peerIndex}`;
+  `${roomId.slice(0, 32)} ${peerIndex}`;
 
 export const getPeerIndexFromPeerId = (peerId: string) =>
-  Number(peerId.split("_")[1]);
+  Number(peerId.split(" ")[1]);
 
 export const getPeerIndexFromConn = (conn: Peer.DataConnection) =>
   getPeerIndexFromPeerId(conn.peer);
