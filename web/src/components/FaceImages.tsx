@@ -12,68 +12,56 @@ const FaceImage = React.memo<{
   nickname: string;
   statusMesg: string;
   obsoleted?: boolean;
-  liveMode?: boolean;
   liveType?: LiveType;
   stream?: MediaStream;
   unmuted?: boolean;
-}>(
-  ({
-    image,
-    nickname,
-    statusMesg,
-    obsoleted,
-    liveMode,
-    liveType,
-    stream,
-    unmuted,
-  }) => {
-    const videoRef = useRef<HTMLVideoElement>(null);
-    useEffect(() => {
-      if (stream && videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    }, [stream]);
-    const hasVideo = !!stream && stream.getVideoTracks().length > 0;
-    const hasAudio = !!stream && stream.getAudioTracks().length > 0;
-    return (
-      <div className="FaceImages-card" style={{ opacity: obsoleted ? 0.2 : 1 }}>
-        {liveMode && stream ? (
-          <video
-            className="FaceImages-photo"
-            ref={videoRef}
-            autoPlay
-            muted={!unmuted}
-          />
-        ) : (
-          <img
-            src={image || BLANK_IMAGE}
-            className="FaceImages-photo"
-            alt="myself"
-          />
-        )}
-        <div className="FaceImages-name">{nickname}</div>
-        <div className="FaceImages-mesg">{statusMesg}</div>
-        {liveMode && hasVideo && hasAudio && (
-          <div className="FaceImages-live-indicator" title="Video/Audio On">
-            &#9672;
-          </div>
-        )}
-        {liveMode && hasVideo && !hasAudio && (
+}>(({ image, nickname, statusMesg, obsoleted, liveType, stream, unmuted }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+  const hasVideo = !!stream && stream.getVideoTracks().length > 0;
+  const hasAudio = !!stream && stream.getAudioTracks().length > 0;
+  return (
+    <div className="FaceImages-card" style={{ opacity: obsoleted ? 0.2 : 1 }}>
+      {liveType !== "off" && stream ? (
+        <video
+          className="FaceImages-photo"
+          ref={videoRef}
+          autoPlay
+          muted={!unmuted}
+        />
+      ) : (
+        <img
+          src={image || BLANK_IMAGE}
+          className="FaceImages-photo"
+          alt="myself"
+        />
+      )}
+      <div className="FaceImages-name">{nickname}</div>
+      <div className="FaceImages-mesg">{statusMesg}</div>
+      {liveType !== "off" && hasVideo && hasAudio && (
+        <div className="FaceImages-live-indicator" title="Video/Audio On">
+          &#9672;
+        </div>
+      )}
+      {liveType !== "off" && hasVideo && !hasAudio && (
+        <div className="FaceImages-live-indicator" title="Video On">
+          &#9673;
+        </div>
+      )}
+      {(liveType === "video" || liveType === "video+audio") &&
+        !stream &&
+        !obsoleted && (
           <div className="FaceImages-live-indicator" title="Video On">
-            &#9673;
+            &#9678;
           </div>
         )}
-        {(liveType === "video" || liveType === "video+audio") &&
-          !stream &&
-          !obsoleted && (
-            <div className="FaceImages-live-indicator" title="Video On">
-              &#9678;
-            </div>
-          )}
-      </div>
-    );
-  }
-);
+    </div>
+  );
+});
 
 type Props = {
   roomId: string;
@@ -117,7 +105,6 @@ const FaceImages: React.FC<Props> = ({
         image={myImage}
         nickname={nickname}
         statusMesg={statusMesg}
-        liveMode={liveType !== "off"}
         liveType={liveType}
         stream={faceStream || undefined}
       />
@@ -128,7 +115,6 @@ const FaceImages: React.FC<Props> = ({
           nickname={item.info.nickname}
           statusMesg={item.info.message}
           obsoleted={item.obsoleted}
-          liveMode={item.liveMode}
           liveType={item.info.liveType}
           stream={faceStreamMap[item.userId] || undefined}
           unmuted={liveType === "video+audio"}

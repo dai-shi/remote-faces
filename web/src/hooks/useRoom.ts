@@ -4,7 +4,10 @@ import { PeerInfo, createRoom, NetworkStatus } from "../network/room";
 
 type NetworkStatusListener = (status: NetworkStatus) => void;
 type DataListener = (data: unknown, info: PeerInfo) => void;
-type TrackListener = (track: MediaStreamTrack, info: PeerInfo) => void;
+type TrackListener = {
+  mediaType: string;
+  listener: (track: MediaStreamTrack, info: PeerInfo) => void;
+};
 type RoomEntry = {
   room: ReturnType<typeof createRoom>;
   networkStatusListeners: Set<NetworkStatusListener>;
@@ -37,7 +40,7 @@ const register = (
       });
     };
     const receiveTrack = (track: MediaStreamTrack, info: PeerInfo) => {
-      trackListeners.forEach((listener) => {
+      trackListeners.forEach(({ listener }) => {
         listener(track, info);
       });
     };
@@ -64,28 +67,41 @@ const register = (
     entry.dataListeners.add(dataListener);
   }
   if (trackListener) {
+    const mediaTypeSet = new Set(
+      Array.from(entry.trackListeners).map((x) => x.mediaType)
+    );
+    const prevSize = mediaTypeSet.size;
     entry.trackListeners.add(trackListener);
-    if (entry.trackListeners.size === 1) {
-      entry.room.enableLiveMode();
+    mediaTypeSet.add(trackListener.mediaType);
+    if (prevSize !== mediaTypeSet.size) {
+      entry.room.setMediaTypes(Array.from(mediaTypeSet));
     }
   }
   entry.count += 1;
+  const definedEntry = entry;
   const unregister = () => {
     if (networkStatusListener) {
-      (entry as RoomEntry).networkStatusListeners.delete(networkStatusListener);
+      definedEntry.networkStatusListeners.delete(networkStatusListener);
     }
     if (dataListener) {
-      (entry as RoomEntry).dataListeners.delete(dataListener);
+      definedEntry.dataListeners.delete(dataListener);
     }
     if (trackListener) {
-      (entry as RoomEntry).trackListeners.delete(trackListener);
-      if ((entry as RoomEntry).trackListeners.size === 0) {
-        (entry as RoomEntry).room.disableLiveMode();
+      let mediaTypeSet = new Set(
+        Array.from(definedEntry.trackListeners).map((x) => x.mediaType)
+      );
+      const prevSize = mediaTypeSet.size;
+      definedEntry.trackListeners.delete(trackListener);
+      mediaTypeSet = new Set(
+        Array.from(definedEntry.trackListeners).map((x) => x.mediaType)
+      );
+      if (prevSize !== mediaTypeSet.size) {
+        definedEntry.room.setMediaTypes(Array.from(mediaTypeSet));
       }
     }
-    (entry as RoomEntry).count -= 1;
-    if ((entry as RoomEntry).count <= 0) {
-      (entry as RoomEntry).room.dispose();
+    definedEntry.count -= 1;
+    if (definedEntry.count <= 0) {
+      definedEntry.room.dispose();
       roomEntryMap.delete(roomEntryKey);
     }
   };
@@ -149,19 +165,24 @@ export const useRoomData = (
 export const useRoomMedia = (
   roomId: string,
   userId: string,
-  enabled: boolean,
-  onTrack: (track: MediaStreamTrack, info: PeerInfo) => void
+  onTrack: (track: MediaStreamTrack, info: PeerInfo) => void,
+  mediaType?: string
 ) => {
   const [functions, setFunctions] = useState<{
     addTrack?: (track: MediaStreamTrack) => void;
     removeTrack?: (track: MediaStreamTrack) => void;
   }>({});
   useEffect(() => {
-    if (enabled) {
-      const result = register(roomId, userId, undefined, undefined, onTrack);
+    if (mediaType) {
+      const result = register(roomId, userId, undefined, undefined, {
+        mediaType,
+        listener: onTrack,
+      });
       setFunctions({
-        addTrack: result.addTrack,
-        removeTrack: result.removeTrack,
+        addTrack: (track: MediaStreamTrack) =>
+          result.addTrack(mediaType, track),
+        removeTrack: (track: MediaStreamTrack) =>
+          result.removeTrack(mediaType, track),
       });
       return () => {
         setFunctions({});
@@ -169,6 +190,6 @@ export const useRoomMedia = (
       };
     }
     return undefined;
-  }, [roomId, userId, enabled, onTrack]);
+  }, [roomId, userId, onTrack, mediaType]);
   return functions;
 };

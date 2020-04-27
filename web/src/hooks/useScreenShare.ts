@@ -30,48 +30,50 @@ export const useScreenShare = (
     return cleanup;
   }, []);
 
-  const { addTrack, removeTrack } = useRoomMedia(
-    roomId,
-    userId,
-    true,
-    useCallback(async (track, info) => {
-      if (!(await isScreenTrack(track))) return;
+  const onTrack = useCallback(async (track, info) => {
+    if (!(await isScreenTrack(track))) return;
+    setScreenStreamMap((prev) => ({
+      ...prev,
+      [info.userId]: new MediaStream([track]),
+    }));
+    const onended = () => {
       setScreenStreamMap((prev) => ({
         ...prev,
-        [info.userId]: new MediaStream([track]),
+        [info.userId]: null,
       }));
-      const onended = () => {
+    };
+    track.addEventListener("ended", onended);
+    // XXX we don't get "ended" event with removeTrack,
+    // so a workaround with "mute" but "mute" is dispatched occasionally,
+    // so use this timeout hack
+    let timeout: NodeJS.Timeout;
+    const onmute = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
         setScreenStreamMap((prev) => ({
           ...prev,
           [info.userId]: null,
         }));
-      };
-      track.addEventListener("ended", onended);
-      // XXX we don't get "ended" event with removeTrack,
-      // so a workaround with "mute" but "mute" is dispatched occasionally,
-      // so use this timeout hack
-      let timeout: NodeJS.Timeout;
-      const onmute = () => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          setScreenStreamMap((prev) => ({
-            ...prev,
-            [info.userId]: null,
-          }));
-        }, 3000);
-      };
-      track.addEventListener("mute", onmute);
-      const onunmute = () => {
-        clearTimeout(timeout);
-      };
-      track.addEventListener("unmute", onunmute);
-      cleanupFns.current.push(() => {
-        track.removeEventListener("ended", onended);
-        clearTimeout(timeout);
-        track.removeEventListener("mute", onmute);
-        track.removeEventListener("unmute", onunmute);
-      });
-    }, [])
+      }, 3000);
+    };
+    track.addEventListener("mute", onmute);
+    const onunmute = () => {
+      clearTimeout(timeout);
+    };
+    track.addEventListener("unmute", onunmute);
+    cleanupFns.current.push(() => {
+      track.removeEventListener("ended", onended);
+      clearTimeout(timeout);
+      track.removeEventListener("mute", onmute);
+      track.removeEventListener("unmute", onunmute);
+    });
+  }, []);
+
+  const { addTrack, removeTrack } = useRoomMedia(
+    roomId,
+    userId,
+    onTrack,
+    "screenVideo"
   );
 
   useEffect(() => {

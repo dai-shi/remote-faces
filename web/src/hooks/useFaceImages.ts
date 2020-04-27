@@ -19,7 +19,6 @@ type RoomImage = ImageData & {
   userId: string;
   received: number; // in milliseconds
   obsoleted: boolean;
-  liveMode: boolean;
   peerIndex: number;
 };
 
@@ -69,7 +68,6 @@ export const useFaceImages = (
         userId: info.userId,
         received: Date.now(),
         obsoleted: false,
-        liveMode: info.liveMode,
         peerIndex: info.peerIndex,
       };
       setRoomImages((prev) => {

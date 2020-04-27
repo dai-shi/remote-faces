@@ -20,7 +20,7 @@ export const createConnectionMap = () => {
     conn: Peer.DataConnection;
     connected?: boolean;
     userId?: string;
-    liveMode?: boolean;
+    mediaTypes: string[];
   };
   const map = new Map<string, Value>();
 
@@ -29,7 +29,7 @@ export const createConnectionMap = () => {
     if (value) {
       value.conn.close();
     }
-    map.set(conn.peer, { conn });
+    map.set(conn.peer, { conn, mediaTypes: [] });
   };
 
   const markConnected = (conn: Peer.DataConnection) => {
@@ -56,16 +56,16 @@ export const createConnectionMap = () => {
     return value && value.userId;
   };
 
-  const setLiveMode = (conn: Peer.DataConnection, liveMode: boolean) => {
+  const setMediaTypes = (conn: Peer.DataConnection, mediaTypes: string[]) => {
     const value = map.get(conn.peer);
     if (value) {
-      value.liveMode = liveMode;
+      value.mediaTypes = mediaTypes;
     }
   };
 
-  const getLiveMode = (conn: Peer.DataConnection) => {
+  const getMediaTypes = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
-    return (value && value.liveMode) || false;
+    return (value && value.mediaTypes) || [];
   };
 
   const hasConn = (peerId: string) => map.has(peerId);
@@ -90,9 +90,16 @@ export const createConnectionMap = () => {
     });
   };
 
-  const forEachLiveConns = (callback: (conn: Peer.DataConnection) => void) => {
+  const forEachConnsAcceptingMedia = (
+    mediaType: string,
+    callback: (conn: Peer.DataConnection) => void
+  ) => {
     Array.from(map.values()).forEach((value) => {
-      if (value.connected && value.liveMode) {
+      if (
+        value.connected &&
+        value.mediaTypes &&
+        value.mediaTypes.includes(mediaType)
+      ) {
         callback(value.conn);
       }
     });
@@ -111,13 +118,13 @@ export const createConnectionMap = () => {
     isConnected,
     setUserId,
     getUserId,
-    setLiveMode,
-    getLiveMode,
+    setMediaTypes,
+    getMediaTypes,
     hasConn,
     delConn,
     getConnectedPeerIds,
     forEachConnectedConns,
-    forEachLiveConns,
+    forEachConnsAcceptingMedia,
     clearAll,
   };
 };
