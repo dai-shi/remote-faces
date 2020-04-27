@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { takePhoto } from "../media/capture";
 import { useRoomData, useBroadcastData, useRoomNetworkStatus } from "./useRoom";
@@ -44,12 +44,6 @@ export const useFaceImages = (
   const [myImage, setMyImage] = useState<ImageUrl>();
   const [roomImages, setRoomImages] = useState<RoomImage[]>([]);
   const [fatalError, setFatalError] = useState<Error>();
-  const faceInfo = useRef<FaceInfo>({
-    nickname,
-    message: statusMesg,
-    liveMode,
-  });
-  faceInfo.current = { nickname, message: statusMesg, liveMode };
 
   if (fatalError) {
     throw fatalError;
@@ -129,10 +123,11 @@ export const useFaceImages = (
         checkObsoletedImage();
         const image = await takePhoto(deviceId);
         setMyImage(image);
+        const info: FaceInfo = { nickname, message: statusMesg, liveMode };
         const data = {
           userId,
           image,
-          info: faceInfo.current,
+          info,
         };
         broadcastData(data, true);
       } catch (e) {
@@ -145,7 +140,7 @@ export const useFaceImages = (
     return () => {
       clearTimeout(timer);
     };
-  }, [roomId, userId, deviceId, broadcastData]);
+  }, [roomId, userId, deviceId, nickname, statusMesg, liveMode, broadcastData]);
 
   return {
     myImage,
