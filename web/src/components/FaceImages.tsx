@@ -1,11 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import "./FaceImages.css";
 import { useFaceImages } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
-
-const isTrackEffective = (track: MediaStreamTrack | undefined) =>
-  !!track && !track.muted;
 
 const BLANK_IMAGE =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQI12NgYAAAAAMAASDVlMcAAAAASUVORK5CYII=";
@@ -17,11 +14,52 @@ const FaceImage = React.memo<{
   obsoleted?: boolean;
   liveMode?: boolean;
   stream?: MediaStream;
-  speakerOn?: boolean;
+  disableAudioInput?: boolean;
+  enableAudioOutput?: boolean;
 }>(
-  ({ image, nickname, statusMesg, obsoleted, liveMode, stream, speakerOn }) => {
-    const hasVideo = !!stream && isTrackEffective(stream.getVideoTracks()[0]);
-    const hasAudio = !!stream && isTrackEffective(stream.getAudioTracks()[0]);
+  ({
+    image,
+    nickname,
+    statusMesg,
+    obsoleted,
+    liveMode,
+    stream,
+    disableAudioInput,
+    enableAudioOutput,
+  }) => {
+    const [hasVideo, setHasVideo] = useState(false);
+    const [hasAudioOrig, setHasAudio] = useState(false);
+    const hasAudio = hasAudioOrig && !disableAudioInput;
+    const videoTrack = stream && stream.getVideoTracks()[0];
+    const audioTrack = stream && stream.getAudioTracks()[0];
+    useEffect(() => {
+      if (videoTrack) {
+        setHasVideo(!videoTrack.muted);
+        const onmute = () => setHasVideo(false);
+        const onunmute = () => setHasVideo(true);
+        videoTrack.addEventListener("mute", onmute);
+        videoTrack.addEventListener("unmute", onunmute);
+        return () => {
+          videoTrack.removeEventListener("mute", onmute);
+          videoTrack.removeEventListener("unmute", onunmute);
+        };
+      }
+      return undefined;
+    }, [videoTrack]);
+    useEffect(() => {
+      if (audioTrack) {
+        setHasAudio(!audioTrack.muted);
+        const onmute = () => setHasAudio(false);
+        const onunmute = () => setHasAudio(true);
+        audioTrack.addEventListener("mute", onmute);
+        audioTrack.addEventListener("unmute", onunmute);
+        return () => {
+          audioTrack.removeEventListener("mute", onmute);
+          audioTrack.removeEventListener("unmute", onunmute);
+        };
+      }
+      return undefined;
+    }, [audioTrack]);
     return (
       <div className="FaceImages-card" style={{ opacity: obsoleted ? 0.2 : 1 }}>
         {liveMode && stream ? (
@@ -34,7 +72,7 @@ const FaceImage = React.memo<{
               }
             }}
             autoPlay
-            muted={!speakerOn}
+            muted={!enableAudioOutput}
           />
         ) : (
           <img
@@ -114,6 +152,7 @@ const FaceImages: React.FC<Props> = ({
         statusMesg={statusMesg}
         liveMode={liveMode}
         stream={faceStream || undefined}
+        disableAudioInput={!micOn}
       />
       {roomImages.map((item) => (
         <FaceImage
@@ -124,7 +163,7 @@ const FaceImages: React.FC<Props> = ({
           obsoleted={item.obsoleted}
           liveMode={item.info.liveMode}
           stream={faceStreamMap[item.userId] || undefined}
-          speakerOn={speakerOn}
+          enableAudioOutput={speakerOn}
         />
       ))}
     </div>
