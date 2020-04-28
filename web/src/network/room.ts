@@ -76,11 +76,7 @@ export const createRoom = (
     }
     const peers = connMap.getConnectedPeerIds();
     connMap.forEachConnectedConns((conn) => {
-      try {
-        sendPayload(conn, { userId, data, peers, mediaTypes });
-      } catch (e) {
-        console.error("broadcastData", e);
-      }
+      sendPayload(conn, { userId, data, peers, mediaTypes });
     });
   };
 
@@ -189,11 +185,15 @@ export const createRoom = (
   };
 
   const sendPayload = async (conn: Peer.DataConnection, payload: unknown) => {
-    const encrypted = await encrypt(
-      JSON.stringify(payload),
-      roomId.slice(ROOM_ID_PREFIX_LEN)
-    );
-    conn.send(encrypted);
+    try {
+      const encrypted = await encrypt(
+        JSON.stringify(payload),
+        roomId.slice(ROOM_ID_PREFIX_LEN)
+      );
+      conn.send(encrypted);
+    } catch (e) {
+      console.error("sendPayload", e);
+    }
   };
 
   const initConnection = (conn: Peer.DataConnection) => {
