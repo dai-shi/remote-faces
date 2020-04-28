@@ -37,6 +37,7 @@ const MomentaryChatContent = React.memo<{
             <div className="MomentaryChat-nickname">
               {item.nickname || "No Name"}
             </div>
+            <div className="MomentaryChat-time">{item.time}</div>
           </div>
           <div>{item.text}</div>
           {item.replies.map(([text, count]) => (

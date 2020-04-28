@@ -13,6 +13,14 @@
 
 .MomentaryChat-nickname {
   font-weight: bold;
+  display: inline-block;
+}
+
+.MomentaryChat-time {
+  color: grey;
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 12px;
 }
 
 .MomentaryChat-iconButton-container {
