@@ -36,6 +36,7 @@ type ChatItem = {
   nickname: string;
   text: string;
   replies: Reply[];
+  time: string;
 };
 
 const compareReply = (a: Reply, b: Reply) => {
@@ -79,6 +80,7 @@ export const useMomentaryChat = (
         })
       );
     } else {
+      const time = new Date();
       const chatItem: ChatItem = {
         key: `${chatData.userId}_${chatData.chatSeq}`,
         replyTo: {
@@ -88,6 +90,7 @@ export const useMomentaryChat = (
         nickname: chatData.nickname,
         text: chatData.chatText,
         replies: [],
+        time: time.toLocaleString().split(" ")[1].slice(0, -3),
       };
       setChatList((prev) => [chatItem, ...prev].slice(0, MAX_CHAT_LIST_SIZE));
     }
