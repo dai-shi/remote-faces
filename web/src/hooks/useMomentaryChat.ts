@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 
+import { isObject } from "../utils/types";
 import { useRoomData, useBroadcastData } from "./useRoom";
 
 const MAX_CHAT_LIST_SIZE = 100;
@@ -16,8 +17,7 @@ type ChatData = {
 };
 
 const isChatData = (x: unknown): x is ChatData =>
-  x &&
-  typeof x === "object" &&
+  isObject(x) &&
   typeof (x as { userId: unknown }).userId === "string" &&
   typeof (x as { nickname: unknown }).nickname === "string" &&
   typeof (x as { chatSeq: unknown }).chatSeq === "number" &&

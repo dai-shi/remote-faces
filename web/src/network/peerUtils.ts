@@ -1,13 +1,16 @@
 import Peer from "peerjs";
 
+export const ROOM_ID_PREFIX_LEN = 32;
+
 export const isValidPeerId = (
   roomId: string,
   peerId: unknown
 ): peerId is string =>
-  typeof peerId === "string" && peerId.startsWith(`${roomId.slice(0, 32)} `);
+  typeof peerId === "string" &&
+  peerId.startsWith(`${roomId.slice(0, ROOM_ID_PREFIX_LEN)} `);
 
 export const generatePeerId = (roomId: string, peerIndex: number) =>
-  `${roomId.slice(0, 32)} ${peerIndex}`;
+  `${roomId.slice(0, ROOM_ID_PREFIX_LEN)} ${peerIndex}`;
 
 export const getPeerIndexFromPeerId = (peerId: string) =>
   Number(peerId.split(" ")[1]);
