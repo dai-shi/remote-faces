@@ -131,7 +131,6 @@ export const useFaceImages = (
         };
         broadcastData(data, true);
       } catch (e) {
-        console.error(e);
         setFatalError(e);
       }
     };

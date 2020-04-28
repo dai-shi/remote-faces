@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 
 import "./SingleRoomEntrance.css";
-import { secureRandomId } from "../utils/crypto";
+import { secureRandomId, generateCryptoKey } from "../utils/crypto";
+import { ROOM_ID_PREFIX_LEN } from "../network/peerUtils";
 import { getRoomIdFromUrl, extractRoomIdFromLink } from "../utils/url";
 import SingleRoom from "./SingleRoom";
 
@@ -12,8 +13,10 @@ const SingleRoomEntrance: React.FC = () => {
   const [roomId, setRoomId] = useState<string | null>(roomIdFromUrl);
   const [linkText, setLinkText] = useState("");
 
-  const onCreateNew = () => {
-    setRoomId(secureRandomId());
+  const onCreateNew = async () => {
+    setRoomId(
+      secureRandomId(ROOM_ID_PREFIX_LEN / 2) + (await generateCryptoKey())
+    );
   };
 
   const onEnter = () => {

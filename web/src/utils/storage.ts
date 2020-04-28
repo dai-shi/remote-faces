@@ -6,7 +6,7 @@ export const setStringItem = (name: StringItemName, value: string) => {
   try {
     window.localStorage.setItem(name, value);
   } catch (e) {
-    console.log("Failed to save string to localStorage", e);
+    console.info("Failed to save string to localStorage", e);
   }
 };
 
@@ -23,7 +23,7 @@ export const setJsonItem = (name: JsonItemName, value: unknown) => {
   try {
     window.localStorage.setItem(name, JSON.stringify(value));
   } catch (e) {
-    console.log("Failed to save json to localStorage", e);
+    console.info("Failed to save json to localStorage", e);
   }
 };
 

@@ -1,8 +1,9 @@
 import Peer from "peerjs";
 
-import { rand4 } from "../utils/crypto";
+import { rand4, encrypt, decrypt } from "../utils/crypto";
 import { getServerConfigFromUrl } from "../utils/url";
 import {
+  ROOM_ID_PREFIX_LEN,
   isValidPeerId,
   generatePeerId,
   getPeerIndexFromPeerId,
@@ -63,7 +64,7 @@ export const createRoom = (
     if (!myPeer || myPeer.id === id) return;
     if (connMap.hasConn(id)) return;
     console.log("connectPeer", id);
-    const conn = myPeer.connect(id, { serialization: "json" });
+    const conn = myPeer.connect(id);
     initConnection(conn);
   };
 
@@ -75,7 +76,7 @@ export const createRoom = (
     const peers = connMap.getConnectedPeerIds();
     connMap.forEachConnectedConns((conn) => {
       try {
-        conn.send({ roomId, userId, data, peers, mediaTypes });
+        sendPayload(conn, { userId, data, peers, mediaTypes });
       } catch (e) {
         console.error("broadcastData", e);
       }
@@ -83,10 +84,10 @@ export const createRoom = (
   };
 
   const sendSDP = (conn: Peer.DataConnection, sdp: unknown) => {
-    conn.send({ roomId, SDP: sdp });
+    sendPayload(conn, { SDP: sdp });
   };
 
-  const handleSDP = async (conn: Peer.DataConnection, sdp: unknown) => {
+  const handlePayloadSDP = async (conn: Peer.DataConnection, sdp: unknown) => {
     if (!sdp || typeof sdp !== "object") return;
     if (typeof (sdp as { offer: unknown }).offer === "object") {
       const { offer } = sdp as { offer: object };
@@ -96,27 +97,30 @@ export const createRoom = (
         await conn.peerConnection.setLocalDescription(answer);
         sendSDP(conn, { answer });
       } catch (e) {
-        console.log("handleSDP offer failed", e);
+        console.info("handleSDP offer failed", e);
       }
     } else if (typeof (sdp as { answer: unknown }).answer === "object") {
       const { answer } = sdp as { answer: object };
       try {
         await conn.peerConnection.setRemoteDescription(answer as any);
       } catch (e) {
-        console.log("handleSDP answer failed", e);
+        console.info("handleSDP answer failed", e);
       }
     } else {
-      console.warn("unkonwn SDP", sdp);
+      console.warn("unknown SDP", sdp);
     }
   };
 
-  const handleUserId = (conn: Peer.DataConnection, payloadUserId: unknown) => {
+  const handlePayloadUserId = (
+    conn: Peer.DataConnection,
+    payloadUserId: unknown
+  ) => {
     if (typeof payloadUserId === "string") {
       connMap.setUserId(conn, payloadUserId as string);
     }
   };
 
-  const handleMediaTypes = (
+  const handlePayloadMediaTypes = (
     conn: Peer.DataConnection,
     payloadMediaTypes: unknown
   ) => {
@@ -133,23 +137,17 @@ export const createRoom = (
     }
   };
 
-  const handlePayload = (conn: Peer.DataConnection, payload: unknown) => {
-    if (disposed) return;
-    if (!payload && typeof payload !== "object") return;
-    if ((payload as { roomId?: unknown }).roomId !== roomId) return;
-
-    handleSDP(conn, (payload as { SDP?: unknown }).SDP);
-    handleUserId(conn, (payload as { userId?: unknown }).userId);
-    handleMediaTypes(conn, (payload as { mediaTypes?: unknown }).mediaTypes);
-
-    if (Array.isArray((payload as { peers?: unknown }).peers)) {
-      (payload as { peers: unknown[] }).peers.forEach((peer) => {
+  const handlePayloadPeers = (peers: unknown) => {
+    if (Array.isArray(peers)) {
+      peers.forEach((peer) => {
         if (isValidPeerId(roomId, peer)) {
           connectPeer(peer);
         }
       });
     }
+  };
 
+  const handlePayloadData = (conn: Peer.DataConnection, data: unknown) => {
     const connUserId = connMap.getUserId(conn);
     if (connUserId) {
       const info: PeerInfo = {
@@ -158,11 +156,43 @@ export const createRoom = (
         mediaTypes: connMap.getMediaTypes(conn),
       };
       try {
-        receiveData((payload as { data: unknown }).data, info);
+        receiveData(data, info);
       } catch (e) {
-        console.error("receiveData", e);
+        console.warn("receiveData", e);
       }
     }
+  };
+
+  const handlePayload = async (
+    conn: Peer.DataConnection,
+    encrypted: ArrayBuffer
+  ) => {
+    if (disposed) return;
+    try {
+      const payload = JSON.parse(
+        await decrypt(encrypted, roomId.slice(ROOM_ID_PREFIX_LEN))
+      );
+      if (!payload && typeof payload !== "object") return;
+
+      handlePayloadSDP(conn, (payload as { SDP?: unknown }).SDP);
+      handlePayloadUserId(conn, (payload as { userId?: unknown }).userId);
+      handlePayloadMediaTypes(
+        conn,
+        (payload as { mediaTypes?: unknown }).mediaTypes
+      );
+      handlePayloadPeers((payload as { peers?: unknown }).peers);
+      handlePayloadData(conn, (payload as { data?: unknown }).data);
+    } catch (e) {
+      console.info("Error in handlePayload", e);
+    }
+  };
+
+  const sendPayload = async (conn: Peer.DataConnection, payload: unknown) => {
+    const encrypted = await encrypt(
+      JSON.stringify(payload),
+      roomId.slice(ROOM_ID_PREFIX_LEN)
+    );
+    conn.send(encrypted);
   };
 
   const initConnection = (conn: Peer.DataConnection) => {
@@ -175,16 +205,12 @@ export const createRoom = (
       connMap.markConnected(conn);
       showConnectedStatus();
       if (lastBroadcastData) {
-        conn.send({
-          roomId,
-          userId,
-          data: lastBroadcastData,
-          peers: connMap.getConnectedPeerIds(),
-          mediaTypes,
-        });
+        const data = lastBroadcastData;
+        const peers = connMap.getConnectedPeerIds();
+        sendPayload(conn, { userId, data, peers, mediaTypes });
       }
     });
-    conn.on("data", (payload: unknown) => handlePayload(conn, payload));
+    conn.on("data", (buf: ArrayBuffer) => handlePayload(conn, buf));
     conn.peerConnection.addEventListener("negotiationneeded", async () => {
       if (!connMap.isConnected(conn.peer)) return;
       const offer = await conn.peerConnection.createOffer();
@@ -240,7 +266,7 @@ export const createRoom = (
     console.log("initMyPeer start", index, id);
     const peer = new Peer(id, {
       ...(getServerConfigFromUrl() || {}),
-      debug: 2,
+      debug: 1,
     });
     myPeer = peer;
     peer.on("open", () => {
@@ -374,7 +400,6 @@ export const createRoom = (
 
   const syncTracks = (conn: Peer.DataConnection) => {
     const senders = conn.peerConnection.getSenders();
-    console.log("syncTracks: senders", senders.length, conn);
     const mTypes = connMap.getMediaTypes(conn);
     if (localStream) {
       localStream.getTracks().forEach((track) => {
