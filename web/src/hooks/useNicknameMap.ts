@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 
+import { isObject } from "../utils/types";
 import { useRoomData } from "./useRoom";
 
 type ImageUrl = string;
@@ -13,14 +14,12 @@ type ImageData = {
 };
 
 const isFaceInfo = (x: unknown): x is FaceInfo =>
-  x &&
-  typeof x === "object" &&
+  isObject(x) &&
   typeof (x as { nickname: unknown }).nickname === "string" &&
   typeof (x as { message: unknown }).message === "string";
 
 const isImageData = (x: unknown): x is ImageData =>
-  x &&
-  typeof x === "object" &&
+  isObject(x) &&
   typeof (x as { image: unknown }).image === "string" &&
   isFaceInfo((x as { info: unknown }).info);
 

@@ -2,6 +2,7 @@ import Peer from "peerjs";
 
 import { rand4, encrypt, decrypt } from "../utils/crypto";
 import { getServerConfigFromUrl } from "../utils/url";
+import { isObject } from "../utils/types";
 import {
   ROOM_ID_PREFIX_LEN,
   isValidPeerId,
@@ -88,8 +89,8 @@ export const createRoom = (
   };
 
   const handlePayloadSDP = async (conn: Peer.DataConnection, sdp: unknown) => {
-    if (!sdp || typeof sdp !== "object") return;
-    if (typeof (sdp as { offer: unknown }).offer === "object") {
+    if (!isObject(sdp)) return;
+    if (isObject((sdp as { offer: unknown }).offer)) {
       const { offer } = sdp as { offer: object };
       try {
         await conn.peerConnection.setRemoteDescription(offer as any);
@@ -99,7 +100,7 @@ export const createRoom = (
       } catch (e) {
         console.info("handleSDP offer failed", e);
       }
-    } else if (typeof (sdp as { answer: unknown }).answer === "object") {
+    } else if (isObject((sdp as { answer: unknown }).answer)) {
       const { answer } = sdp as { answer: object };
       try {
         await conn.peerConnection.setRemoteDescription(answer as any);
@@ -172,7 +173,7 @@ export const createRoom = (
       const payload = JSON.parse(
         await decrypt(encrypted, roomId.slice(ROOM_ID_PREFIX_LEN))
       );
-      if (!payload && typeof payload !== "object") return;
+      if (!isObject(payload)) return;
 
       handlePayloadSDP(conn, (payload as { SDP?: unknown }).SDP);
       handlePayloadUserId(conn, (payload as { userId?: unknown }).userId);
