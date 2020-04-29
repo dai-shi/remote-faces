@@ -8,6 +8,7 @@ import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import FaceImages from "./FaceImages";
 import MomentaryChat from "./MomentaryChat";
 import ScreenShare from "./ScreenShare";
+import CollabWhiteBoard from "./CollabWhiteBoard";
 import {
   Emoji,
   EmojiPicker,
@@ -75,7 +76,8 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const [micOn, setMicOn] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(false);
   const [screenShareMode, setScreenShareMode] = useState(false);
-  const [configOpen, setConfigOpen] = useState<boolean>(true);
+  const [configOpen, setConfigOpen] = useState(true);
+  const [collabWBOpen, setCollabWBOpen] = useState(false);
 
   const networkStatus = useRoomNetworkStatus(roomId, userId);
 
@@ -229,6 +231,12 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
                   : "Enable Screen Share (currently off)"}
               </button>
             </div>
+            <div>
+              Collab White Board:{" "}
+              <button type="button" onClick={() => setCollabWBOpen((x) => !x)}>
+                {collabWBOpen ? "Close" : "Open"}
+              </button>
+            </div>
           </>
         ) : (
           <button type="button" onClick={() => setConfigOpen(true)}>
@@ -251,6 +259,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
       {screenShareMode && (
         <ScreenShare roomId={roomId} userId={userId} nickname={nickname} />
       )}
+      {collabWBOpen && <CollabWhiteBoard roomId={roomId} />}
     </>
   );
 };
