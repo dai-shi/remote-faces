@@ -31,25 +31,28 @@ export const generateCryptoKey = async () => {
   return hex;
 };
 
-const importCryptoKey = async (key: string, usage: "encrypt" | "decrypt") => {
+export const importCryptoKey = async (
+  key: string,
+  usages: ("encrypt" | "decrypt")[]
+) => {
   const size = key.length / 2;
   const buf = new Uint8Array(size);
   for (let i = 0; i < size; i += 1) {
-    buf[i] = parseInt(key.slice(i * 2, 2), 16);
+    buf[i] = parseInt(key.slice(i * 2, i * 2 + 2), 16);
   }
   const cryptoKey = await window.crypto.subtle.importKey(
     "raw",
     buf,
     { name: "AES-GCM", length: 128 },
-    false,
-    [usage]
+    true,
+    usages
   );
   return cryptoKey;
 };
 
 export const encrypt = async (data: string, key: string) => {
   const encoder = new TextEncoder();
-  const cryptoKey = await importCryptoKey(key, "encrypt");
+  const cryptoKey = await importCryptoKey(key, ["encrypt"]);
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
   const encrypted = await window.crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
@@ -63,7 +66,7 @@ export const encrypt = async (data: string, key: string) => {
 };
 
 export const decrypt = async (buf: ArrayBuffer, key: string) => {
-  const cryptoKey = await importCryptoKey(key, "decrypt");
+  const cryptoKey = await importCryptoKey(key, ["decrypt"]);
   const decrypted = await window.crypto.subtle.decrypt(
     { name: "AES-GCM", iv: buf.slice(0, 12) },
     cryptoKey,

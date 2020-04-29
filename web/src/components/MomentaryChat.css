@@ -1,4 +1,7 @@
 .MomentaryChat-container {
+  float: left;
+  margin-right: 10px;
+  width: 180px;
   overflow: hidden;
 }
 
