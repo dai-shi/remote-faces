@@ -20,7 +20,11 @@ const ErrorFallback: React.FC<Props> = ({ err }) => {
   return (
     <div>
       <h1>Unrecoverable error occurred.</h1>
-      {err && <h6>{err.message}</h6>}
+      {err && (
+        <h6>
+          {err.name}: {err.message}
+        </h6>
+      )}
       <p>Will auto reload in {waitSec} sec.</p>
     </div>
   );
