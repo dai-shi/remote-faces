@@ -1,0 +1,15 @@
+.VideoShare-container {
+  overflow: hidden;
+}
+
+.VideoShare-body {
+  display: grid;
+  column-gap: 5px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+}
+
+.VideoShare-video {
+  width: 100%;
+  height: 100%;
+}
