@@ -21,6 +21,8 @@ type Props = {
 };
 
 const initialNickname = getStringItem("nickname");
+const initialVideoDeviceId = getStringItem("faceimage_video_device_id");
+const initialAudioDeviceId = getStringItem("faceimage_audio_device_id");
 
 const TextField = React.memo<{
   initialText: string;
@@ -67,8 +69,8 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
 
   const videoDevices = useVideoDevices();
   const audioDevices = useAudioDevices();
-  const [videoDeviceId, setVideoDeviceId] = useState<string>();
-  const [audioDeviceId, setAudioDeviceId] = useState<string>();
+  const [videoDeviceId, setVideoDeviceId] = useState(initialVideoDeviceId);
+  const [audioDeviceId, setAudioDeviceId] = useState(initialAudioDeviceId);
   const [liveMode, setLiveMode] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(false);
@@ -152,7 +154,13 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             )}
             <div>
               Select Camera:{" "}
-              <select onChange={(e) => setVideoDeviceId(e.target.value)}>
+              <select
+                value={videoDeviceId}
+                onChange={(e) => {
+                  setVideoDeviceId(e.target.value);
+                  setStringItem("faceimage_video_device_id", e.target.value);
+                }}
+              >
                 {videoDevices.map((videoDevice) => (
                   <option
                     key={videoDevice.deviceId}
@@ -165,7 +173,13 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
             </div>
             <div>
               Select Mic:{" "}
-              <select onChange={(e) => setAudioDeviceId(e.target.value)}>
+              <select
+                value={audioDeviceId}
+                onChange={(e) => {
+                  setAudioDeviceId(e.target.value);
+                  setStringItem("faceimage_audio_device_id", e.target.value);
+                }}
+              >
                 {audioDevices.map((audioDevice) => (
                   <option
                     key={audioDevice.deviceId}
