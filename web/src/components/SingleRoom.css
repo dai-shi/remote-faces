@@ -4,6 +4,7 @@
   font-family: sans-serif;
   white-space: nowrap;
   padding-left: 20px;
+  min-height: 15px;
 }
 
 .SingleRoom-config {

@@ -22,6 +22,7 @@ type Props = {
 };
 
 const initialNickname = getStringItem("nickname");
+const initialConfigOpen = getStringItem("config_hidden") !== "true";
 const initialVideoDeviceId = getStringItem("faceimage_video_device_id");
 const initialAudioDeviceId = getStringItem("faceimage_audio_device_id");
 
@@ -76,8 +77,12 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   const [micOn, setMicOn] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(false);
   const [screenShareMode, setScreenShareMode] = useState(false);
-  const [configOpen, setConfigOpen] = useState(true);
   const [collabWBOpen, setCollabWBOpen] = useState(false);
+
+  const [configOpen, setConfigOpen] = useState(initialConfigOpen);
+  useEffect(() => {
+    setStringItem("config_hidden", configOpen ? "false" : "true");
+  }, [configOpen]);
 
   const networkStatus = useRoomNetworkStatus(roomId, userId);
 
