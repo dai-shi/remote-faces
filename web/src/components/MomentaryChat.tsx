@@ -42,6 +42,7 @@ const MomentaryChatContent = React.memo<{
           <div>{item.text}</div>
           {item.replies.map(([text, count]) => (
             <button
+              key={text}
               className="Momentary-icon"
               type="button"
               onClick={() => reply(text)}
