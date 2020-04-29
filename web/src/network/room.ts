@@ -25,6 +25,7 @@ export type NetworkStatus =
   | { type: "CONNECTION_CLOSED"; peerIndex: number }
   | { type: "INITIALIZING_PEER"; peerIndex: number }
   | { type: "RECONNECTING" }
+  | { type: "SERVER_ERROR" }
   | { type: "UNKNOWN_ERROR"; err: Error }
   | { type: "CONNECTED_PEERS"; peerIndexList: number[] };
 
@@ -291,8 +292,12 @@ export const createRoom = (
       } else if (err.type === "network") {
         console.log("initMyPeer network error", index, err);
         peer.destroy();
+      } else if (err.type === "server-error") {
+        console.log("initMyPeer server error", index, err);
+        updateNetworkStatus({ type: "SERVER_ERROR" });
+        peer.destroy();
       } else {
-        console.error("initMyPeer", index, err.type, err);
+        console.error("initMyPeer unknown error", index, err.type, err);
         updateNetworkStatus({ type: "UNKNOWN_ERROR", err });
       }
     });
@@ -322,7 +327,7 @@ export const createRoom = (
       if (myPeer === peer) {
         console.log("initMyPeer closed, re-initializing", index);
         myPeer = null;
-        setTimeout(initMyPeer, 10 * 1000);
+        setTimeout(initMyPeer, 20 * 1000);
       } else {
         console.log("initMyPeer closed, ignoring", index);
       }
