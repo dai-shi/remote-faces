@@ -53,7 +53,7 @@ const FaceImage = React.memo<{
   )
 );
 
-type Props = {
+export const FaceImages = React.memo<{
   roomId: string;
   userId: string;
   nickname: string;
@@ -63,60 +63,58 @@ type Props = {
   speakerOn: boolean;
   videoDeviceId?: string;
   audioDeviceId?: string;
-};
-
-const FaceImages: React.FC<Props> = ({
-  roomId,
-  userId,
-  nickname,
-  statusMesg,
-  liveMode,
-  micOn,
-  speakerOn,
-  videoDeviceId,
-  audioDeviceId,
-}) => {
-  const { myImage, roomImages } = useFaceImages(
+}>(
+  ({
     roomId,
     userId,
     nickname,
     statusMesg,
     liveMode,
-    videoDeviceId
-  );
-  const { faceStream, faceStreamMap } = useFaceVideos(
-    roomId,
-    userId,
-    liveMode,
-    liveMode,
     micOn,
+    speakerOn,
     videoDeviceId,
-    audioDeviceId
-  );
+    audioDeviceId,
+  }) => {
+    const { myImage, roomImages } = useFaceImages(
+      roomId,
+      userId,
+      nickname,
+      statusMesg,
+      liveMode,
+      videoDeviceId
+    );
+    const { faceStream, faceStreamMap } = useFaceVideos(
+      roomId,
+      userId,
+      liveMode,
+      liveMode,
+      micOn,
+      videoDeviceId,
+      audioDeviceId
+    );
 
-  return (
-    <div className="FaceImage-container">
-      <FaceImage
-        image={myImage}
-        nickname={nickname}
-        statusMesg={statusMesg}
-        liveMode={liveMode}
-        stream={faceStream || undefined}
-      />
-      {roomImages.map((item) => (
+    return (
+      <div className="FaceImage-container">
         <FaceImage
-          key={item.userId}
-          image={item.image}
-          nickname={item.info.nickname}
-          statusMesg={item.info.message}
-          obsoleted={item.obsoleted}
-          liveMode={item.info.liveMode}
-          stream={faceStreamMap[item.userId] || undefined}
-          speakerOn={speakerOn}
+          image={myImage}
+          nickname={nickname}
+          statusMesg={statusMesg}
+          liveMode={liveMode}
+          stream={faceStream || undefined}
         />
-      ))}
-    </div>
-  );
-};
-
-export default React.memo(FaceImages);
+        {roomImages.map((item) => (
+          <FaceImage
+            key={item.userId}
+            image={item.image}
+            nickname={item.info.nickname}
+            statusMesg={item.info.message}
+            obsoleted={item.obsoleted}
+            liveMode={item.info.liveMode}
+            stream={faceStreamMap[item.userId] || undefined}
+            speakerOn={speakerOn}
+          />
+        ))}
+      </div>
+    );
+  }
+);

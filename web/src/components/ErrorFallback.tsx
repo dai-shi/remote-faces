@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 
-type Props = {
+export const ErrorFallback = React.memo<{
   err: Error;
-};
-
-const ErrorFallback: React.FC<Props> = ({ err }) => {
+}>(({ err }) => {
   const [waitSec, setWaitSec] = useState(30);
 
   useEffect(() => {
@@ -28,6 +26,4 @@ const ErrorFallback: React.FC<Props> = ({ err }) => {
       <p>Will auto reload in {waitSec} sec.</p>
     </div>
   );
-};
-
-export default ErrorFallback;
+});

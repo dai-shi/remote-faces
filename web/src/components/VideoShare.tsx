@@ -23,13 +23,11 @@ const Video = React.memo<{
   );
 });
 
-type Props = {
+export const VideoShare = React.memo<{
   roomId: string;
   userId: string;
   nickname: string;
-};
-
-const VideoShare: React.FC<Props> = ({ roomId, userId, nickname }) => {
+}>(({ roomId, userId, nickname }) => {
   const videoDevices = useVideoDevices();
   const [videoDeviceId, setVideoDeviceId] = useState<string>();
   const [enabled, setEnabled] = useState(false);
@@ -76,6 +74,4 @@ const VideoShare: React.FC<Props> = ({ roomId, userId, nickname }) => {
       </div>
     </div>
   );
-};
-
-export default React.memo(VideoShare);
+});

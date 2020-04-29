@@ -22,13 +22,11 @@ const Screen = React.memo<{
   );
 });
 
-type Props = {
+export const ScreenShare = React.memo<{
   roomId: string;
   userId: string;
   nickname: string;
-};
-
-const ScreenShare: React.FC<Props> = ({ roomId, userId, nickname }) => {
+}>(({ roomId, userId, nickname }) => {
   const [enabled, setEnabled] = useState(false);
   const { screenStream, screenStreamMap } = useScreenShare(
     roomId,
@@ -57,6 +55,4 @@ const ScreenShare: React.FC<Props> = ({ roomId, userId, nickname }) => {
       })}
     </div>
   );
-};
-
-export default React.memo(ScreenShare);
+});

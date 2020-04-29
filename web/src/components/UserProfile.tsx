@@ -42,72 +42,72 @@ const TextField = React.memo<{
   );
 });
 
-const UserProfile: React.FC<{
+export const UserProfile = React.memo<{
   initialNickname: string;
   emoji: EmojiDataType | null;
   onUpdateNickname: (e: string) => void;
   onUpdateStatusMesg: (e: string) => void;
   onUpdateEmoji: (e: EmojiDataType | null) => void;
-}> = ({
-  initialNickname,
-  emoji,
-  onUpdateNickname,
-  onUpdateStatusMesg,
-  onUpdateEmoji,
-}) => {
-  const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
-  return (
-    <div className="UserProfile-nickname">
+}>(
+  ({
+    initialNickname,
+    emoji,
+    onUpdateNickname,
+    onUpdateStatusMesg,
+    onUpdateEmoji,
+  }) => {
+    const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
+    return (
       <div className="UserProfile-nickname">
-        <TextField
-          initialText={initialNickname}
-          onUpdate={onUpdateNickname}
-          placeholder="Enter your name"
-          buttonLabel="Set"
-        />
-      </div>
-      <div className="UserProfile-status-area">
-        <div className="UserProfile-emoji">
-          <button
-            type="button"
-            onClick={() => {
-              setOpenEmojiPicker(!openEmojiPicker);
-            }}
-          >
-            {emoji ? <Emoji emoji={emoji} size={10} /> : ":)"}
-          </button>
-        </div>
-        <div className="UserProfile-statusmesg">
+        <div className="UserProfile-nickname">
           <TextField
-            initialText=""
-            onUpdate={onUpdateStatusMesg}
-            placeholder="Enter status message"
+            initialText={initialNickname}
+            onUpdate={onUpdateNickname}
+            placeholder="Enter your name"
             buttonLabel="Set"
           />
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            onUpdateEmoji(null);
-            onUpdateStatusMesg("");
-            setOpenEmojiPicker(false);
-          }}
-        >
-          Clear
-        </button>
+        <div className="UserProfile-status-area">
+          <div className="UserProfile-emoji">
+            <button
+              type="button"
+              onClick={() => {
+                setOpenEmojiPicker(!openEmojiPicker);
+              }}
+            >
+              {emoji ? <Emoji emoji={emoji} size={10} /> : ":)"}
+            </button>
+          </div>
+          <div className="UserProfile-statusmesg">
+            <TextField
+              initialText=""
+              onUpdate={onUpdateStatusMesg}
+              placeholder="Enter status message"
+              buttonLabel="Set"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onUpdateEmoji(null);
+              onUpdateStatusMesg("");
+              setOpenEmojiPicker(false);
+            }}
+          >
+            Clear
+          </button>
+        </div>
+        {openEmojiPicker && (
+          <EmojiPicker
+            onSelect={(e) => {
+              if (isEmojiDataType(e)) {
+                onUpdateEmoji(e);
+              }
+              setOpenEmojiPicker(false);
+            }}
+          />
+        )}
       </div>
-      {openEmojiPicker && (
-        <EmojiPicker
-          onSelect={(e) => {
-            if (isEmojiDataType(e)) {
-              onUpdateEmoji(e);
-            }
-            setOpenEmojiPicker(false);
-          }}
-        />
-      )}
-    </div>
-  );
-};
-
-export default UserProfile;
+    );
+  }
+);

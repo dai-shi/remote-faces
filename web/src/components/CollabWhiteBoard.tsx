@@ -3,11 +3,9 @@ import React, { useEffect, useState } from "react";
 import "./CollabWhiteBoard.css";
 import { generateExcalidrawURL } from "../utils/excalidraw";
 
-type Props = {
+export const CollabWhiteBoard = React.memo<{
   roomId: string;
-};
-
-const CollabWhiteBoard: React.FC<Props> = ({ roomId }) => {
+}>(({ roomId }) => {
   const [url, setUrl] = useState<string>();
   useEffect(() => {
     (async () => {
@@ -20,6 +18,4 @@ const CollabWhiteBoard: React.FC<Props> = ({ roomId }) => {
       {url && <iframe title="Excalidraw" src={url} />}
     </div>
   );
-};
-
-export default React.memo(CollabWhiteBoard);
+});

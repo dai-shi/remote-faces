@@ -4,12 +4,12 @@ import "./SingleRoomEntrance.css";
 import { secureRandomId, generateCryptoKey } from "../utils/crypto";
 import { ROOM_ID_PREFIX_LEN } from "../network/peerUtils";
 import { getRoomIdFromUrl, extractRoomIdFromLink } from "../utils/url";
-import SingleRoom from "./SingleRoom";
+import { SingleRoom } from "./SingleRoom";
 
 const roomIdFromUrl = getRoomIdFromUrl();
 const userId = secureRandomId();
 
-const SingleRoomEntrance: React.FC = () => {
+export const SingleRoomEntrance = React.memo(() => {
   const [roomId, setRoomId] = useState<string | null>(roomIdFromUrl);
   const [linkText, setLinkText] = useState("");
 
@@ -47,6 +47,4 @@ const SingleRoomEntrance: React.FC = () => {
       </button>
     </div>
   );
-};
-
-export default SingleRoomEntrance;
+});

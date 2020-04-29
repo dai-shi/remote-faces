@@ -8,14 +8,14 @@ type ReplyChat = ReturnType<typeof useMomentaryChat>["replyChat"];
 
 const reactions = ["👍", "❤️", "😁", "😎", "🤣"];
 
-const ReactionButton: React.FC<{
+const ReactionButton = React.memo<{
   text: string;
   onClick: (text: string) => void;
-}> = ({ text, onClick }) => (
+}>(({ text, onClick }) => (
   <button type="button" onClick={() => onClick(text)}>
     <span aria-label="Reaction">{text}</span>
   </button>
-);
+));
 
 const MomentaryChatContent = React.memo<{
   chatList: ChatList;
@@ -56,13 +56,11 @@ const MomentaryChatContent = React.memo<{
   </ul>
 ));
 
-type Props = {
+export const MomentaryChat = React.memo<{
   roomId: string;
   userId: string;
   nickname: string;
-};
-
-const MomentaryChat: React.FC<Props> = ({ roomId, userId, nickname }) => {
+}>(({ roomId, userId, nickname }) => {
   const { chatList, sendChat, replyChat } = useMomentaryChat(
     roomId,
     userId,
@@ -93,6 +91,4 @@ const MomentaryChat: React.FC<Props> = ({ roomId, userId, nickname }) => {
       <MomentaryChatContent chatList={chatList} replyChat={replyChat} />
     </div>
   );
-};
-
-export default React.memo(MomentaryChat);
+});

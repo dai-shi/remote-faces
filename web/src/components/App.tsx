@@ -1,10 +1,10 @@
 import React from "react";
 
-import ErrorFallback from "./ErrorFallback";
-import SingleRoomEntrance from "./SingleRoomEntrance";
+import { ErrorFallback } from "./ErrorFallback";
+import { SingleRoomEntrance } from "./SingleRoomEntrance";
 import "./App.css";
 
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends React.PureComponent {
   state: { err?: Error } = {};
 
   static getDerivedStateFromError(err: Error) {
@@ -19,12 +19,10 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const App: React.FC = () => (
+export const App = React.memo(() => (
   <div className="App">
     <ErrorBoundary>
       <SingleRoomEntrance />
     </ErrorBoundary>
   </div>
-);
-
-export default App;
+));

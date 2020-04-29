@@ -5,25 +5,23 @@ import { setRoomIdToUrl } from "../utils/url";
 import { setStringItem, getStringItem } from "../utils/storage";
 import { useRoomNetworkStatus } from "../hooks/useRoom";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
-import FaceImages from "./FaceImages";
-import MomentaryChat from "./MomentaryChat";
-import ScreenShare from "./ScreenShare";
-import VideoShare from "./VideoShare";
-import CollabWhiteBoard from "./CollabWhiteBoard";
-import UserProfile from "./UserProfile";
+import { FaceImages } from "./FaceImages";
+import { MomentaryChat } from "./MomentaryChat";
+import { ScreenShare } from "./ScreenShare";
+import { VideoShare } from "./VideoShare";
+import { CollabWhiteBoard } from "./CollabWhiteBoard";
+import { UserProfile } from "./UserProfile";
 import { EmojiDataType } from "../utils/emoji";
-
-type Props = {
-  roomId: string;
-  userId: string;
-};
 
 const initialNickname = getStringItem("nickname");
 const initialConfigOpen = getStringItem("config_hidden") !== "true";
 const initialVideoDeviceId = getStringItem("faceimage_video_device_id");
 const initialAudioDeviceId = getStringItem("faceimage_audio_device_id");
 
-const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
+export const SingleRoom = React.memo<{
+  roomId: string;
+  userId: string;
+}>(({ roomId, userId }) => {
   const [nickname, setNickname] = useState(initialNickname);
   const [statusMesg, setStatusMesg] = useState("");
   const [emoji, setEmoji] = useState<EmojiDataType | null>(null);
@@ -213,6 +211,4 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
       </div>
     </>
   );
-};
-
-export default SingleRoom;
+});
