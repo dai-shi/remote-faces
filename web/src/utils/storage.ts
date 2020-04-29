@@ -1,4 +1,7 @@
-type StringItemName = "nickname" | "TODO1";
+type StringItemName =
+  | "nickname"
+  | "faceimage_video_device_id"
+  | "faceimage_audio_device_id";
 
 type JsonItemName = "TODO2" | "TODO3";
 
