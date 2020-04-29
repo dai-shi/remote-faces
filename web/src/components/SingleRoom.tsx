@@ -89,7 +89,7 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   return (
     <>
       <div className="SingleRoom-status">{JSON.stringify(networkStatus)}</div>
-      <div className="SingleRoom-room-info">
+      <div className="SingleRoom-config">
         {configOpen ? (
           <>
             <button type="button" onClick={() => setConfigOpen(false)}>
@@ -244,22 +244,24 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
           </button>
         )}
       </div>
-      <FaceImages
-        roomId={roomId}
-        userId={userId}
-        videoDeviceId={videoDeviceId}
-        audioDeviceId={audioDeviceId}
-        nickname={nickname}
-        statusMesg={`${emoji?.native || ""}${statusMesg}`}
-        liveMode={liveMode}
-        micOn={micOn}
-        speakerOn={speakerOn}
-      />
-      <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
-      {screenShareMode && (
-        <ScreenShare roomId={roomId} userId={userId} nickname={nickname} />
-      )}
-      {collabWBOpen && <CollabWhiteBoard roomId={roomId} />}
+      <div className="SingleRoom-body">
+        <FaceImages
+          roomId={roomId}
+          userId={userId}
+          videoDeviceId={videoDeviceId}
+          audioDeviceId={audioDeviceId}
+          nickname={nickname}
+          statusMesg={`${emoji?.native || ""}${statusMesg}`}
+          liveMode={liveMode}
+          micOn={micOn}
+          speakerOn={speakerOn}
+        />
+        <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
+        {screenShareMode && (
+          <ScreenShare roomId={roomId} userId={userId} nickname={nickname} />
+        )}
+        {collabWBOpen && <CollabWhiteBoard roomId={roomId} />}
+      </div>
     </>
   );
 };

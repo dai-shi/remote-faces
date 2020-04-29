@@ -1,4 +1,8 @@
+.ScreenShare-container {
+  overflow: hidden;
+}
+
 .ScreenShare-video {
   width: 100%;
-  height: 100%;
+  height: 90vh;
 }

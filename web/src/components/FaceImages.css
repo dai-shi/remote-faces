@@ -1,6 +1,5 @@
 .FaceImage-container {
-  float: left;
-  margin-right: 10px;
+  overflow: hidden;
 }
 
 .FaceImages-card {

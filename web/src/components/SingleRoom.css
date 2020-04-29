@@ -6,8 +6,16 @@
   padding-left: 2px;
 }
 
-.SingleRoom-room-info {
+.SingleRoom-config {
   overflow: hidden;
+}
+
+.SingleRoom-body {
+  display: grid;
+  column-gap: 3px;
+  grid-template-columns: 36px 150px 1fr;
+  grid-template-rows: 1fr;
+  height: 100vh;
 }
 
 .SingleRoom-nickname {
