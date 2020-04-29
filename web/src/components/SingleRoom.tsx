@@ -89,12 +89,16 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
   return (
     <>
       <div className="SingleRoom-status">{JSON.stringify(networkStatus)}</div>
+      <button
+        type="button"
+        className="SingleRoom-config-toggle"
+        onClick={() => setConfigOpen((o) => !o)}
+      >
+        {configOpen ? <>&#9660;</> : <>&#9654;</>}
+      </button>
       <div className="SingleRoom-config">
-        {configOpen ? (
+        {configOpen && (
           <>
-            <button type="button" onClick={() => setConfigOpen(false)}>
-              Hide config
-            </button>
             <div>
               Link to this room:
               <input value={window.location.href} readOnly />
@@ -238,10 +242,6 @@ const SingleRoom: React.FC<Props> = ({ roomId, userId }) => {
               </button>
             </div>
           </>
-        ) : (
-          <button type="button" onClick={() => setConfigOpen(true)}>
-            Show config
-          </button>
         )}
       </div>
       <div className="SingleRoom-body">
