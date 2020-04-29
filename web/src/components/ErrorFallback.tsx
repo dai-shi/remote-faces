@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 
-const ErrorFallback: React.FC = () => {
+type Props = {
+  err: Error;
+};
+
+const ErrorFallback: React.FC<Props> = ({ err }) => {
   const [waitSec, setWaitSec] = useState(30);
 
   useEffect(() => {
@@ -16,6 +20,7 @@ const ErrorFallback: React.FC = () => {
   return (
     <div>
       <h1>Unrecoverable error occurred.</h1>
+      {err && <h6>{err.message}</h6>}
       <p>Will auto reload in {waitSec} sec.</p>
     </div>
   );

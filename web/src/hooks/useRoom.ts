@@ -120,7 +120,7 @@ export const useRoomNetworkStatus = (
 ) => {
   const [networkStatus, updateNetworkStatus] = useState<NetworkStatus>();
   if (networkStatus && networkStatus.type === "UNKNOWN_ERROR") {
-    throw new Error("Network Error");
+    throw new Error(`Network Error: ${networkStatus.err.message}`);
   }
   useEffect(() => {
     const { unregister } = register(roomId, userId, (ns: NetworkStatus) => {

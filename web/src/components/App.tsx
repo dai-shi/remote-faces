@@ -5,16 +5,16 @@ import SingleRoomEntrance from "./SingleRoomEntrance";
 import "./App.css";
 
 class ErrorBoundary extends React.Component {
-  state = { hasError: false };
+  state: { err?: Error } = {};
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(err: Error) {
+    return { err };
   }
 
   render() {
     const { children } = this.props;
-    const { hasError } = this.state;
-    if (hasError) return <ErrorFallback />;
+    const { err } = this.state;
+    if (err) return <ErrorFallback err={err} />;
     return children;
   }
 }

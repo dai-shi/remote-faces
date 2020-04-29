@@ -25,7 +25,7 @@ export type NetworkStatus =
   | { type: "CONNECTION_CLOSED"; peerIndex: number }
   | { type: "INITIALIZING_PEER"; peerIndex: number }
   | { type: "RECONNECTING" }
-  | { type: "UNKNOWN_ERROR" }
+  | { type: "UNKNOWN_ERROR"; err: Error }
   | { type: "CONNECTED_PEERS"; peerIndexList: number[] };
 
 type UpdateNetworkStatus = (status: NetworkStatus) => void;
@@ -293,7 +293,7 @@ export const createRoom = (
         peer.destroy();
       } else {
         console.error("initMyPeer", index, err.type, err);
-        updateNetworkStatus({ type: "UNKNOWN_ERROR" });
+        updateNetworkStatus({ type: "UNKNOWN_ERROR", err });
       }
     });
     peer.on("connection", (conn) => {
