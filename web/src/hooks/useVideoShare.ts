@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 
-import { isVideoTrackFaceSize } from "../media/video";
-import { getScreenStream } from "../media/screen";
+import { getVideoStream, isVideoTrackFaceSize } from "../media/video";
 import { useRoomMedia } from "./useRoom";
 
-const isScreenTrack = async (track: MediaStreamTrack) => {
+const isVideoTrack = async (track: MediaStreamTrack) => {
   if (track.kind !== "video") return false;
   const isFaceSize = await isVideoTrackFaceSize(track);
   return !isFaceSize;
 };
 
-export const useScreenShare = (
+export const useVideoShare = (
   roomId: string,
   userId: string,
   enabled: boolean,
-  setEnabled: (enabled: boolean) => void
+  setEnabled: (enabled: boolean) => void,
+  videoDeviceId?: string
 ) => {
-  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
-  const [screenStreamMap, setScreenStreamMap] = useState<{
+  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const [videoStreamMap, setVideoStreamMap] = useState<{
     [userId: string]: MediaStream | null;
   }>({});
 
@@ -31,13 +31,13 @@ export const useScreenShare = (
   }, []);
 
   const onTrack = useCallback(async (track, info) => {
-    if (!(await isScreenTrack(track))) return;
-    setScreenStreamMap((prev) => ({
+    if (!(await isVideoTrack(track))) return;
+    setVideoStreamMap((prev) => ({
       ...prev,
       [info.userId]: new MediaStream([track]),
     }));
     const onended = () => {
-      setScreenStreamMap((prev) => ({
+      setVideoStreamMap((prev) => ({
         ...prev,
         [info.userId]: null,
       }));
@@ -50,7 +50,7 @@ export const useScreenShare = (
     const onmute = () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        setScreenStreamMap((prev) => ({
+        setVideoStreamMap((prev) => ({
           ...prev,
           [info.userId]: null,
         }));
@@ -73,25 +73,21 @@ export const useScreenShare = (
     roomId,
     userId,
     onTrack,
-    "screenVideo"
+    "cameraVideo"
   );
 
   useEffect(() => {
     let dispose: (() => void) | null = null;
     if (enabled && addTrack && removeTrack) {
       (async () => {
-        const result = await getScreenStream();
-        if (!result) {
-          setEnabled(false);
-          return;
-        }
+        const result = await getVideoStream(videoDeviceId);
         const track = result.stream.getVideoTracks()[0];
         addTrack(track);
-        setScreenStream(result.stream);
+        setVideoStream(result.stream);
         dispose = () => {
           removeTrack(track);
           result.dispose();
-          setScreenStream(null);
+          setVideoStream(null);
           setEnabled(false);
         };
         track.addEventListener("ended", () => {
@@ -103,7 +99,7 @@ export const useScreenShare = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, enabled, setEnabled, addTrack, removeTrack]);
+  }, [roomId, videoDeviceId, enabled, setEnabled, addTrack, removeTrack]);
 
-  return { screenStream, screenStreamMap };
+  return { videoStream, videoStreamMap };
 };

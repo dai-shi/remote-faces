@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 
-import { getVideoStream, isVideoTrackFaceSize } from "../media/video";
+import { getFaceVideoStream, isVideoTrackFaceSize } from "../media/video";
 import { getAudioStream } from "../media/audio";
 import { useRoomMedia } from "./useRoom";
 
@@ -108,7 +108,7 @@ export const useFaceVideos = (
         const {
           stream: videoStream,
           dispose: disposeVideo,
-        } = await getVideoStream(videoDeviceId);
+        } = await getFaceVideoStream(videoDeviceId);
         const videoTrack = videoStream.getVideoTracks()[0];
         addVideoTrack(videoTrack);
         setFaceStream((prev) => addTrackWithNewStream(videoTrack, prev));

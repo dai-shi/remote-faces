@@ -8,6 +8,23 @@ export const getVideoStream = async (deviceId?: string) => {
     : { video: true };
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
   const track = stream.getVideoTracks()[0];
+  const dispose = () => {
+    track.stop();
+  };
+  return {
+    stream,
+    dispose,
+  };
+};
+
+export const getFaceVideoStream = async (deviceId?: string) => {
+  const constraints = deviceId
+    ? {
+        video: { deviceId },
+      }
+    : { video: true };
+  const stream = await navigator.mediaDevices.getUserMedia(constraints);
+  const track = stream.getVideoTracks()[0];
   const video = document.getElementById("internal-video") as HTMLVideoElement;
   video.style.display = "block";
   video.srcObject = stream;
