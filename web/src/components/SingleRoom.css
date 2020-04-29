@@ -1,3 +1,7 @@
+.SingleRoom-body hr {
+  border: solid 0.1px #bbb;
+}
+
 .SingleRoom-status {
   background-color: lightyellow;
   font-size: 8px;
@@ -8,6 +12,7 @@
 }
 
 .SingleRoom-config {
+  font-size: 9px;
   margin: 2px;
   padding: 6px;
   border: 2px solid gray;
@@ -15,11 +20,13 @@
   overflow: hidden;
   background-color: lightgray;
 }
+.SingleRoom-config input,
+.SingleRoom-config select,
+.SingleRoom-config button {
+  font-size: 9px;
+}
 
 .SingleRoom-config-toggle {
-  position: absolute;
-  top: 1px;
-  left: 1px;
   font-size: 8px;
   line-height: 8px;
   font-family: sans-serif;
@@ -33,19 +40,7 @@
 .SingleRoom-body {
   display: grid;
   column-gap: 3px;
-  grid-template-columns: 36px 150px 1fr;
+  grid-template-columns: 36px 240px 1fr;
   grid-template-rows: 1fr;
   height: 100vh;
-}
-
-.SingleRoom-nickname {
-  -webkit-app-region: no-drag
-}
-
-.SingleRoom-statusmesg {
-  -webkit-app-region: no-drag
-}
-
-.SingleRoom-emoji {
-  -webkit-app-region: no-drag;
 }

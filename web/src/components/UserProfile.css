@@ -1,0 +1,16 @@
+.UserProfile-status-area {
+  display: flex;
+}
+
+.UserProfile-nickname {
+  -webkit-app-region: no-drag
+}
+
+.UserProfile-statusmesg {
+  -webkit-app-region: no-drag
+}
+
+.UserProfile-emoji {
+  -webkit-app-region: no-drag;
+}
+
