@@ -205,6 +205,7 @@ export const createRoom = (
     connMap.addConn(conn);
     conn.on("open", () => {
       connMap.markConnected(conn);
+      console.log("dataConnection open", conn);
       showConnectedStatus();
       if (lastBroadcastData) {
         const data = lastBroadcastData;

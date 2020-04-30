@@ -124,8 +124,7 @@ export const useFaceImages = (
         const image = await takePhoto(deviceId);
         setMyImage(image);
         const info: FaceInfo = { nickname, message: statusMesg, liveMode };
-        const data = {
-          userId,
+        const data: ImageData = {
           image,
           info,
         };
@@ -133,7 +132,7 @@ export const useFaceImages = (
       } catch (e) {
         setFatalError(e);
       }
-      setTimeout(loop, 2 * 60 * 1000);
+      timer = setTimeout(loop, 2 * 60 * 1000);
     };
     loop();
     return () => {
