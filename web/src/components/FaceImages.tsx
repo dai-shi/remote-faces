@@ -110,7 +110,7 @@ export const FaceImages = React.memo<{
             statusMesg={item.info.message}
             obsoleted={item.obsoleted}
             liveMode={item.info.liveMode}
-            stream={faceStreamMap[item.userId] || undefined}
+            stream={(liveMode && faceStreamMap[item.userId]) || undefined}
             speakerOn={speakerOn}
           />
         ))}
