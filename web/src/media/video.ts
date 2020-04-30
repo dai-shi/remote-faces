@@ -44,13 +44,16 @@ export const getFaceVideoStream = async (deviceId?: string) => {
   const height = Math.min(srcH, dstH / ratio);
   const x = (srcW - width) / 2;
   const y = (srcH - height) / 2;
-  const timer = setInterval(() => {
+  let timer: NodeJS.Timeout;
+  const loop = () => {
     ctx.drawImage(video, x, y, width, height, 0, 0, dstW, dstH);
-  }, 1000 / 30);
+    timer = setTimeout(loop, 1000 / 15);
+  };
+  loop();
   const canvasStream = (canvas as any).captureStream() as MediaStream;
   const dispose = () => {
     video.style.display = "none";
-    clearInterval(timer);
+    clearTimeout(timer);
     track.stop();
     canvasStream.getVideoTracks()[0].stop();
   };

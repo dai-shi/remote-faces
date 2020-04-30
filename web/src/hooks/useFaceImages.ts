@@ -117,6 +117,7 @@ export const useFaceImages = (
         return changed ? next : prev;
       });
     };
+    let timer: NodeJS.Timeout;
     const loop = async () => {
       try {
         checkObsoletedImage();
@@ -132,9 +133,9 @@ export const useFaceImages = (
       } catch (e) {
         setFatalError(e);
       }
+      setTimeout(loop, 2 * 60 * 1000);
     };
     loop();
-    const timer = setInterval(loop, 2 * 60 * 1000);
     return () => {
       clearTimeout(timer);
     };
