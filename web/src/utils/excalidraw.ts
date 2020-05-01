@@ -8,6 +8,5 @@ export const generateExcalidrawURL = async (roomId: string) => {
     "decrypt",
   ]);
   const key = (await window.crypto.subtle.exportKey("jwk", imported)).k;
-  console.log(key);
   return `https://excalidraw.com/#room=${id},${key}`;
 };

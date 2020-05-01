@@ -58,7 +58,7 @@ export const UserProfile = React.memo<{
   }) => {
     const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
     return (
-      <div className="UserProfile-nickname">
+      <div className="UserProfile-container">
         <div className="UserProfile-nickname">
           <TextField
             initialText={initialNickname}
