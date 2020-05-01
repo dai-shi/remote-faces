@@ -181,7 +181,7 @@ export const createRoom = (
       handlePayloadPeers((payload as { peers?: unknown }).peers);
       handlePayloadData(conn, (payload as { data?: unknown }).data);
     } catch (e) {
-      console.info("Error in handlePayload", e);
+      console.info("Error in handlePayload", e, encrypted);
     }
   };
 
