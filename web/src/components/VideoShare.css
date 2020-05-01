@@ -1,5 +1,5 @@
 .VideoShare-container {
-  -webkit-app-region: no-drag
+  -webkit-app-region: no-drag;
   overflow: hidden;
 }
 
