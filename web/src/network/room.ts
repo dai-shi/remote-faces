@@ -210,6 +210,12 @@ export const createRoom = (
       }
     });
     conn.on("data", (buf: ArrayBuffer) => handlePayload(conn, buf));
+    conn.peerConnection.addEventListener("icegatheringstatechange", () => {
+      const pc = conn.peerConnection;
+      if (pc.iceGatheringState === "complete") {
+        pc.onicecandidate = () => undefined;
+      }
+    });
     conn.peerConnection.addEventListener("negotiationneeded", async () => {
       if (!connMap.isConnected(conn.peer)) return;
       const offer = await conn.peerConnection.createOffer();
