@@ -223,6 +223,14 @@ export const createRoom = (
         pc.onicecandidate = () => undefined;
       }
     });
+    /*
+    conn.peerConnection.addEventListener("negotiationneeded", async () => {
+      if (!connMap.isConnected(conn.peer)) return;
+      const offer = await conn.peerConnection.createOffer();
+      await conn.peerConnection.setLocalDescription(offer);
+      sendSDP(conn, { offer });
+    });
+    */
     conn.peerConnection.addEventListener("track", (event: RTCTrackEvent) => {
       const connUserId = connMap.getUserId(conn);
       if (connUserId) {
