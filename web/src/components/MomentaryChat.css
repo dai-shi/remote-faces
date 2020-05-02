@@ -5,6 +5,15 @@
   grid-template-rows: auto 50px;
 }
 
+.MomentaryChat-message-input-area {
+  display: flex;
+}
+
+.MomentaryChat-message-input-area input {
+  flex-grow: 1;
+  height: 24px;
+}
+
 .MomentaryChat-list {
   list-style: none;
   padding-inline-start: 0;
@@ -18,23 +27,27 @@
 }
 
 .MomentaryChat-nickname {
+  font-size: 14px;
   font-weight: bold;
-  display: inline-block;
 }
 
 .MomentaryChat-time {
   color: grey;
-  display: inline-block;
   margin-left: 10px;
   font-size: 12px;
 }
 
 .MomentaryChat-iconButton-container {
-  float: right;
+  position: absolute;
+  right: 0;
 }
 
 .MomentaryChat-iconButton {
   opacity: 0;
+}
+
+.MomentaryChat-listPart {
+  margin: 5px 0;
 }
 
 .MomentaryChat-listPart:hover .MomentaryChat-iconButton {
@@ -42,6 +55,7 @@
 }
 
 .MomentaryChat-listPart-header {
+  position: relative;
   margin-bottom: 5px;
 }
 

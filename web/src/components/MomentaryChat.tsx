@@ -43,10 +43,10 @@ const MomentaryChatContent = React.memo<{
                   ))}
                 </div>
               </div>
-              <div className="MomentaryChat-nickname">
+              <span className="MomentaryChat-nickname">
                 {item.nickname || "No Name"}
-              </div>
-              <div className="MomentaryChat-time">{item.time}</div>
+              </span>
+              <span className="MomentaryChat-time">{item.time}</span>
             </div>
             <div>{item.text}</div>
             {item.replies.map(([text, count]) => (
@@ -99,14 +99,16 @@ export const MomentaryChat = React.memo<{
         }}
       />
       <form onSubmit={onSubmit}>
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Enter chat message"
-        />
-        <button type="submit" disabled={!text}>
-          Send
-        </button>
+        <div className="MomentaryChat-message-input-area">
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Enter chat message"
+          />
+          <button type="submit" disabled={!text}>
+            Send
+          </button>
+        </div>
       </form>
     </div>
   );
