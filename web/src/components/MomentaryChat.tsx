@@ -22,7 +22,7 @@ const MomentaryChatContent = React.memo<{
   replyChat: ReplyChat;
   onUpdateLayout: (height: number) => void;
 }>(({ chatList, replyChat, onUpdateLayout }) => {
-  const chatListRef = useRef<HTMLUListElement | null>(null);
+  const chatListRef = useRef<HTMLUListElement>();
   useLayoutEffect(() => {
     if (chatListRef.current) {
       onUpdateLayout(chatListRef.current.scrollHeight);
