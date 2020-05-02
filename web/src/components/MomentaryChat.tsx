@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useLayoutEffect } from "react";
 
 import "./MomentaryChat.css";
 import { useMomentaryChat } from "../hooks/useMomentaryChat";
@@ -20,47 +20,58 @@ const ReactionButton = React.memo<{
 const MomentaryChatContent = React.memo<{
   chatList: ChatList;
   replyChat: ReplyChat;
-}>(({ chatList, replyChat }) => (
-  <ul className="MomentaryChat-list">
-    {chatList.map((item) => {
-      const reply = (text: string) => replyChat(text, item.replyTo);
-      return (
-        <li key={item.key} className="MomentaryChat-listPart">
-          <div className="MomentaryChat-listPart-header">
-            <div className="MomentaryChat-iconButton-container">
-              <div className="MomentaryChat-iconButton">
-                {reactions.map((text) => (
-                  <ReactionButton key={text} text={text} onClick={reply} />
-                ))}
+  onUpdateLayout: (height: number) => void;
+}>(({ chatList, replyChat, onUpdateLayout }) => {
+  const chatListRef = useRef<HTMLUListElement | null>(null);
+  useLayoutEffect(() => {
+    if (chatListRef.current) {
+      onUpdateLayout(chatListRef.current.scrollHeight);
+    }
+  });
+
+  return (
+    <ul className="MomentaryChat-list" ref={chatListRef}>
+      {chatList.map((item) => {
+        const reply = (text: string) => replyChat(text, item.replyTo);
+        return (
+          <li key={item.key} className="MomentaryChat-listPart">
+            <div className="MomentaryChat-listPart-header">
+              <div className="MomentaryChat-iconButton-container">
+                <div className="MomentaryChat-iconButton">
+                  {reactions.map((text) => (
+                    <ReactionButton key={text} text={text} onClick={reply} />
+                  ))}
+                </div>
               </div>
+              <div className="MomentaryChat-nickname">
+                {item.nickname || "No Name"}
+              </div>
+              <div className="MomentaryChat-time">{item.time}</div>
             </div>
-            <div className="MomentaryChat-nickname">
-              {item.nickname || "No Name"}
-            </div>
-            <div className="MomentaryChat-time">{item.time}</div>
-          </div>
-          <div>{item.text}</div>
-          {item.replies.map(([text, count]) => (
-            <button
-              key={text}
-              className="Momentary-icon"
-              type="button"
-              onClick={() => reply(text)}
-            >
-              {text} {count}
-            </button>
-          ))}
-        </li>
-      );
-    })}
-  </ul>
-));
+            <div>{item.text}</div>
+            {item.replies.map(([text, count]) => (
+              <button
+                key={text}
+                className="Momentary-icon"
+                type="button"
+                onClick={() => reply(text)}
+              >
+                {text} {count}
+              </button>
+            ))}
+          </li>
+        );
+      })}
+    </ul>
+  );
+});
 
 export const MomentaryChat = React.memo<{
   roomId: string;
   userId: string;
   nickname: string;
 }>(({ roomId, userId, nickname }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const { chatList, sendChat, replyChat } = useMomentaryChat(
     roomId,
     userId,
@@ -77,7 +88,16 @@ export const MomentaryChat = React.memo<{
   };
 
   return (
-    <div className="MomentaryChat-container">
+    <div className="MomentaryChat-container" ref={containerRef}>
+      <MomentaryChatContent
+        chatList={chatList}
+        replyChat={replyChat}
+        onUpdateLayout={(height: number) => {
+          if (containerRef.current) {
+            containerRef.current.scrollTop = height;
+          }
+        }}
+      />
       <form onSubmit={onSubmit}>
         <input
           value={text}
@@ -88,7 +108,6 @@ export const MomentaryChat = React.memo<{
           Send
         </button>
       </form>
-      <MomentaryChatContent chatList={chatList} replyChat={replyChat} />
     </div>
   );
 });
