@@ -1,11 +1,16 @@
 .MomentaryChat-container {
   -webkit-app-region: no-drag;
-  overflow: hidden;
+  overflow: auto;
+  display: grid;
+  grid-template-rows: auto 50px;
 }
 
 .MomentaryChat-list {
   list-style: none;
   padding-inline-start: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: scroll;
 }
 
 .MomentaryChat-listPart:hover {

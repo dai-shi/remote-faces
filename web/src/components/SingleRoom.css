@@ -41,6 +41,10 @@
   display: grid;
   column-gap: 3px;
   grid-template-columns: 36px 240px 1fr;
-  grid-template-rows: 1fr;
-  height: 100vh;
+  grid-template-rows: 100vh;
+}
+
+.SingleRoom-2nd-column {
+  display: grid;
+  grid-template-rows: auto 1fr;
 }
