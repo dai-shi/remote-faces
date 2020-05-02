@@ -81,6 +81,12 @@ export const createRoom = (
     });
   };
 
+  const renegotiate = async (conn: Peer.DataConnection) => {
+    const offer = await conn.peerConnection.createOffer();
+    await conn.peerConnection.setLocalDescription(offer);
+    sendSDP(conn, { offer });
+  };
+
   const sendSDP = (conn: Peer.DataConnection, sdp: unknown) => {
     sendPayload(conn, { SDP: sdp });
   };
@@ -90,6 +96,7 @@ export const createRoom = (
     if (isObject((sdp as { offer: unknown }).offer)) {
       const { offer } = sdp as { offer: object };
       try {
+        // DEBUG await new Promise(r => setTimeout(r, 3000));
         await conn.peerConnection.setRemoteDescription(offer as any);
         const answer = await conn.peerConnection.createAnswer();
         await conn.peerConnection.setLocalDescription(answer);
@@ -210,11 +217,11 @@ export const createRoom = (
       }
     });
     conn.on("data", (buf: ArrayBuffer) => handlePayload(conn, buf));
-    conn.peerConnection.addEventListener("negotiationneeded", async () => {
-      if (!connMap.isConnected(conn.peer)) return;
-      const offer = await conn.peerConnection.createOffer();
-      await conn.peerConnection.setLocalDescription(offer);
-      sendSDP(conn, { offer });
+    conn.peerConnection.addEventListener("icegatheringstatechange", () => {
+      const pc = conn.peerConnection;
+      if (pc.iceGatheringState === "complete") {
+        pc.onicecandidate = () => undefined;
+      }
     });
     conn.peerConnection.addEventListener("track", (event: RTCTrackEvent) => {
       const connUserId = connMap.getUserId(conn);
@@ -359,6 +366,19 @@ export const createRoom = (
     if (mediaTypes.length) {
       if (!localStream) {
         localStream = new MediaStream();
+        connMap.forEachConnectedConns((conn) => {
+          const connUserId = connMap.getUserId(conn);
+          if (connUserId) {
+            const info: PeerInfo = {
+              userId: connUserId,
+              peerIndex: getPeerIndexFromPeerId(conn.peer),
+              mediaTypes: connMap.getMediaTypes(conn),
+            };
+            conn.peerConnection.getReceivers().forEach((receiver) => {
+              receiveTrack(receiver.track, info);
+            });
+          }
+        });
       }
     } else {
       localStream = null;
@@ -372,10 +392,11 @@ export const createRoom = (
     if (!localStream) return;
     trackMediaTypeMap.set(track, mediaType);
     localStream.addTrack(track);
-    connMap.forEachConnsAcceptingMedia(mediaType, async (conn) => {
+    connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       try {
         if (!localStream) return;
         conn.peerConnection.addTrack(track, localStream);
+        renegotiate(conn);
       } catch (e) {
         if (e.name === "InvalidAccessError") {
           // ignore
@@ -390,11 +411,12 @@ export const createRoom = (
     if (localStream) {
       localStream.removeTrack(track);
     }
-    connMap.forEachConnsAcceptingMedia(mediaType, async (conn) => {
+    connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       const senders = conn.peerConnection.getSenders();
       const sender = senders.find((s) => s.track === track);
       if (sender) {
         conn.peerConnection.removeTrack(sender);
+        renegotiate(conn);
       }
     });
   };
@@ -412,6 +434,7 @@ export const createRoom = (
           senders.every((sender) => sender.track !== track)
         ) {
           conn.peerConnection.addTrack(track, localStream);
+          renegotiate(conn);
         }
       });
     }
@@ -420,6 +443,7 @@ export const createRoom = (
         const mType = trackMediaTypeMap.get(sender.track);
         if (!mType || !mTypes.includes(mType)) {
           conn.peerConnection.removeTrack(sender);
+          renegotiate(conn);
         }
       }
     });
