@@ -1,12 +1,7 @@
 import React, { useState } from "react";
 
 import "./UserProfile.css";
-import {
-  Emoji,
-  EmojiPicker,
-  EmojiDataType,
-  isEmojiDataType,
-} from "../utils/emoji";
+import { Emoji, EmojiPicker, EmojiDataType } from "../utils/emoji";
 
 const TextField = React.memo<{
   initialText: string;
@@ -100,9 +95,7 @@ export const UserProfile = React.memo<{
         {openEmojiPicker && (
           <EmojiPicker
             onSelect={(e) => {
-              if (isEmojiDataType(e)) {
-                onUpdateEmoji(e);
-              }
+              onUpdateEmoji(e);
               setOpenEmojiPicker(false);
             }}
           />

@@ -127,11 +127,7 @@ export const createRoom = (
       payloadMediaTypes.every((x) => typeof x === "string")
     ) {
       connMap.setMediaTypes(conn, payloadMediaTypes as string[]);
-      // We need to delay because negotiation is in progress
-      // FIXME there should be better way than timeout
-      setTimeout(() => {
-        syncTracks(conn);
-      }, 3000);
+      syncTracks(conn);
     }
   };
 
@@ -269,7 +265,7 @@ export const createRoom = (
     console.log("initMyPeer start", index, id);
     const peer = new Peer(id, {
       ...(getServerConfigFromUrl() || {}),
-      debug: 1,
+      debug: 3,
     });
     myPeer = peer;
     peer.on("open", () => {
@@ -292,11 +288,9 @@ export const createRoom = (
         // ignore
       } else if (err.type === "network") {
         console.log("initMyPeer network error", index, err);
-        peer.destroy();
       } else if (err.type === "server-error") {
         console.log("initMyPeer server error", index, err);
         updateNetworkStatus({ type: "SERVER_ERROR" });
-        peer.destroy();
       } else {
         console.error("initMyPeer unknown error", index, err.type, err);
         updateNetworkStatus({ type: "UNKNOWN_ERROR", err });
