@@ -1,5 +1,6 @@
 import Peer from "peerjs";
 
+import { sleep } from "../utils/sleep";
 import { rand4, encrypt, decrypt } from "../utils/crypto";
 import { getServerConfigFromUrl } from "../utils/url";
 import { isObject } from "../utils/types";
@@ -81,12 +82,6 @@ export const createRoom = (
     });
   };
 
-  const renegotiate = async (conn: Peer.DataConnection) => {
-    const offer = await conn.peerConnection.createOffer();
-    await conn.peerConnection.setLocalDescription(offer);
-    sendSDP(conn, { offer });
-  };
-
   const sendSDP = (conn: Peer.DataConnection, sdp: unknown) => {
     sendPayload(conn, { SDP: sdp });
   };
@@ -96,7 +91,6 @@ export const createRoom = (
     if (isObject((sdp as { offer: unknown }).offer)) {
       const { offer } = sdp as { offer: object };
       try {
-        // DEBUG await new Promise(r => setTimeout(r, 3000));
         await conn.peerConnection.setRemoteDescription(offer as any);
         const answer = await conn.peerConnection.createAnswer();
         await conn.peerConnection.setLocalDescription(answer);
@@ -125,7 +119,7 @@ export const createRoom = (
     }
   };
 
-  const handlePayloadMediaTypes = (
+  const handlePayloadMediaTypes = async (
     conn: Peer.DataConnection,
     payloadMediaTypes: unknown
   ) => {
@@ -134,6 +128,7 @@ export const createRoom = (
       payloadMediaTypes.every((x) => typeof x === "string")
     ) {
       connMap.setMediaTypes(conn, payloadMediaTypes as string[]);
+      await sleep(5000);
       syncTracks(conn);
     }
   };
@@ -223,14 +218,13 @@ export const createRoom = (
         pc.onicecandidate = () => undefined;
       }
     });
-    /*
     conn.peerConnection.addEventListener("negotiationneeded", async () => {
+      await sleep(1000);
       if (!connMap.isConnected(conn.peer)) return;
       const offer = await conn.peerConnection.createOffer();
       await conn.peerConnection.setLocalDescription(offer);
       sendSDP(conn, { offer });
     });
-    */
     conn.peerConnection.addEventListener("track", (event: RTCTrackEvent) => {
       const connUserId = connMap.getUserId(conn);
       if (connUserId) {
@@ -404,7 +398,6 @@ export const createRoom = (
       try {
         if (!localStream) return;
         conn.peerConnection.addTrack(track, localStream);
-        renegotiate(conn);
       } catch (e) {
         if (e.name === "InvalidAccessError") {
           // ignore
@@ -424,7 +417,6 @@ export const createRoom = (
       const sender = senders.find((s) => s.track === track);
       if (sender) {
         conn.peerConnection.removeTrack(sender);
-        renegotiate(conn);
       }
     });
   };
@@ -442,7 +434,6 @@ export const createRoom = (
           senders.every((sender) => sender.track !== track)
         ) {
           conn.peerConnection.addTrack(track, localStream);
-          renegotiate(conn);
         }
       });
     }
@@ -451,7 +442,6 @@ export const createRoom = (
         const mType = trackMediaTypeMap.get(sender.track);
         if (!mType || !mTypes.includes(mType)) {
           conn.peerConnection.removeTrack(sender);
-          renegotiate(conn);
         }
       }
     });
