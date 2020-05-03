@@ -1,5 +1,6 @@
 import Peer from "peerjs";
 
+import { sleep } from "../utils/sleep";
 import { rand4, encrypt, decrypt } from "../utils/crypto";
 import { getServerConfigFromUrl } from "../utils/url";
 import { isObject } from "../utils/types";
@@ -118,7 +119,7 @@ export const createRoom = (
     }
   };
 
-  const handlePayloadMediaTypes = (
+  const handlePayloadMediaTypes = async (
     conn: Peer.DataConnection,
     payloadMediaTypes: unknown
   ) => {
@@ -127,6 +128,7 @@ export const createRoom = (
       payloadMediaTypes.every((x) => typeof x === "string")
     ) {
       connMap.setMediaTypes(conn, payloadMediaTypes as string[]);
+      await sleep(5000);
       syncTracks(conn);
     }
   };
@@ -217,6 +219,7 @@ export const createRoom = (
       }
     });
     conn.peerConnection.addEventListener("negotiationneeded", async () => {
+      await sleep(1000);
       if (!connMap.isConnected(conn.peer)) return;
       const offer = await conn.peerConnection.createOffer();
       await conn.peerConnection.setLocalDescription(offer);
@@ -365,6 +368,19 @@ export const createRoom = (
     if (mediaTypes.length) {
       if (!localStream) {
         localStream = new MediaStream();
+        connMap.forEachConnectedConns((conn) => {
+          const connUserId = connMap.getUserId(conn);
+          if (connUserId) {
+            const info: PeerInfo = {
+              userId: connUserId,
+              peerIndex: getPeerIndexFromPeerId(conn.peer),
+              mediaTypes: connMap.getMediaTypes(conn),
+            };
+            conn.peerConnection.getReceivers().forEach((receiver) => {
+              receiveTrack(receiver.track, info);
+            });
+          }
+        });
       }
     } else {
       localStream = null;
@@ -378,7 +394,7 @@ export const createRoom = (
     if (!localStream) return;
     trackMediaTypeMap.set(track, mediaType);
     localStream.addTrack(track);
-    connMap.forEachConnsAcceptingMedia(mediaType, async (conn) => {
+    connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       try {
         if (!localStream) return;
         conn.peerConnection.addTrack(track, localStream);
@@ -396,7 +412,7 @@ export const createRoom = (
     if (localStream) {
       localStream.removeTrack(track);
     }
-    connMap.forEachConnsAcceptingMedia(mediaType, async (conn) => {
+    connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       const senders = conn.peerConnection.getSenders();
       const sender = senders.find((s) => s.track === track);
       if (sender) {
