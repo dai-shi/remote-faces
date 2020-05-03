@@ -295,6 +295,9 @@ export const createRoom = (
         initMyPeer(index + 1);
       } else if (err.type === "peer-unavailable") {
         // ignore
+      } else if (err.type === "disconnected") {
+        console.log("initMyPeer disconnected error", index, err);
+        peer.destroy();
       } else if (err.type === "network") {
         console.log("initMyPeer network error", index, err);
       } else if (err.type === "server-error") {
