@@ -1,13 +1,12 @@
 .VideoShare-container {
   -webkit-app-region: no-drag;
-  overflow: hidden;
+  overflow: scroll;
 }
 
 .VideoShare-body {
   display: grid;
   column-gap: 5px;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .VideoShare-video {
