@@ -146,12 +146,11 @@ export const SingleRoom = React.memo<{
                 <div>
                   Live Mode:{" "}
                   <button type="button" onClick={() => setLiveMode((x) => !x)}>
-                    {liveMode
-                      ? "Disable Live Mode (currently on)"
-                      : "Enable Live Mode (currently off)"}
+                    {liveMode ? "Disable" : "Enable"}
                   </button>
+                  {liveMode && <>&#10004;</>}
                   {liveMode && (
-                    <>
+                    <div>
                       <label>
                         <input
                           type="checkbox"
@@ -168,7 +167,7 @@ export const SingleRoom = React.memo<{
                         />
                         Speaker On
                       </label>
-                    </>
+                    </div>
                   )}
                 </div>
                 <div>
@@ -177,10 +176,9 @@ export const SingleRoom = React.memo<{
                     type="button"
                     onClick={() => setScreenShareMode((x) => !x)}
                   >
-                    {screenShareMode
-                      ? "Disable Screen Share (currently on)"
-                      : "Enable Screen Share (currently off)"}
+                    {screenShareMode ? "Close" : "Open"}
                   </button>
+                  {screenShareMode && <>&#10004;</>}
                 </div>
                 <div>
                   Video Share:{" "}
@@ -188,10 +186,9 @@ export const SingleRoom = React.memo<{
                     type="button"
                     onClick={() => setVideoShareMode((x) => !x)}
                   >
-                    {videoShareMode
-                      ? "Disable Video Share (currently on)"
-                      : "Enable Video Share (currently off)"}
+                    {videoShareMode ? "Close" : "Open"}
                   </button>
+                  {videoShareMode && <>&#10004;</>}
                 </div>
                 <div>
                   Collab White Board:{" "}
@@ -201,6 +198,7 @@ export const SingleRoom = React.memo<{
                   >
                     {collabWBOpen ? "Close" : "Open"}
                   </button>
+                  {collabWBOpen && <>&#10004;</>}
                 </div>
                 <div className="SingleRoom-status">
                   {JSON.stringify(networkStatus)}

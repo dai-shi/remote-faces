@@ -168,6 +168,7 @@ export const createRoom = (
       const payload = JSON.parse(
         await decrypt(encrypted, roomId.slice(ROOM_ID_PREFIX_LEN))
       );
+      console.log("decrypted payload", payload);
       if (!isObject(payload)) return;
 
       handlePayloadSDP(conn, (payload as { SDP?: unknown }).SDP);
