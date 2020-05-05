@@ -1,8 +1,10 @@
 .MomentaryChat-container {
   -webkit-app-region: no-drag;
-  overflow: auto;
+  margin-top: 5px;
+  border-top: solid 0.1px #bbb;
+  overflow: hidden;
   display: grid;
-  grid-template-rows: auto 50px;
+  grid-template-rows: 1fr 50px;
 }
 
 .MomentaryChat-message-input-area {
@@ -59,7 +61,7 @@
   margin-bottom: 5px;
 }
 
-.Momentary-icon {
+.MomentaryChat-icon {
   background-color: #eee;
   border-radius: 35px;
   width: 35px;
@@ -70,6 +72,6 @@
   display: inline-block;
 }
 
-.Momentary-icon:focus {
+.MomentaryChat-icon:focus {
   outline: 0;
 }

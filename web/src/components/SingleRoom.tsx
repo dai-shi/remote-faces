@@ -67,21 +67,21 @@ export const SingleRoom = React.memo<{
           speakerOn={speakerOn}
         />
         <div className="SingleRoom-2nd-column">
+          <UserProfile
+            initialNickname={initialNickname}
+            emoji={emoji}
+            onUpdateNickname={(text) => {
+              setNickname(text);
+              setStringItem("nickname", text);
+            }}
+            onUpdateStatusMesg={(text) => {
+              setStatusMesg(text);
+            }}
+            onUpdateEmoji={(e) => {
+              setEmoji(e);
+            }}
+          />
           <div>
-            <UserProfile
-              initialNickname={initialNickname}
-              emoji={emoji}
-              onUpdateNickname={(text) => {
-                setNickname(text);
-                setStringItem("nickname", text);
-              }}
-              onUpdateStatusMesg={(text) => {
-                setStatusMesg(text);
-              }}
-              onUpdateEmoji={(e) => {
-                setEmoji(e);
-              }}
-            />
             <button
               type="button"
               className="SingleRoom-config-toggle"
@@ -205,17 +205,18 @@ export const SingleRoom = React.memo<{
                 </div>
               </div>
             )}
-            <hr />
           </div>
           <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
         </div>
-        {screenShareMode && (
-          <ScreenShare roomId={roomId} userId={userId} nickname={nickname} />
-        )}
-        {videoShareMode && (
-          <VideoShare roomId={roomId} userId={userId} nickname={nickname} />
-        )}
-        {collabWBOpen && <CollabWhiteBoard roomId={roomId} />}
+        <div className="SingleRoom-3rd-column">
+          {screenShareMode && (
+            <ScreenShare roomId={roomId} userId={userId} nickname={nickname} />
+          )}
+          {videoShareMode && (
+            <VideoShare roomId={roomId} userId={userId} nickname={nickname} />
+          )}
+          {collabWBOpen && <CollabWhiteBoard roomId={roomId} />}
+        </div>
       </div>
     </>
   );

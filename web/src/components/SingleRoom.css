@@ -1,13 +1,9 @@
-.SingleRoom-body hr {
-  border: solid 0.1px #bbb;
-}
-
 .SingleRoom-status {
   background-color: lightyellow;
   font-size: 8px;
   font-family: sans-serif;
-  white-space: nowrap;
-  padding-left: 20px;
+  word-break: break-all;
+  padding: 2px;
   min-height: 15px;
 }
 
@@ -27,13 +23,11 @@
 }
 
 .SingleRoom-config-toggle {
-  font-size: 8px;
-  line-height: 8px;
-  font-family: sans-serif;
+  text-align: left;
   cursor: pointer;
   border: none;
   background: none;
-  padding: 1px 3px;
+  padding: 3px;
   color: gray;
 }
 
@@ -46,5 +40,12 @@
 
 .SingleRoom-2nd-column {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-columns: 240px;
+  grid-template-rows: auto auto 1fr;
+}
+
+.SingleRoom-3rd-column {
+  display: grid;
+  row-gap: 5px;
+  grid-template-rows: repeat(1fr);
 }
