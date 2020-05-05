@@ -58,7 +58,14 @@ export const VideoShare = React.memo<{
       <button type="button" onClick={() => setEnabled(!enabled)}>
         {enabled ? "Stop video share" : "Start video share"}
       </button>
-      <div className="VideoShare-body">
+      <div
+        className="VideoShare-body"
+        style={{
+          gridTemplateColumns: `repeat(${Math.ceil(
+            Math.sqrt(1 + Object.keys(videoStreamMap).length)
+          )}, 1fr)`,
+        }}
+      >
         {videoStream && <Video nickname={nickname} stream={videoStream} />}
         {Object.keys(videoStreamMap).map((screenUserId) => {
           const stream = videoStreamMap[screenUserId];
