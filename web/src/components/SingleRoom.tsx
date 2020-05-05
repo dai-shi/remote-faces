@@ -4,6 +4,7 @@ import "./SingleRoom.css";
 import { setRoomIdToUrl } from "../utils/url";
 import { setStringItem, getStringItem } from "../utils/storage";
 import { useRoomNetworkStatus } from "../hooks/useRoom";
+import { useNicknameMap } from "../hooks/useNicknameMap";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import { FaceImages } from "./FaceImages";
 import { MomentaryChat } from "./MomentaryChat";
@@ -46,6 +47,7 @@ export const SingleRoom = React.memo<{
   }, [configOpen]);
 
   const networkStatus = useRoomNetworkStatus(roomId, userId);
+  useNicknameMap(roomId, userId); // to enable caching
 
   const appLink = `remote-faces://${window.location.href.replace(
     /^https:\/\//,
