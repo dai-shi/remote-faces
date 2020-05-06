@@ -128,7 +128,7 @@ export const createRoom = (
       payloadMediaTypes.every((x) => typeof x === "string")
     ) {
       connMap.setMediaTypes(conn, payloadMediaTypes as string[]);
-      await sleep(5000);
+      await sleep(1000);
       syncTracks(conn);
     }
   };
@@ -220,7 +220,7 @@ export const createRoom = (
       }
     });
     conn.peerConnection.addEventListener("negotiationneeded", async () => {
-      await sleep(1000);
+      await sleep(4000);
       if (!connMap.isConnected(conn.peer)) return;
       const offer = await conn.peerConnection.createOffer();
       await conn.peerConnection.setLocalDescription(offer);
