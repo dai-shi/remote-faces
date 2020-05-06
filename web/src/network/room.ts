@@ -97,13 +97,17 @@ export const createRoom = (
         sendSDP(conn, { answer });
       } catch (e) {
         console.info("handleSDP offer failed", e);
+        sendSDP(conn, { answer: "failed" });
       }
+    } else if ((sdp as { answer: unknown }).answer === "failed") {
+      conn.peerConnection.dispatchEvent(new Event("negotiationneeded"));
     } else if (isObject((sdp as { answer: unknown }).answer)) {
       const { answer } = sdp as { answer: object };
       try {
         await conn.peerConnection.setRemoteDescription(answer as any);
       } catch (e) {
         console.info("handleSDP answer failed", e);
+        conn.peerConnection.dispatchEvent(new Event("negotiationneeded"));
       }
     } else {
       console.warn("unknown SDP", sdp);
@@ -128,7 +132,6 @@ export const createRoom = (
       payloadMediaTypes.every((x) => typeof x === "string")
     ) {
       connMap.setMediaTypes(conn, payloadMediaTypes as string[]);
-      await sleep(1000);
       syncTracks(conn);
     }
   };
@@ -220,7 +223,7 @@ export const createRoom = (
       }
     });
     conn.peerConnection.addEventListener("negotiationneeded", async () => {
-      await sleep(4000);
+      await sleep(2000);
       if (!connMap.isConnected(conn.peer)) return;
       const offer = await conn.peerConnection.createOffer();
       await conn.peerConnection.setLocalDescription(offer);
