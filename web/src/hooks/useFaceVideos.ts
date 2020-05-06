@@ -10,6 +10,10 @@ const addTrackWithNewStream = (
 ) => {
   const prevVideoTrack = stream && stream.getVideoTracks()[0];
   const prevAudioTrack = stream && stream.getAudioTracks()[0];
+  if (stream && (prevVideoTrack === track || prevAudioTrack === track)) {
+    // not changed
+    return stream;
+  }
   const newStream = new MediaStream();
   newStream.addTrack(track);
   if (track.kind === "video" && prevAudioTrack) {
@@ -65,10 +69,14 @@ export const useFaceVideos = (
     if (track.kind === "video" && !(await isVideoTrackFaceSize(track))) {
       return;
     }
-    setFaceStreamMap((prev) => ({
-      ...prev,
-      [info.userId]: addTrackWithNewStream(track, prev[info.userId]),
-    }));
+    setFaceStreamMap((prev) => {
+      const oldStream = prev[info.userId];
+      const newStream = addTrackWithNewStream(track, oldStream);
+      if (oldStream === newStream) {
+        return prev;
+      }
+      return { ...prev, [info.userId]: newStream };
+    });
     const onended = () => {
       setFaceStreamMap((prev) => ({
         ...prev,
