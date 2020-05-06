@@ -81,7 +81,7 @@ export const useVideoShare = (
     if (enabled && addTrack && removeTrack) {
       (async () => {
         const result = await getVideoStream(videoDeviceId);
-        const track = result.stream.getVideoTracks()[0];
+        const [track] = result.stream.getVideoTracks();
         addTrack(track);
         setVideoStream(result.stream);
         dispose = () => {

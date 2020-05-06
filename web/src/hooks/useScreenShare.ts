@@ -85,7 +85,7 @@ export const useScreenShare = (
           setEnabled(false);
           return;
         }
-        const track = result.stream.getVideoTracks()[0];
+        const [track] = result.stream.getVideoTracks();
         addTrack(track);
         setScreenStream(result.stream);
         dispose = () => {

@@ -4,7 +4,7 @@ export const getScreenStream = async () => {
     const stream = (await (navigator.mediaDevices as any).getDisplayMedia(
       constraints
     )) as MediaStream;
-    const track = stream.getVideoTracks()[0];
+    const [track] = stream.getVideoTracks();
     const dispose = () => {
       track.stop();
     };

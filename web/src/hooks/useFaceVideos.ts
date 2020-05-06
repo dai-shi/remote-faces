@@ -117,7 +117,7 @@ export const useFaceVideos = (
           stream: videoStream,
           dispose: disposeVideo,
         } = await getFaceVideoStream(videoDeviceId);
-        const videoTrack = videoStream.getVideoTracks()[0];
+        const [videoTrack] = videoStream.getVideoTracks();
         addVideoTrack(videoTrack);
         setFaceStream((prev) => addTrackWithNewStream(videoTrack, prev));
         dispose = () => {
@@ -140,7 +140,7 @@ export const useFaceVideos = (
           stream: audioStream,
           dispose: disposeAudio,
         } = await getAudioStream(audioDeviceId);
-        const audioTrack = audioStream.getAudioTracks()[0];
+        const [audioTrack] = audioStream.getAudioTracks();
         addAudioTrack(audioTrack);
         setFaceStream((prev) => addTrackWithNewStream(audioTrack, prev));
         dispose = () => {
@@ -156,7 +156,7 @@ export const useFaceVideos = (
   }, [roomId, audioEnabled, audioDeviceId, addAudioTrack, removeAudioTrack]);
   useEffect(() => {
     if (faceStream) {
-      const audioTrack = faceStream.getAudioTracks()[0];
+      const [audioTrack] = faceStream.getAudioTracks();
       if (audioTrack) {
         audioTrack.enabled = micOn;
       }

@@ -36,7 +36,7 @@ export const takePhoto = async (deviceId?: string) => {
       }
     : { video: true };
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
-  const track = stream.getVideoTracks()[0];
+  const [track] = stream.getVideoTracks();
   const canvas = document.getElementById(
     "internal-canvas"
   ) as HTMLCanvasElement;

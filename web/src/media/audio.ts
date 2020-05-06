@@ -5,7 +5,7 @@ export const getAudioStream = async (deviceId?: string) => {
       }
     : { audio: true };
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
-  const track = stream.getAudioTracks()[0];
+  const [track] = stream.getAudioTracks();
   await track.applyConstraints({
     echoCancellation: true,
     echoCancellationType: { ideal: "system" },
