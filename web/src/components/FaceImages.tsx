@@ -22,7 +22,7 @@ const FaceImage = React.memo<{
         <video
           className="FaceImages-photo"
           ref={(videoEle) => {
-            if (videoEle) {
+            if (videoEle && videoEle.srcObject !== stream) {
               // eslint-disable-next-line no-param-reassign
               videoEle.srcObject = stream;
             }
