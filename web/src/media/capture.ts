@@ -56,5 +56,5 @@ export const takePhoto = async (deviceId?: string) => {
     revert();
   }
   track.stop();
-  return canvas.toDataURL("image/png");
+  return canvas.toDataURL("image/jpeg");
 };
