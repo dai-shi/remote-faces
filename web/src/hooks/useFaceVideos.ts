@@ -4,42 +4,20 @@ import { getFaceVideoStream, isVideoTrackFaceSize } from "../media/video";
 import { getAudioStream } from "../media/audio";
 import { useRoomMedia } from "./useRoom";
 
-const addTrackWithNewStream = (
+const addTrackToStream = (
   track: MediaStreamTrack,
-  stream: MediaStream | null
+  stream: MediaStream | null,
+  disposeStream: () => void
 ) => {
-  const prevVideoTrack = stream && stream.getVideoTracks()[0];
-  const prevAudioTrack = stream && stream.getAudioTracks()[0];
-  if (stream && (prevVideoTrack === track || prevAudioTrack === track)) {
-    // not changed
-    return stream;
-  }
-  const newStream = new MediaStream();
+  const newStream = stream || new MediaStream();
   newStream.addTrack(track);
-  if (track.kind === "video" && prevAudioTrack) {
-    newStream.addTrack(prevAudioTrack);
-  } else if (track.kind === "audio" && prevVideoTrack) {
-    newStream.addTrack(prevVideoTrack);
-  }
+  track.addEventListener("ended", () => {
+    newStream.removeTrack(track);
+    if (newStream.getTracks().length === 0) {
+      disposeStream();
+    }
+  });
   return newStream;
-};
-
-const removeTrackWithNewStream = (
-  track: MediaStreamTrack,
-  stream: MediaStream | null
-) => {
-  const prevVideoTrack = stream && stream.getVideoTracks()[0];
-  const prevAudioTrack = stream && stream.getAudioTracks()[0];
-  const newStream = new MediaStream();
-  if (track.kind === "video" && prevAudioTrack) {
-    newStream.addTrack(prevAudioTrack);
-  } else if (track.kind === "audio" && prevVideoTrack) {
-    newStream.addTrack(prevVideoTrack);
-  }
-  if (newStream.getTracks().length > 0) {
-    return newStream;
-  }
-  return null;
 };
 
 export const useFaceVideos = (
@@ -53,39 +31,33 @@ export const useFaceVideos = (
 ) => {
   const [faceStream, setFaceStream] = useState<MediaStream | null>(null);
   const [faceStreamMap, setFaceStreamMap] = useState<{
-    [userId: string]: MediaStream | null;
+    [userId: string]: MediaStream;
   }>({});
 
-  type CleanupFn = () => void;
-  const cleanupFns = useRef<CleanupFn[]>([]);
+  const isMounted = useRef(true);
   useEffect(() => {
-    const cleanup = () => {
-      cleanupFns.current.forEach((fn) => fn());
-    };
-    return cleanup;
+    isMounted.current = false;
   }, []);
 
   const onTrack = useCallback(async (track, info) => {
     if (track.kind === "video" && !(await isVideoTrackFaceSize(track))) {
       return;
     }
+    const disposeStream = () => {
+      if (isMounted.current) {
+        setFaceStreamMap((prev) => {
+          const { [info.userId]: _, ...rest } = prev;
+          return rest;
+        });
+      }
+    };
     setFaceStreamMap((prev) => {
-      const oldStream = prev[info.userId];
-      const newStream = addTrackWithNewStream(track, oldStream);
-      if (oldStream === newStream) {
+      const stream = prev[info.userId];
+      const newStream = addTrackToStream(track, stream, disposeStream);
+      if (stream === newStream) {
         return prev;
       }
       return { ...prev, [info.userId]: newStream };
-    });
-    const onended = () => {
-      setFaceStreamMap((prev) => ({
-        ...prev,
-        [info.userId]: removeTrackWithNewStream(track, prev[info.userId]),
-      }));
-    };
-    track.addEventListener("ended", onended);
-    cleanupFns.current.push(() => {
-      track.removeEventListener("ended", onended);
     });
   }, []);
 
@@ -119,11 +91,19 @@ export const useFaceVideos = (
         } = await getFaceVideoStream(videoDeviceId);
         const [videoTrack] = videoStream.getVideoTracks();
         addVideoTrack(videoTrack);
-        setFaceStream((prev) => addTrackWithNewStream(videoTrack, prev));
+        const disposeStream = () => {
+          if (isMounted.current) {
+            setFaceStream(null);
+          }
+        };
+        setFaceStream((prev) =>
+          addTrackToStream(videoTrack, prev, disposeStream)
+        );
         dispose = () => {
-          setFaceStream((prev) => removeTrackWithNewStream(videoTrack, prev));
           removeVideoTrack(videoTrack);
           disposeVideo();
+          // XXX we need to manually dispatch ended event, why?
+          videoTrack.dispatchEvent(new Event("ended"));
         };
       })();
     }
@@ -142,11 +122,19 @@ export const useFaceVideos = (
         } = await getAudioStream(audioDeviceId);
         const [audioTrack] = audioStream.getAudioTracks();
         addAudioTrack(audioTrack);
-        setFaceStream((prev) => addTrackWithNewStream(audioTrack, prev));
+        const disposeStream = () => {
+          if (isMounted.current) {
+            setFaceStream(null);
+          }
+        };
+        setFaceStream((prev) =>
+          addTrackToStream(audioTrack, prev, disposeStream)
+        );
         dispose = () => {
-          setFaceStream((prev) => removeTrackWithNewStream(audioTrack, prev));
           removeAudioTrack(audioTrack);
           disposeAudio();
+          // XXX we need to manually dispatch ended event, why?
+          audioTrack.dispatchEvent(new Event("ended"));
         };
       })();
     }
