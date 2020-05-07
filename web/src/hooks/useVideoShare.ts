@@ -43,29 +43,8 @@ export const useVideoShare = (
       }));
     };
     track.addEventListener("ended", onended);
-    // XXX we don't get "ended" event with removeTrack,
-    // so a workaround with "mute" but "mute" is dispatched occasionally,
-    // so use this timeout hack
-    let timeout: NodeJS.Timeout;
-    const onmute = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        setVideoStreamMap((prev) => ({
-          ...prev,
-          [info.userId]: null,
-        }));
-      }, 3000);
-    };
-    track.addEventListener("mute", onmute);
-    const onunmute = () => {
-      clearTimeout(timeout);
-    };
-    track.addEventListener("unmute", onunmute);
     cleanupFns.current.push(() => {
       track.removeEventListener("ended", onended);
-      clearTimeout(timeout);
-      track.removeEventListener("mute", onmute);
-      track.removeEventListener("unmute", onunmute);
     });
   }, []);
 
