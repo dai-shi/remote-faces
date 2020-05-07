@@ -93,22 +93,19 @@ export const createRoom = (
       const { offer } = sdp as { offer: object };
       try {
         await conn.peerConnection.setRemoteDescription(offer as any);
+        syncTracks(conn);
         const answer = await conn.peerConnection.createAnswer();
         await conn.peerConnection.setLocalDescription(answer);
         sendSDP(conn, { answer });
       } catch (e) {
         console.info("handleSDP offer failed", e);
-        sendSDP(conn, { answer: "failed" });
       }
-    } else if ((sdp as { answer: unknown }).answer === "failed") {
-      conn.peerConnection.dispatchEvent(new Event("negotiationneeded"));
     } else if (isObject((sdp as { answer: unknown }).answer)) {
       const { answer } = sdp as { answer: object };
       try {
         await conn.peerConnection.setRemoteDescription(answer as any);
       } catch (e) {
         console.info("handleSDP answer failed", e);
-        conn.peerConnection.dispatchEvent(new Event("negotiationneeded"));
       }
     } else {
       console.warn("unknown SDP", sdp);
@@ -133,6 +130,7 @@ export const createRoom = (
       payloadMediaTypes.every((x) => typeof x === "string")
     ) {
       connMap.setMediaTypes(conn, payloadMediaTypes as string[]);
+      await sleep(5000);
       syncTracks(conn);
     }
   };
@@ -172,7 +170,7 @@ export const createRoom = (
       const payload = JSON.parse(
         await decrypt(encrypted, roomId.slice(ROOM_ID_PREFIX_LEN))
       );
-      console.log("decrypted payload", payload);
+      console.log("decrypted payload", conn.peer, payload);
       if (!isObject(payload)) return;
 
       handlePayloadSDP(conn, (payload as { SDP?: unknown }).SDP);
