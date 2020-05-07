@@ -12,6 +12,7 @@ import {
   getPeerIndexFromConn,
   createConnectionMap,
 } from "./peerUtils";
+import { setupTrackStopOnLongMute } from "./trackUtils";
 
 const MIN_SEED_PEER_INDEX = 10; // config
 const MAX_SEED_PEER_INDEX = 14; // config
@@ -237,7 +238,7 @@ export const createRoom = (
           peerIndex: getPeerIndexFromPeerId(conn.peer),
           mediaTypes: connMap.getMediaTypes(conn),
         };
-        receiveTrack(event.track, info);
+        receiveTrack(setupTrackStopOnLongMute(event.track), info);
       }
     });
     conn.on("close", () => {
@@ -384,7 +385,7 @@ export const createRoom = (
               mediaTypes: connMap.getMediaTypes(conn),
             };
             conn.peerConnection.getReceivers().forEach((receiver) => {
-              receiveTrack(receiver.track, info);
+              receiveTrack(setupTrackStopOnLongMute(receiver.track), info);
             });
           }
         });
