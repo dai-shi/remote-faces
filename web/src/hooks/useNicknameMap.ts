@@ -40,12 +40,10 @@ export const useNicknameMap = (roomId: string, userId: string) => {
         const index = cache.findIndex(
           (entry) => entry.roomId === roomId && entry.userId === info.userId
         );
-        let changed = false;
         const now = Date.now();
         if (index >= 0) {
           if (cache[index].nickname !== data.info.nickname) {
             cache[index].nickname = data.info.nickname;
-            changed = true;
           }
           cache[index].lastUpdated = now;
         } else {
@@ -55,16 +53,23 @@ export const useNicknameMap = (roomId: string, userId: string) => {
             nickname: data.info.nickname,
             lastUpdated: now,
           });
-          changed = true;
         }
         for (let i = cache.length - 1; i >= 0; i -= 1) {
           if (cache[i].lastUpdated + TTL < now) {
             cache.splice(i, 1);
           }
         }
-        if (changed) {
-          setNicknameMap(createMapFromCache(roomId));
-        }
+        setNicknameMap((prev) => {
+          const map = createMapFromCache(roomId);
+          const keys = Object.keys(map);
+          if (
+            keys.length === Object.keys(prev).length &&
+            keys.every((key) => map[key] === prev[key])
+          ) {
+            return prev;
+          }
+          return map;
+        });
       },
       [roomId]
     )
