@@ -39,6 +39,9 @@ export const VideoShare = React.memo<{
     videoDeviceId
   );
   const nicknameMap = useNicknameMap(roomId, userId);
+  const numOfVideos =
+    (videoStream ? 1 : 0) +
+    Object.values(videoStreamMap).filter((x) => x).length;
 
   return (
     <div className="VideoShare-container">
@@ -62,7 +65,7 @@ export const VideoShare = React.memo<{
         className="VideoShare-body"
         style={{
           gridTemplateColumns: `repeat(${Math.ceil(
-            Math.sqrt(1 + Object.keys(videoStreamMap).length)
+            Math.sqrt(numOfVideos)
           )}, 1fr)`,
         }}
       >
