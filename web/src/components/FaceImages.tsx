@@ -18,7 +18,7 @@ const FaceImage = React.memo<{
 }>(
   ({ image, nickname, statusMesg, obsoleted, liveMode, stream, speakerOn }) => (
     <div className="FaceImages-card" style={{ opacity: obsoleted ? 0.2 : 1 }}>
-      {liveMode && stream ? (
+      {liveMode && !obsoleted && stream ? (
         <video
           className="FaceImages-photo"
           ref={(videoEle) => {
@@ -39,12 +39,12 @@ const FaceImage = React.memo<{
       )}
       <div className="FaceImages-name">{nickname}</div>
       <div className="FaceImages-mesg">{statusMesg}</div>
-      {liveMode && stream && (
+      {liveMode && !obsoleted && stream && (
         <div className="FaceImages-live-indicator" title="Live Mode On">
           &#9673;
         </div>
       )}
-      {liveMode && !stream && !obsoleted && (
+      {liveMode && !obsoleted && !stream && (
         <div className="FaceImages-live-indicator" title="Live Mode Available">
           &#9678;
         </div>
