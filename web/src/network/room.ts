@@ -93,7 +93,7 @@ export const createRoom = (
       const { offer } = sdp as { offer: object };
       try {
         await conn.peerConnection.setRemoteDescription(offer as any);
-        syncTracks(conn);
+        syncAllTracks(conn);
         const answer = await conn.peerConnection.createAnswer();
         await conn.peerConnection.setLocalDescription(answer);
         sendSDP(conn, { answer });
@@ -106,6 +106,9 @@ export const createRoom = (
         await conn.peerConnection.setRemoteDescription(answer as any);
       } catch (e) {
         console.info("handleSDP answer failed", e);
+        await sleep(Math.random() * 30 * 1000);
+        removeAllTracks(conn);
+        syncAllTracks(conn);
       }
     } else {
       console.warn("unknown SDP", sdp);
@@ -131,7 +134,7 @@ export const createRoom = (
     ) {
       connMap.setMediaTypes(conn, payloadMediaTypes as string[]);
       await sleep(5000);
-      syncTracks(conn);
+      syncAllTracks(conn);
     }
   };
 
@@ -221,8 +224,12 @@ export const createRoom = (
         pc.onicecandidate = () => undefined;
       }
     });
+    const scheduledNegotiation = new WeakMap<Peer.DataConnection, boolean>();
     conn.peerConnection.addEventListener("negotiationneeded", async () => {
+      if (scheduledNegotiation.has(conn)) return;
+      scheduledNegotiation.set(conn, true);
       await sleep(2000);
+      scheduledNegotiation.delete(conn);
       if (!connMap.isConnected(conn.peer)) return;
       const offer = await conn.peerConnection.createOffer();
       await conn.peerConnection.setLocalDescription(offer);
@@ -427,7 +434,7 @@ export const createRoom = (
     });
   };
 
-  const syncTracks = (conn: Peer.DataConnection) => {
+  const syncAllTracks = (conn: Peer.DataConnection) => {
     const senders = conn.peerConnection.getSenders();
     const mTypes = connMap.getMediaTypes(conn);
     if (localStream) {
@@ -449,6 +456,18 @@ export const createRoom = (
         if (!mType || !mTypes.includes(mType)) {
           conn.peerConnection.removeTrack(sender);
         }
+      }
+    });
+    if (senders.some((sender) => sender.track && !sender.transport)) {
+      conn.peerConnection.dispatchEvent(new Event("negotiationneeded"));
+    }
+  };
+
+  const removeAllTracks = (conn: Peer.DataConnection) => {
+    const senders = conn.peerConnection.getSenders();
+    senders.forEach((sender) => {
+      if (sender.track) {
+        conn.peerConnection.removeTrack(sender);
       }
     });
   };
