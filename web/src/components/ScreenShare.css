@@ -1,6 +1,6 @@
 .ScreenShare-container {
   -webkit-app-region: no-drag;
-  overflow: hidden;
+  overflow: scroll;
 }
 
 .ScreenShare-video {

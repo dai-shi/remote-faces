@@ -243,7 +243,10 @@ export const createRoom = (
           peerIndex: getPeerIndexFromPeerId(conn.peer),
           mediaTypes: connMap.getMediaTypes(conn),
         };
-        receiveTrack(setupTrackStopOnLongMute(event.track), info);
+        receiveTrack(
+          setupTrackStopOnLongMute(event.track, conn.peerConnection),
+          info
+        );
       }
     });
     conn.on("close", () => {
@@ -390,7 +393,10 @@ export const createRoom = (
               mediaTypes: connMap.getMediaTypes(conn),
             };
             conn.peerConnection.getReceivers().forEach((receiver) => {
-              receiveTrack(setupTrackStopOnLongMute(receiver.track), info);
+              receiveTrack(
+                setupTrackStopOnLongMute(receiver.track, conn.peerConnection),
+                info
+              );
             });
           }
         });
