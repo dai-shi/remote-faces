@@ -30,7 +30,7 @@ const isChatData = (x: unknown): x is ChatData =>
 
 type Reply = [string, number];
 
-type ChatItem = {
+export type ChatItem = {
   key: string;
   replyTo: { userId: string; chatSeq: number };
   nickname: string;

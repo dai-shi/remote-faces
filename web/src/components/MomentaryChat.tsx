@@ -1,21 +1,60 @@
 import React, { useState, useRef, useLayoutEffect } from "react";
 
 import "./MomentaryChat.css";
-import { useMomentaryChat } from "../hooks/useMomentaryChat";
+import { useMomentaryChat, ChatItem } from "../hooks/useMomentaryChat";
+import { EmojiPicker } from "../utils/emoji";
 
 type ChatList = ReturnType<typeof useMomentaryChat>["chatList"];
 type ReplyChat = ReturnType<typeof useMomentaryChat>["replyChat"];
 
-const reactions = ["👍", "❤️", "😁", "😎", "🤣"];
-
-const ReactionButton = React.memo<{
-  text: string;
-  onClick: (text: string) => void;
-}>(({ text, onClick }) => (
-  <button type="button" onClick={() => onClick(text)}>
-    <span aria-label="Reaction">{text}</span>
-  </button>
-));
+const MomentaryChatContentPart = React.memo<{
+  item: ChatItem;
+  replyChat: ReplyChat;
+}>(({ item, replyChat }) => {
+  const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
+  const reply = (text: string) => replyChat(text, item.replyTo);
+  return (
+    <li key={item.key} className="MomentaryChat-listPart">
+      {openEmojiPicker && (
+        <EmojiPicker
+          onSelect={(e) => {
+            reply(e.native);
+            setOpenEmojiPicker(false);
+          }}
+        />
+      )}
+      <div className="MomentaryChat-listPart-header">
+        <div className="MomentaryChat-iconButton-container">
+          <div className="MomentaryChat-iconButton">
+            <button
+              type="button"
+              onClick={() => {
+                setOpenEmojiPicker(!openEmojiPicker);
+              }}
+            >
+              +
+            </button>
+          </div>
+        </div>
+        <span className="MomentaryChat-nickname">
+          {item.nickname || "No Name"}
+        </span>
+        <span className="MomentaryChat-time">{item.time}</span>
+      </div>
+      <div>{item.text}</div>
+      {item.replies.map(([text, count]) => (
+        <button
+          key={text}
+          className="MomentaryChat-icon"
+          type="button"
+          onClick={() => reply(text)}
+        >
+          {text} {count}
+        </button>
+      ))}
+    </li>
+  );
+});
 
 const MomentaryChatContent = React.memo<{
   chatList: ChatList;
@@ -31,37 +70,13 @@ const MomentaryChatContent = React.memo<{
 
   return (
     <ul className="MomentaryChat-list" ref={chatListRef}>
-      {chatList.map((item) => {
-        const reply = (text: string) => replyChat(text, item.replyTo);
-        return (
-          <li key={item.key} className="MomentaryChat-listPart">
-            <div className="MomentaryChat-listPart-header">
-              <div className="MomentaryChat-iconButton-container">
-                <div className="MomentaryChat-iconButton">
-                  {reactions.map((text) => (
-                    <ReactionButton key={text} text={text} onClick={reply} />
-                  ))}
-                </div>
-              </div>
-              <span className="MomentaryChat-nickname">
-                {item.nickname || "No Name"}
-              </span>
-              <span className="MomentaryChat-time">{item.time}</span>
-            </div>
-            <div>{item.text}</div>
-            {item.replies.map(([text, count]) => (
-              <button
-                key={text}
-                className="MomentaryChat-icon"
-                type="button"
-                onClick={() => reply(text)}
-              >
-                {text} {count}
-              </button>
-            ))}
-          </li>
-        );
-      })}
+      {chatList.map((item) => (
+        <MomentaryChatContentPart
+          key={item.key}
+          item={item}
+          replyChat={replyChat}
+        />
+      ))}
     </ul>
   );
 });
