@@ -1,8 +1,9 @@
 import React from "react";
 
+import "./App.css";
 import { ErrorFallback } from "./ErrorFallback";
 import { SingleRoomEntrance } from "./SingleRoomEntrance";
-import "./App.css";
+import { GitHubCorner } from "./GitHubCorner";
 
 class ErrorBoundary extends React.PureComponent {
   state: { err?: Error } = {};
@@ -23,6 +24,7 @@ export const App = React.memo(() => (
   <div className="App">
     <ErrorBoundary>
       <SingleRoomEntrance />
+      <GitHubCorner size={40} fill="gray" />
     </ErrorBoundary>
   </div>
 ));
