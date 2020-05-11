@@ -11,6 +11,7 @@ const addTrackToStream = (
 ) => {
   const newStream = stream || new MediaStream();
   newStream.addTrack(track);
+  newStream.dispatchEvent(new MediaStreamTrackEvent("addtrack", { track }));
   track.addEventListener("ended", () => {
     newStream.removeTrack(track);
     if (newStream.getTracks().length === 0) {
@@ -144,11 +145,22 @@ export const useFaceVideos = (
   }, [roomId, audioEnabled, audioDeviceId, addAudioTrack, removeAudioTrack]);
   useEffect(() => {
     if (faceStream) {
-      const [audioTrack] = faceStream.getAudioTracks();
-      if (audioTrack) {
+      faceStream.getAudioTracks().forEach((track) => {
+        const audioTrack = track;
         audioTrack.enabled = micOn;
-      }
+      });
+      const onaddtrack = (event: MediaStreamTrackEvent) => {
+        const { track } = event;
+        if (track.kind === "audio") {
+          track.enabled = micOn;
+        }
+      };
+      faceStream.addEventListener("addtrack", onaddtrack);
+      return () => {
+        faceStream.removeEventListener("addtrack", onaddtrack);
+      };
     }
+    return undefined;
   }, [faceStream, micOn]);
 
   return { faceStream, faceStreamMap };
