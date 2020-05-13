@@ -28,6 +28,7 @@ const FaceImage = React.memo<{
             }
           }}
           autoPlay
+          playsInline
           muted={!speakerOn}
         />
       ) : (
