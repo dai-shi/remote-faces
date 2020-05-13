@@ -1,3 +1,4 @@
+const path = require('path');
 const {
   app,
   BrowserWindow,
@@ -54,6 +55,9 @@ const createWindow = () => {
     alwaysOnTop: store.get('alwaysOnTop', false),
     frame: false,
   });
+  win.webContents.session.setPreloads([
+    path.join(__dirname, 'get-display-media-polyfill.js'),
+  ]);
   // win.webContents.openDevTools();
   loadURL();
   win.webContents.reloadIgnoringCache();
