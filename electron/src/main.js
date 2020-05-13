@@ -3,6 +3,7 @@ const {
   BrowserWindow,
   Menu,
   dialog,
+  shell,
 } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const Store = require('electron-store');
@@ -65,6 +66,12 @@ const createWindow = () => {
       app.setAboutPanelOptions({
         version,
       });
+    }
+  });
+  win.webContents.on('new-window', (event, link) => {
+    if (link.startsWith('https://') || link.startsWith('http://')) {
+      event.preventDefault();
+      shell.openExternal(link);
     }
   });
   win.on('close', () => {
