@@ -4,6 +4,8 @@ import React from "react";
 import CKEditor from "@ckeditor/ckeditor5-react";
 import CustomEditor from "@daishi/ckeditor5-build-inline-custom";
 
+import "./WysiwygEditor.css";
+
 const config = {
   toolbar: [
     "specialCharacters",
@@ -43,21 +45,19 @@ const initEditor = (editor) => {
 export const WysiwygEditor = React.memo<{
   registerClear: (clear: () => void) => void;
   onChange: (data: string) => void;
-}>(({ registerClear, onChange }) => {
-  return (
-    <CKEditor
-      editor={CustomEditor}
-      config={config}
-      onInit={(editor) => {
-        registerClear(() => {
-          editor.setData("");
-        });
-        initEditor(editor);
-      }}
-      onChange={(_event, editor) => {
-        const data = editor.getData();
-        onChange(data);
-      }}
-    />
-  );
-});
+}>(({ registerClear, onChange }) => (
+  <CKEditor
+    editor={CustomEditor}
+    config={config}
+    onInit={(editor) => {
+      registerClear(() => {
+        editor.setData("");
+      });
+      initEditor(editor);
+    }}
+    onChange={(_event, editor) => {
+      const data = editor.getData();
+      onChange(data);
+    }}
+  />
+));
