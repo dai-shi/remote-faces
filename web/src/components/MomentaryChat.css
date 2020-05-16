@@ -4,16 +4,13 @@
   border-top: solid 0.1px #bbb;
   overflow: hidden;
   display: grid;
-  grid-template-rows: 1fr 50px;
+  grid-template-rows: 3fr auto;
 }
 
-.MomentaryChat-message-input-area {
-  display: flex;
-}
-
-.MomentaryChat-message-input-area input {
-  flex-grow: 1;
-  height: 24px;
+.MomentaryChat-editor {
+  border: 1px solid lightgray;
+  border-radius: 3px;
+  overflow-x: scroll;
 }
 
 .MomentaryChat-list {
@@ -22,6 +19,11 @@
   display: flex;
   flex-direction: column-reverse;
   overflow-y: scroll;
+}
+
+.MomentaryChat-text {
+  word-break: break-all;
+  overflow-x: scroll;
 }
 
 .MomentaryChat-listPart:hover {

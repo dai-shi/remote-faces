@@ -15,6 +15,9 @@
   },
   "homepage": "./",
   "dependencies": {
+    "@ckeditor/ckeditor5-react": "^2.1.0",
+    "ckeditor5-build-inline-custom": "npm:@daishi/ckeditor5-build-inline-custom@^19.0.0-custom.4",
+    "dompurify": "^2.0.11",
     "emoji-mart": "^3.0.0",
     "peerjs": "^1.2.0",
     "react": "^16.13.1",
@@ -24,6 +27,7 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "@types/dompurify": "^2.0.2",
     "@types/emoji-mart": "^2.11.3",
     "@types/jest": "^25.2.1",
     "@types/node": "^12.0.0",
@@ -104,6 +108,14 @@
         ],
         "rules": {
           "no-use-before-define": "off"
+        }
+      },
+      {
+        "files": [
+          "src/components/MomentaryChat.tsx"
+        ],
+        "rules": {
+          "react/no-danger": "off"
         }
       },
       {

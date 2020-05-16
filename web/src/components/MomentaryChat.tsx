@@ -1,11 +1,17 @@
 import React, { useState, useRef, useLayoutEffect } from "react";
+import DOMPurify from "dompurify";
 
 import "./MomentaryChat.css";
 import { useMomentaryChat, ChatItem } from "../hooks/useMomentaryChat";
 import { EmojiPicker } from "../utils/emoji";
+import { WysiwygEditor } from "./WysiwygEditor";
 
 type ChatList = ReturnType<typeof useMomentaryChat>["chatList"];
 type ReplyChat = ReturnType<typeof useMomentaryChat>["replyChat"];
+
+const sanitize = (text: string) => ({
+  __html: DOMPurify.sanitize(text),
+});
 
 const MomentaryChatContentPart = React.memo<{
   item: ChatItem;
@@ -41,7 +47,10 @@ const MomentaryChatContentPart = React.memo<{
         </span>
         <span className="MomentaryChat-time">{item.time}</span>
       </div>
-      <div>{item.text}</div>
+      <div
+        className="MomentaryChat-text ck-content"
+        dangerouslySetInnerHTML={sanitize(item.text)}
+      />
       {item.replies.map(([text, count]) => (
         <button
           key={text}
@@ -93,12 +102,19 @@ export const MomentaryChat = React.memo<{
     nickname
   );
 
+  const clearRef = useRef<() => void>();
+  const registerClear = (clear: () => void) => {
+    clearRef.current = clear;
+  };
+
   const [text, setText] = useState("");
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onClick = () => {
     if (text) {
       sendChat(text);
       setText("");
+      if (clearRef.current) {
+        clearRef.current();
+      }
     }
   };
 
@@ -113,18 +129,14 @@ export const MomentaryChat = React.memo<{
           }
         }}
       />
-      <form onSubmit={onSubmit}>
-        <div className="MomentaryChat-message-input-area">
-          <input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Enter chat message"
-          />
-          <button type="submit" disabled={!text}>
-            Send
-          </button>
-        </div>
-      </form>
+      <div className="MomentaryChat-editor">
+        <WysiwygEditor registerClear={registerClear} onChange={setText} />
+      </div>
+      <div className="MomentaryChat-button">
+        <button type="button" onClick={onClick} disabled={!text}>
+          Send
+        </button>
+      </div>
     </div>
   );
 });
