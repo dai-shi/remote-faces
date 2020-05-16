@@ -2,7 +2,7 @@
 
 import React from "react";
 import CKEditor from "@ckeditor/ckeditor5-react";
-import CustomEditor from "@ckeditor/ckeditor5-build-inline";
+import CustomEditor from "@daishi/ckeditor5-build-inline-custom";
 
 const config = {
   toolbar: [

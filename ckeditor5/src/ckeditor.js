@@ -71,7 +71,6 @@ InlineEditor.builtinPlugins = [
 InlineEditor.defaultConfig = {
 	toolbar: {
 		items: [
-			'specialCharacters',
 			'heading',
 			'|',
 			'bold',
