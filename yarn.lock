@@ -3685,6 +3685,11 @@ cipher-base@^1.0.0, cipher-base@^1.0.1, cipher-base@^1.0.3:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
 
+"ckeditor5-build-inline-custom@npm:@daishi/ckeditor5-build-inline-custom@^19.0.0-custom.4":
+  version "19.0.0-custom.4"
+  resolved "https://registry.yarnpkg.com/@daishi/ckeditor5-build-inline-custom/-/ckeditor5-build-inline-custom-19.0.0-custom.4.tgz#f1c8f9fa3a0d81f3a07724c615927aab88de8680"
+  integrity sha512-ozSMwFjSnD6MdTX36oLe0eO2QbjMhpvCBHplVzgG3r3aWi4yZbDB2oLnTq6IWL2TJVGbQexbc5xIaerJ3TFo4w==
+
 class-utils@^0.3.5:
   version "0.3.6"
   resolved "https://registry.yarnpkg.com/class-utils/-/class-utils-0.3.6.tgz#f93369ae8b9a7ce02fd41faad0ca83033190c463"
@@ -9433,9 +9438,9 @@ onetime@^5.1.0:
     mimic-fn "^2.1.0"
 
 open@^7.0.2:
-  version "7.0.3"
-  resolved "https://registry.yarnpkg.com/open/-/open-7.0.3.tgz#db551a1af9c7ab4c7af664139930826138531c48"
-  integrity sha512-sP2ru2v0P290WFfv49Ap8MF6PkzGNnGlAwHweB4WR4mr5d2d0woiCluUeJ218w7/+PmoBy9JmYgD5A4mLcWOFA==
+  version "7.0.4"
+  resolved "https://registry.yarnpkg.com/open/-/open-7.0.4.tgz#c28a9d315e5c98340bf979fdcb2e58664aa10d83"
+  integrity sha512-brSA+/yq+b08Hsr4c8fsEW2CRzk1BmfN3SAK/5VCHQ9bdoZJ4qa/+AfR0xHjlbbZUyPkUHs1b8x1RqdyZdkVqQ==
   dependencies:
     is-docker "^2.0.0"
     is-wsl "^2.1.1"

@@ -7,7 +7,6 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "pretest": "yarn add @daishi/ckeditor5-build-inline-custom",
     "test:app": "react-scripts test",
     "test:lint": "eslint --ext .js,.ts,.tsx src",
     "test:type": "tsc --noEmit",
@@ -17,7 +16,7 @@
   "homepage": "./",
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^2.1.0",
-    "@daishi/ckeditor5-build-inline-custom": "^19.0.0-custom.4",
+    "ckeditor5-build-inline-custom": "npm:@daishi/ckeditor5-build-inline-custom@^19.0.0-custom.4",
     "dompurify": "^2.0.11",
     "emoji-mart": "^3.0.0",
     "peerjs": "^1.2.0",
