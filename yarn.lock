@@ -1068,9 +1068,9 @@
     "@ckeditor/ckeditor5-ui" "^19.0.0"
     "@ckeditor/ckeditor5-utils" "^19.0.0"
 
-"@ckeditor/ckeditor5-build-inline@file:../ckeditor5/ckeditor-ckeditor5-build-inline-19.0.0-custom.3.tgz":
+"@ckeditor/ckeditor5-build-inline@file:./ckeditor-ckeditor5-build-inline-19.0.0-custom.3.tgz":
   version "19.0.0-custom.3"
-  resolved "file:../ckeditor5/ckeditor-ckeditor5-build-inline-19.0.0-custom.3.tgz#3e9cab5a0217942dd41535097120063a929d843c"
+  resolved "file:./ckeditor-ckeditor5-build-inline-19.0.0-custom.3.tgz#3e9cab5a0217942dd41535097120063a929d843c"
 
 "@ckeditor/ckeditor5-ckfinder@^19.0.0":
   version "19.0.0"
