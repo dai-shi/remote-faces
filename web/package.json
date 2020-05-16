@@ -16,7 +16,6 @@
   "homepage": "./",
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^2.1.0",
-    "@daishi/ckeditor5-build-inline-custom": "^19.0.0-custom.4",
     "dompurify": "^2.0.11",
     "emoji-mart": "^3.0.0",
     "peerjs": "^1.2.0",
