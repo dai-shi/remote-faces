@@ -47,7 +47,10 @@ const MomentaryChatContentPart = React.memo<{
         </span>
         <span className="MomentaryChat-time">{item.time}</span>
       </div>
-      <div dangerouslySetInnerHTML={sanitize(item.text)} />
+      <div
+        className="MomentaryChat-text ck-content"
+        dangerouslySetInnerHTML={sanitize(item.text)}
+      />
       {item.replies.map(([text, count]) => (
         <button
           key={text}

@@ -32,6 +32,7 @@ import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformatio
 import Base64UploadAdapter from '@ckeditor/ckeditor5-upload/src/adapters/base64uploadadapter';
 import SpecialCharacters from '@ckeditor/ckeditor5-special-characters/src/specialcharacters';
 import SpecialCharactersEssentials from '@ckeditor/ckeditor5-special-characters/src/specialcharactersessentials';
+import BalloonToolbar from '@ckeditor/ckeditor5-ui/src/toolbar/balloon/balloontoolbar';
 
 export default class InlineEditor extends InlineEditorBase {}
 
@@ -62,7 +63,8 @@ InlineEditor.builtinPlugins = [
 	TextTransformation,
 	Base64UploadAdapter,
 	SpecialCharacters,
-	SpecialCharactersEssentials
+	SpecialCharactersEssentials,
+	BalloonToolbar
 ];
 
 // Editor configuration.

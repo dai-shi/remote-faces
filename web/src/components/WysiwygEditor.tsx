@@ -4,6 +4,32 @@ import React from "react";
 import CKEditor from "@ckeditor/ckeditor5-react";
 import CustomEditor from "@ckeditor/ckeditor5-build-inline";
 
+const config = {
+  toolbar: [
+    "specialCharacters",
+    "|",
+    "bold",
+    "italic",
+    "link",
+    "blockQuote",
+    "|",
+    "imageUpload",
+    "insertTable",
+    "mediaEmbed",
+    "|",
+    "undo",
+    "redo",
+  ],
+  balloonToolbar: [
+    "heading",
+    "|",
+    "bulletedList",
+    "numberedList",
+    "indent",
+    "outdent",
+  ],
+};
+
 const initEditor = (editor) => {
   editor.plugins.get("SpecialCharacters").addItems("Emoji", [
     { title: "smiley face", character: "😊" },
@@ -21,6 +47,7 @@ export const WysiwygEditor = React.memo<{
   return (
     <CKEditor
       editor={CustomEditor}
+      config={config}
       onInit={(editor) => {
         registerClear(() => {
           editor.setData("");
