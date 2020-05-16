@@ -7,13 +7,8 @@
   grid-template-rows: 1fr 50px;
 }
 
-.MomentaryChat-message-input-area {
-  display: flex;
-}
-
-.MomentaryChat-message-input-area input {
-  flex-grow: 1;
-  height: 24px;
+.MomentaryChat-editor {
+  border: 1px solid lightgray;
 }
 
 .MomentaryChat-list {
