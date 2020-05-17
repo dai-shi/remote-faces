@@ -19,3 +19,5 @@ export const CollabWhiteBoard = React.memo<{
     </div>
   );
 });
+
+export default CollabWhiteBoard;

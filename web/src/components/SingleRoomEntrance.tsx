@@ -4,13 +4,16 @@ import "./SingleRoomEntrance.css";
 import { secureRandomId, generateCryptoKey } from "../utils/crypto";
 import { ROOM_ID_PREFIX_LEN } from "../network/peerUtils";
 import { getRoomIdFromUrl, extractRoomIdFromLink } from "../utils/url";
-import { SingleRoom } from "./SingleRoom";
+
+const Landing = React.lazy(() => import("./Landing"));
+const SingleRoom = React.lazy(() => import("./SingleRoom"));
 
 const roomIdFromUrl = getRoomIdFromUrl();
 const userId = secureRandomId();
 
 export const SingleRoomEntrance = React.memo(() => {
   const [roomId, setRoomId] = useState<string | null>(roomIdFromUrl);
+  const [linkShown, setLinkShown] = useState(false);
   const [linkText, setLinkText] = useState("");
 
   const onCreateNew = async () => {
@@ -28,23 +31,44 @@ export const SingleRoomEntrance = React.memo(() => {
   }
 
   return (
-    <div className="SingleRoomEntrance-init">
-      <button type="button" onClick={onCreateNew}>
-        Create a new room
-      </button>
-      OR
-      <input
-        value={linkText}
-        onChange={(e) => setLinkText(e.target.value)}
-        placeholder="Enter room link..."
-      />
-      <button
-        type="button"
-        onClick={onEnter}
-        disabled={!extractRoomIdFromLink(linkText)}
-      >
-        Enter room
-      </button>
+    <div className="SingleRoomEntrance-container">
+      <Landing />
+      <div className="SingleRoomEntrance-input">
+        {!linkShown && (
+          <>
+            <div>
+              <button type="button" onClick={onCreateNew}>
+                Create a new room
+              </button>
+            </div>
+            <div>OR</div>
+            <div>
+              <button type="button" onClick={() => setLinkShown(true)}>
+                Enter an existing room link
+              </button>
+            </div>
+          </>
+        )}
+        {linkShown && (
+          <div>
+            <input
+              value={linkText}
+              onChange={(e) => setLinkText(e.target.value)}
+              placeholder="Enter room link..."
+            />
+            <button
+              type="button"
+              onClick={onEnter}
+              disabled={!extractRoomIdFromLink(linkText)}
+            >
+              Enter room
+            </button>
+            <button type="button" onClick={() => setLinkShown(false)}>
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 });

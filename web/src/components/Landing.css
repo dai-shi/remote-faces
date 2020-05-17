@@ -1,0 +1,8 @@
+.Landing-container {
+  display: flex;
+  justify-content: center;
+}
+
+.Landing-container img {
+  height: 50vh;
+}

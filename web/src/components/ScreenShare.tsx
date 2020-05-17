@@ -56,3 +56,5 @@ export const ScreenShare = React.memo<{
     </div>
   );
 });
+
+export default ScreenShare;

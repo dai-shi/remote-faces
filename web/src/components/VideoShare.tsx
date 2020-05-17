@@ -85,3 +85,5 @@ export const VideoShare = React.memo<{
     </div>
   );
 });
+
+export default VideoShare;

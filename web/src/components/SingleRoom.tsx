@@ -8,11 +8,12 @@ import { useNicknameMap } from "../hooks/useNicknameMap";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import { FaceImages } from "./FaceImages";
 import { MomentaryChat } from "./MomentaryChat";
-import { ScreenShare } from "./ScreenShare";
-import { VideoShare } from "./VideoShare";
-import { CollabWhiteBoard } from "./CollabWhiteBoard";
 import { UserProfile } from "./UserProfile";
 import { EmojiDataType } from "../utils/emoji";
+
+const ScreenShare = React.lazy(() => import("./ScreenShare"));
+const VideoShare = React.lazy(() => import("./VideoShare"));
+const CollabWhiteBoard = React.lazy(() => import("./CollabWhiteBoard"));
 
 const initialNickname = getStringItem("nickname");
 const initialConfigOpen = getStringItem("config_hidden") !== "true";
@@ -221,3 +222,5 @@ export const SingleRoom = React.memo<{
     </>
   );
 });
+
+export default SingleRoom;
