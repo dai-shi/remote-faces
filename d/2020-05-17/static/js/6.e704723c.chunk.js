@@ -1,0 +1,2 @@
+(this["webpackJsonpremote-faces-web"]=this["webpackJsonpremote-faces-web"]||[]).push([[6],{61:function(e,t,a){},96:function(e,t,a){"use strict";a.r(t),a.d(t,"Landing",(function(){return c}));var n=a(0),s=a.n(n),c=(a(61),s.a.memo((function(){return s.a.createElement("div",{className:"Landing-container"},s.a.createElement("img",{src:"https://github.com/dai-shi/remote-faces/raw/master/images/logo.png",alt:"logo"}))})));t.default=c}}]);
+//# sourceMappingURL=6.e704723c.chunk.js.map
