@@ -28,7 +28,9 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        run: yarn install
+        run: |
+          yarn install
+          ls node_modules
 
       - name: Test
         run: yarn test
