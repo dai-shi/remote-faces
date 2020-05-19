@@ -30,6 +30,9 @@ const config = {
     "indent",
     "outdent",
   ],
+  link: {
+    addTargetToExternalLinks: true,
+  },
 };
 
 const initEditor = (editor) => {

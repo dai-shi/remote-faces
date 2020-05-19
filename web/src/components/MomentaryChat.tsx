@@ -10,7 +10,7 @@ type ChatList = ReturnType<typeof useMomentaryChat>["chatList"];
 type ReplyChat = ReturnType<typeof useMomentaryChat>["replyChat"];
 
 const sanitize = (text: string) => ({
-  __html: DOMPurify.sanitize(text),
+  __html: DOMPurify.sanitize(text, { ADD_ATTR: ["target"] }),
 });
 
 const MomentaryChatContentPart = React.memo<{
