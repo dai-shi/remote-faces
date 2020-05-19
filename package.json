@@ -5,7 +5,7 @@
   "author": "Daishi Kato",
   "workspaces": {
     "packages": ["web", "electron", "ckeditor5"],
-    "nohoist": ["**/electron", "**/electron/**", "**/@daishi", "**/@daishi/**"]
+    "nohoist": ["**/electron", "**/electron/**"]
   },
   "scripts": {
     "test": "yarn workspaces run test"
