@@ -65,7 +65,7 @@ export const createRoom = (
 
   const connectPeer = (id: string) => {
     if (disposed) return;
-    if (!myPeer || myPeer.id === id) return;
+    if (!myPeer || myPeer.id === id || myPeer.disconnected) return;
     if (connMap.hasConn(id)) return;
     console.log("connectPeer", id);
     const conn = myPeer.connect(id);
