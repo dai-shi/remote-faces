@@ -3685,11 +3685,6 @@ cipher-base@^1.0.0, cipher-base@^1.0.1, cipher-base@^1.0.3:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
 
-"ckeditor5-build-inline-custom@npm:@daishi/ckeditor5-build-inline-custom@^19.0.0-custom.4":
-  version "19.0.0-custom.4"
-  resolved "https://registry.yarnpkg.com/@daishi/ckeditor5-build-inline-custom/-/ckeditor5-build-inline-custom-19.0.0-custom.4.tgz#f1c8f9fa3a0d81f3a07724c615927aab88de8680"
-  integrity sha512-ozSMwFjSnD6MdTX36oLe0eO2QbjMhpvCBHplVzgG3r3aWi4yZbDB2oLnTq6IWL2TJVGbQexbc5xIaerJ3TFo4w==
-
 class-utils@^0.3.5:
   version "0.3.6"
   resolved "https://registry.yarnpkg.com/class-utils/-/class-utils-0.3.6.tgz#f93369ae8b9a7ce02fd41faad0ca83033190c463"
