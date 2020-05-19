@@ -29,9 +29,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          (cd web; yarn install; ls node_modules)
           yarn install
+          echo 11111111
           ls node_modules
+          echo 22222222
+          ls web/node_modules
+          echo 33333333
 
       - name: Test
         run: yarn test
