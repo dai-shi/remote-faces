@@ -30,7 +30,8 @@ jobs:
       - name: Install dependencies
         run: |
           yarn install
-          ls node_modules
+          ls node_modules/@daishi
+          (cd web; yarn install; ls node_modules; ls node_modules/@daishi)
 
       - name: Test
         run: yarn test
