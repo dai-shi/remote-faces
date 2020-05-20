@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useLayoutEffect } from "react";
+import React, { useState, useRef, useLayoutEffect } from "react";
 import DOMPurify from "dompurify";
 
 import "./MomentaryChat.css";
@@ -68,15 +68,14 @@ const MomentaryChatContentPart = React.memo<{
 const MomentaryChatContent = React.memo<{
   chatList: ChatList;
   replyChat: ReplyChat;
-  onUpdateLayout: (height: number) => void;
-}>(({ chatList, replyChat, onUpdateLayout }) => {
+}>(({ chatList, replyChat }) => {
   const chatListRef = useRef<HTMLUListElement | null>(null);
   const latestMessageId = chatList[0]?.messageId;
   useLayoutEffect(() => {
     if (chatListRef.current && latestMessageId) {
-      onUpdateLayout(chatListRef.current.scrollHeight);
+      chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
     }
-  }, [onUpdateLayout, latestMessageId]);
+  }, [latestMessageId]);
 
   return (
     <ul className="MomentaryChat-list" ref={chatListRef}>
@@ -121,15 +120,7 @@ export const MomentaryChat = React.memo<{
 
   return (
     <div className="MomentaryChat-container" ref={containerRef}>
-      <MomentaryChatContent
-        chatList={chatList}
-        replyChat={replyChat}
-        onUpdateLayout={useCallback((height: number) => {
-          if (containerRef.current) {
-            containerRef.current.scrollTop = height;
-          }
-        }, [])}
-      />
+      <MomentaryChatContent chatList={chatList} replyChat={replyChat} />
       <div className="MomentaryChat-editor">
         <WysiwygEditor registerClear={registerClear} onChange={setText} />
       </div>
