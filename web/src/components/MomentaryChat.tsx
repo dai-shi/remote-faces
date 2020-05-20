@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect } from "react";
+import React, { useState, useRef, useCallback, useLayoutEffect } from "react";
 import DOMPurify from "dompurify";
 
 import "./MomentaryChat.css";
@@ -18,9 +18,9 @@ const MomentaryChatContentPart = React.memo<{
   replyChat: ReplyChat;
 }>(({ item, replyChat }) => {
   const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
-  const reply = (text: string) => replyChat(text, item.replyTo);
+  const reply = (text: string) => replyChat(text, item.messageId);
   return (
-    <li key={item.key} className="MomentaryChat-listPart">
+    <li key={item.messageId} className="MomentaryChat-listPart">
       {openEmojiPicker && (
         <EmojiPicker
           onSelect={(e) => {
@@ -71,17 +71,18 @@ const MomentaryChatContent = React.memo<{
   onUpdateLayout: (height: number) => void;
 }>(({ chatList, replyChat, onUpdateLayout }) => {
   const chatListRef = useRef<HTMLUListElement | null>(null);
+  const latestMessageId = chatList[0]?.messageId;
   useLayoutEffect(() => {
-    if (chatListRef.current) {
+    if (chatListRef.current && latestMessageId) {
       onUpdateLayout(chatListRef.current.scrollHeight);
     }
-  });
+  }, [onUpdateLayout, latestMessageId]);
 
   return (
     <ul className="MomentaryChat-list" ref={chatListRef}>
       {chatList.map((item) => (
         <MomentaryChatContentPart
-          key={item.key}
+          key={item.messageId}
           item={item}
           replyChat={replyChat}
         />
@@ -123,11 +124,11 @@ export const MomentaryChat = React.memo<{
       <MomentaryChatContent
         chatList={chatList}
         replyChat={replyChat}
-        onUpdateLayout={(height: number) => {
+        onUpdateLayout={useCallback((height: number) => {
           if (containerRef.current) {
             containerRef.current.scrollTop = height;
           }
-        }}
+        }, [])}
       />
       <div className="MomentaryChat-editor">
         <WysiwygEditor registerClear={registerClear} onChange={setText} />

@@ -1,39 +1,37 @@
 import { useState, useCallback, useRef } from "react";
 
+import { secureRandomId } from "../utils/crypto";
 import { isObject } from "../utils/types";
 import { useRoomData, useBroadcastData } from "./useRoom";
 
 const MAX_CHAT_LIST_SIZE = 100;
+const MAX_CHAT_HISTORY_SIZE = 1000;
 
 type ChatData = {
   userId: string;
   nickname: string;
-  chatSeq: number;
+  messageId: string;
+  createdAt: number; // in millisecond
   chatText: string;
-  chatInReplyTo?: {
-    userId: string;
-    chatSeq: number;
-  };
+  chatInReplyTo?: string; // messageId
 };
 
 const isChatData = (x: unknown): x is ChatData =>
   isObject(x) &&
   typeof (x as { userId: unknown }).userId === "string" &&
   typeof (x as { nickname: unknown }).nickname === "string" &&
-  typeof (x as { chatSeq: unknown }).chatSeq === "number" &&
+  typeof (x as { messageId: unknown }).messageId === "string" &&
+  typeof (x as { createdAt: unknown }).createdAt === "number" &&
   typeof (x as { chatText: unknown }).chatText === "string" &&
   (typeof (x as { chatInReplyTo: unknown }).chatInReplyTo === "undefined" ||
-    typeof (x as { chatInReplyTo: { userId: unknown } }).chatInReplyTo
-      .userId === "string" ||
-    typeof (x as { chatInReplyTo: { chatSeq: unknown } }).chatInReplyTo
-      .chatSeq === "number");
+    typeof (x as { chatInReplyTo: unknown }).chatInReplyTo === "string");
 
 type Reply = [string, number];
 
 export type ChatItem = {
-  key: string;
-  replyTo: { userId: string; chatSeq: number };
+  messageId: string;
   nickname: string;
+  createdAt: number; // in millisecond
   text: string;
   replies: Reply[];
   time: string;
@@ -52,24 +50,22 @@ export const useMomentaryChat = (
   userId: string,
   nickname: string
 ) => {
-  const chatSeqRef = useRef(1);
-  const receivedSeqMap = useRef(new Map<string, number>());
+  const chatHistory = useRef<ChatData[]>([]);
   const [chatList, setChatList] = useState<ChatItem[]>([]);
 
   const addChatItem = useCallback((chatData: ChatData) => {
-    if ((receivedSeqMap.current.get(chatData.userId) || 0) < chatData.chatSeq) {
-      receivedSeqMap.current.set(chatData.userId, chatData.chatSeq);
-    } else {
+    if (chatHistory.current.some((x) => x.messageId === chatData.messageId)) {
       return;
+    }
+    chatHistory.current.unshift(chatData);
+    if (chatHistory.current.length > MAX_CHAT_HISTORY_SIZE) {
+      chatHistory.current.pop();
     }
     if (chatData.chatInReplyTo) {
       const { chatText, chatInReplyTo } = chatData;
       setChatList((prev) =>
         prev.map((item) => {
-          if (
-            item.replyTo.userId === chatInReplyTo.userId &&
-            item.replyTo.chatSeq === chatInReplyTo.chatSeq
-          ) {
+          if (item.messageId === chatInReplyTo) {
             const replyMap = new Map(item.replies);
             replyMap.set(chatText, (replyMap.get(chatText) || 0) + 1);
             const replies = [...replyMap.entries()];
@@ -79,21 +75,27 @@ export const useMomentaryChat = (
           return item;
         })
       );
-    } else {
-      const time = new Date();
-      const chatItem: ChatItem = {
-        key: `${chatData.userId}_${chatData.chatSeq}`,
-        replyTo: {
-          userId: chatData.userId,
-          chatSeq: chatData.chatSeq,
-        },
-        nickname: chatData.nickname,
-        text: chatData.chatText,
-        replies: [],
-        time: time.toLocaleString().split(" ")[1].slice(0, -3),
-      };
-      setChatList((prev) => [chatItem, ...prev].slice(0, MAX_CHAT_LIST_SIZE));
+      return;
     }
+    const chatItem: ChatItem = {
+      messageId: chatData.messageId,
+      nickname: chatData.nickname,
+      createdAt: chatData.createdAt,
+      text: chatData.chatText,
+      replies: [],
+      time: new Date(chatData.createdAt)
+        .toLocaleString()
+        .split(" ")[1]
+        .slice(0, -3),
+    };
+    setChatList((prev) => {
+      const newList = [chatItem, ...prev];
+      if (newList.length > MAX_CHAT_LIST_SIZE) {
+        newList.pop();
+      }
+      newList.sort((a, b) => b.createdAt - a.createdAt); // slow?
+      return newList;
+    });
   }, []);
 
   const broadcastData = useBroadcastData(roomId, userId);
@@ -114,10 +116,10 @@ export const useMomentaryChat = (
       const data: ChatData = {
         userId,
         nickname,
-        chatSeq: chatSeqRef.current,
+        messageId: secureRandomId(),
+        createdAt: Date.now(),
         chatText: text,
       };
-      chatSeqRef.current += 1;
       broadcastData(data);
       addChatItem(data);
     },
@@ -125,15 +127,15 @@ export const useMomentaryChat = (
   );
 
   const replyChat = useCallback(
-    (text: string, inReplyTo: { userId: string; chatSeq: number }) => {
+    (text: string, inReplyTo: string) => {
       const data: ChatData = {
         userId,
         nickname,
-        chatSeq: chatSeqRef.current,
+        messageId: secureRandomId(),
+        createdAt: Date.now(),
         chatText: text,
         chatInReplyTo: inReplyTo,
       };
-      chatSeqRef.current += 1;
       broadcastData(data);
       addChatItem(data);
     },
