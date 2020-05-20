@@ -68,12 +68,11 @@ const MomentaryChatContentPart = React.memo<{
 const MomentaryChatContent = React.memo<{
   chatList: ChatList;
   replyChat: ReplyChat;
-  onUpdateLayout: (height: number) => void;
-}>(({ chatList, replyChat, onUpdateLayout }) => {
+}>(({ chatList, replyChat }) => {
   const chatListRef = useRef<HTMLUListElement | null>(null);
   useLayoutEffect(() => {
     if (chatListRef.current) {
-      onUpdateLayout(chatListRef.current.scrollHeight);
+      chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
     }
   });
 
@@ -120,15 +119,7 @@ export const MomentaryChat = React.memo<{
 
   return (
     <div className="MomentaryChat-container" ref={containerRef}>
-      <MomentaryChatContent
-        chatList={chatList}
-        replyChat={replyChat}
-        onUpdateLayout={(height: number) => {
-          if (containerRef.current) {
-            containerRef.current.scrollTop = height;
-          }
-        }}
-      />
+      <MomentaryChatContent chatList={chatList} replyChat={replyChat} />
       <div className="MomentaryChat-editor">
         <WysiwygEditor registerClear={registerClear} onChange={setText} />
       </div>
