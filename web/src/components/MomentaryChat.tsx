@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import DOMPurify from "dompurify";
 
 import "./MomentaryChat.css";
@@ -71,7 +71,7 @@ const MomentaryChatContent = React.memo<{
 }>(({ chatList, replyChat }) => {
   const chatListRef = useRef<HTMLUListElement | null>(null);
   const latestMessageId = chatList[0]?.messageId;
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (chatListRef.current && latestMessageId) {
       chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
     }
