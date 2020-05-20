@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import DOMPurify from "dompurify";
 
 import "./MomentaryChat.css";
@@ -18,9 +18,9 @@ const MomentaryChatContentPart = React.memo<{
   replyChat: ReplyChat;
 }>(({ item, replyChat }) => {
   const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
-  const reply = (text: string) => replyChat(text, item.replyTo);
+  const reply = (text: string) => replyChat(text, item.messageId);
   return (
-    <li key={item.key} className="MomentaryChat-listPart">
+    <li key={item.messageId} className="MomentaryChat-listPart">
       {openEmojiPicker && (
         <EmojiPicker
           onSelect={(e) => {
@@ -70,17 +70,18 @@ const MomentaryChatContent = React.memo<{
   replyChat: ReplyChat;
 }>(({ chatList, replyChat }) => {
   const chatListRef = useRef<HTMLUListElement | null>(null);
-  useLayoutEffect(() => {
-    if (chatListRef.current) {
+  const latestMessageId = chatList[0]?.messageId;
+  useEffect(() => {
+    if (chatListRef.current && latestMessageId) {
       chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
     }
-  });
+  }, [latestMessageId]);
 
   return (
     <ul className="MomentaryChat-list" ref={chatListRef}>
       {chatList.map((item) => (
         <MomentaryChatContentPart
-          key={item.key}
+          key={item.messageId}
           item={item}
           replyChat={replyChat}
         />
