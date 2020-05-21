@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { PeerInfo, createRoom, NetworkStatus } from "../network/room";
 
 type NetworkStatusListener = (status: NetworkStatus) => void;
+type NewPeerListener = (sendInitialData: (data: unknown) => void) => void;
 type DataListener = (data: unknown, info: PeerInfo) => void;
 type TrackListener = {
   mediaType: string;
@@ -11,6 +12,7 @@ type TrackListener = {
 type RoomEntry = {
   room: ReturnType<typeof createRoom>;
   networkStatusListeners: Set<NetworkStatusListener>;
+  newPeerListeners: Set<NewPeerListener>;
   dataListeners: Set<DataListener>;
   trackListeners: Set<TrackListener>;
   count: number;
@@ -19,19 +21,28 @@ const roomEntryMap = new Map<string, RoomEntry>();
 const register = (
   roomId: string,
   userId: string,
-  networkStatusListener?: NetworkStatusListener,
-  dataListener?: DataListener,
-  trackListener?: TrackListener
+  listeners: {
+    networkStatusListener?: NetworkStatusListener;
+    newPeerListener?: NewPeerListener;
+    dataListener?: DataListener;
+    trackListener?: TrackListener;
+  }
 ) => {
   const roomEntryKey = `${roomId}_${userId}`;
   let entry = roomEntryMap.get(roomEntryKey);
   if (!entry) {
     const networkStatusListeners = new Set<NetworkStatusListener>();
+    const newPeerListeners = new Set<NewPeerListener>();
     const dataListeners = new Set<DataListener>();
     const trackListeners = new Set<TrackListener>();
     const updateNetworkStatus = (status: NetworkStatus) => {
       networkStatusListeners.forEach((listener) => {
         listener(status);
+      });
+    };
+    const notifyNewPeer = (sendInitialData: (data: unknown) => void) => {
+      newPeerListeners.forEach((listener) => {
+        listener(sendInitialData);
       });
     };
     const receiveData = (data: unknown, info: PeerInfo) => {
@@ -48,31 +59,36 @@ const register = (
       roomId,
       userId,
       updateNetworkStatus,
+      notifyNewPeer,
       receiveData,
       receiveTrack
     );
     entry = {
       room,
       networkStatusListeners,
+      newPeerListeners,
       dataListeners,
       trackListeners,
       count: 0,
     };
     roomEntryMap.set(roomEntryKey, entry);
   }
-  if (networkStatusListener) {
-    entry.networkStatusListeners.add(networkStatusListener);
+  if (listeners.networkStatusListener) {
+    entry.networkStatusListeners.add(listeners.networkStatusListener);
   }
-  if (dataListener) {
-    entry.dataListeners.add(dataListener);
+  if (listeners.newPeerListener) {
+    entry.newPeerListeners.add(listeners.newPeerListener);
   }
-  if (trackListener) {
+  if (listeners.dataListener) {
+    entry.dataListeners.add(listeners.dataListener);
+  }
+  if (listeners.trackListener) {
     const mediaTypeSet = new Set(
       Array.from(entry.trackListeners).map((x) => x.mediaType)
     );
     const prevSize = mediaTypeSet.size;
-    entry.trackListeners.add(trackListener);
-    mediaTypeSet.add(trackListener.mediaType);
+    entry.trackListeners.add(listeners.trackListener);
+    mediaTypeSet.add(listeners.trackListener.mediaType);
     if (prevSize !== mediaTypeSet.size) {
       entry.room.acceptMediaTypes(Array.from(mediaTypeSet));
     }
@@ -80,18 +96,23 @@ const register = (
   entry.count += 1;
   const definedEntry = entry;
   const unregister = () => {
-    if (networkStatusListener) {
-      definedEntry.networkStatusListeners.delete(networkStatusListener);
+    if (listeners.networkStatusListener) {
+      definedEntry.networkStatusListeners.delete(
+        listeners.networkStatusListener
+      );
     }
-    if (dataListener) {
-      definedEntry.dataListeners.delete(dataListener);
+    if (listeners.newPeerListener) {
+      definedEntry.newPeerListeners.delete(listeners.newPeerListener);
     }
-    if (trackListener) {
+    if (listeners.dataListener) {
+      definedEntry.dataListeners.delete(listeners.dataListener);
+    }
+    if (listeners.trackListener) {
       let mediaTypeSet = new Set(
         Array.from(definedEntry.trackListeners).map((x) => x.mediaType)
       );
       const prevSize = mediaTypeSet.size;
-      definedEntry.trackListeners.delete(trackListener);
+      definedEntry.trackListeners.delete(listeners.trackListener);
       mediaTypeSet = new Set(
         Array.from(definedEntry.trackListeners).map((x) => x.mediaType)
       );
@@ -123,13 +144,33 @@ export const useRoomNetworkStatus = (
     throw new Error(`Network Error: ${networkStatus.err.message}`);
   }
   useEffect(() => {
-    const { unregister } = register(roomId, userId, (ns: NetworkStatus) => {
-      updateNetworkStatus(ns);
-      if (onNetworkStatus) onNetworkStatus(ns);
+    const { unregister } = register(roomId, userId, {
+      networkStatusListener: (ns: NetworkStatus) => {
+        updateNetworkStatus(ns);
+        if (onNetworkStatus) onNetworkStatus(ns);
+      },
     });
     return unregister;
   }, [roomId, userId, onNetworkStatus]);
   return networkStatus;
+};
+
+export const useRoomNewPeer = (
+  roomId: string,
+  userId: string,
+  getInitialDataIterator: () => AsyncIterable<unknown>
+) => {
+  useEffect(() => {
+    const { unregister } = register(roomId, userId, {
+      newPeerListener: async (sendInitialData: (data: unknown) => void) => {
+        // eslint-disable-next-line no-restricted-syntax
+        for await (const data of getInitialDataIterator()) {
+          sendInitialData(data);
+        }
+      },
+    });
+    return unregister;
+  }, [roomId, userId, getInitialDataIterator]);
 };
 
 type BroadcastData = ReturnType<typeof createRoom>["broadcastData"];
@@ -144,7 +185,7 @@ export const useBroadcastData = (roomId: string, userId: string) => {
     }
   }, []);
   useEffect(() => {
-    const registered = register(roomId, userId);
+    const registered = register(roomId, userId, {});
     broadcastDataRef.current = registered.broadcastData;
     return registered.unregister;
   }, [roomId, userId]);
@@ -157,7 +198,9 @@ export const useRoomData = (
   onRoomData: (data: unknown, info: PeerInfo) => void
 ) => {
   useEffect(() => {
-    const { unregister } = register(roomId, userId, undefined, onRoomData);
+    const { unregister } = register(roomId, userId, {
+      dataListener: onRoomData,
+    });
     return unregister;
   }, [roomId, userId, onRoomData]);
 };
@@ -174,9 +217,8 @@ export const useRoomMedia = (
   }>({});
   useEffect(() => {
     if (mediaType) {
-      const result = register(roomId, userId, undefined, undefined, {
-        mediaType,
-        listener: onTrack,
+      const result = register(roomId, userId, {
+        trackListener: { mediaType, listener: onTrack },
       });
       setFunctions({
         addTrack: (track: MediaStreamTrack) =>
