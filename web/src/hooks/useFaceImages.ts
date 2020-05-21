@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 
 import { isObject } from "../utils/types";
 import { takePhoto } from "../media/capture";
-import { useRoomData, useBroadcastData, useRoomNetworkStatus } from "./useRoom";
+import {
+  useRoomData,
+  useBroadcastData,
+  useRoomNetworkStatus,
+  useRoomNewPeer,
+} from "./useRoom";
 
 type ImageUrl = string;
 type FaceInfo = {
@@ -42,11 +47,21 @@ export const useFaceImages = (
 ) => {
   const [myImage, setMyImage] = useState<ImageUrl>();
   const [roomImages, setRoomImages] = useState<RoomImage[]>([]);
-  const [fatalError, setFatalError] = useState<Error>();
 
+  const [fatalError, setFatalError] = useState<Error>();
   if (fatalError) {
     throw fatalError;
   }
+
+  const lastDataRef = useRef<ImageData>();
+  useRoomNewPeer(
+    roomId,
+    userId,
+    useCallback(async function* getInitialDataIterator() {
+      if (!lastDataRef.current) return;
+      yield lastDataRef.current;
+    }, [])
+  );
 
   const broadcastData = useBroadcastData(roomId, userId);
   useRoomData(
@@ -128,7 +143,8 @@ export const useFaceImages = (
           image,
           info,
         };
-        broadcastData(data, true);
+        broadcastData(data);
+        lastDataRef.current = data;
       } catch (e) {
         setFatalError(e);
       }

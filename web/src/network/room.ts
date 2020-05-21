@@ -38,6 +38,7 @@ export type PeerInfo = {
   peerIndex: number;
   mediaTypes: string[];
 };
+type NotifyNewPeer = (sendInitialData: (data: unknown) => void) => void;
 type ReceiveData = (data: unknown, info: PeerInfo) => void;
 type ReceiveTrack = (track: MediaStreamTrack, info: PeerInfo) => void;
 
@@ -45,12 +46,12 @@ export const createRoom = (
   roomId: string,
   userId: string,
   updateNetworkStatus: UpdateNetworkStatus,
+  notifyNewPeer: NotifyNewPeer,
   receiveData: ReceiveData,
   receiveTrack: ReceiveTrack
 ) => {
   let disposed = false;
   let myPeer: Peer | null = null;
-  let lastBroadcastData: unknown | null = null;
   const connMap = createConnectionMap();
   let mediaTypes: string[] = [];
   let localStream: MediaStream | null = null;
@@ -72,11 +73,8 @@ export const createRoom = (
     initConnection(conn);
   };
 
-  const broadcastData = (data: unknown, replaceLastData?: boolean) => {
+  const broadcastData = (data: unknown) => {
     if (disposed) return;
-    if (replaceLastData) {
-      lastBroadcastData = data;
-    }
     const peers = connMap.getConnectedPeerIds();
     connMap.forEachConnectedConns((conn) => {
       sendPayload(conn, { userId, data, peers, mediaTypes });
@@ -211,11 +209,11 @@ export const createRoom = (
       connMap.markConnected(conn);
       console.log("dataConnection open", conn);
       showConnectedStatus();
-      if (lastBroadcastData) {
-        const data = lastBroadcastData;
+      const sendInitialData = (data: unknown) => {
         const peers = connMap.getConnectedPeerIds();
         sendPayload(conn, { userId, data, peers, mediaTypes });
-      }
+      };
+      notifyNewPeer(sendInitialData);
     });
     conn.on("data", (buf: ArrayBuffer) => handlePayload(conn, buf));
     conn.peerConnection.addEventListener("icegatheringstatechange", () => {

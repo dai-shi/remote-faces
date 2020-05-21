@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef } from "react";
 
+import { sleep } from "../utils/sleep";
 import { secureRandomId } from "../utils/crypto";
 import { isObject } from "../utils/types";
-import { useRoomData, useBroadcastData } from "./useRoom";
+import { useRoomData, useBroadcastData, useRoomNewPeer } from "./useRoom";
 
 const MAX_CHAT_LIST_SIZE = 100;
 const MAX_CHAT_HISTORY_SIZE = 1000;
@@ -97,6 +98,20 @@ export const useMomentaryChat = (
       return newList;
     });
   }, []);
+
+  useRoomNewPeer(
+    roomId,
+    userId,
+    useCallback(async function* getInitialDataIterator() {
+      // TODO do not let all peers send initial data
+      // XXX it might be better to return packed chatList
+      for (let i = chatHistory.current.length - 1; i >= 0; i -= 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await sleep(Math.random() * 5000);
+        yield chatHistory.current[i];
+      }
+    }, [])
+  );
 
   const broadcastData = useBroadcastData(roomId, userId);
   useRoomData(
