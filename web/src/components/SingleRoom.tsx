@@ -64,7 +64,7 @@ export const SingleRoom = React.memo<{
       </div>
       <div
         className="SingleRoom-2nd-column"
-        style={{ display: secondColumnOpen ? "inherit" : "none" }}
+        style={{ width: secondColumnOpen ? "inherit" : "0" }}
       >
         <button
           type="button"

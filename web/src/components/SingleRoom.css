@@ -1,7 +1,7 @@
 .SingleRoom-container {
   display: grid;
   column-gap: 3px;
-  grid-template-columns: 36px 240px 1fr;
+  grid-template-columns: 36px auto 1fr;
   grid-template-rows: 100vh;
 }
 
@@ -11,7 +11,9 @@
 
 .SingleRoom-2nd-column {
   display: grid;
+  grid-template-columns: 240px;
   grid-template-rows: auto 1fr;
+  overflow: hidden;
   position: relative;
 }
 

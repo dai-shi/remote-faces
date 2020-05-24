@@ -8,6 +8,7 @@
 .TabPane-tabList {
   display: flex;
   flex-direction: column;
+  overflow: scroll;
 }
 
 .TabPane-tabList button {
