@@ -2,6 +2,7 @@
   display: grid;
   grid-template-columns: 1.5rem 1fr;
   grid-template-rows: 100vh;
+  overflow: hidden;
 }
 
 .TabPane-tabList {
