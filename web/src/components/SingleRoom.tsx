@@ -7,6 +7,7 @@ import { useNicknameMap } from "../hooks/useNicknameMap";
 import { FaceImages } from "./FaceImages";
 import { MomentaryChat } from "./MomentaryChat";
 import { SettingPanel } from "./SettingPanel";
+import { UserStatus } from "./UserStatus";
 import { EmojiDataType } from "../utils/emoji";
 
 const ScreenShare = React.lazy(() => import("./ScreenShare"));
@@ -22,6 +23,7 @@ export const SingleRoom = React.memo<{
   userId: string;
 }>(({ roomId, userId }) => {
   const [nickname, setNickname] = useState(initialNickname);
+  const [statusMesg, setStatusMesg] = useState("");
   const [emoji, setEmoji] = useState<EmojiDataType | null>(null);
   useEffect(() => {
     setRoomIdToUrl(roomId);
@@ -48,13 +50,18 @@ export const SingleRoom = React.memo<{
             videoDeviceId={videoDeviceId}
             audioDeviceId={audioDeviceId}
             nickname={nickname}
-            statusMesg={emoji?.native || ""}
+            statusMesg={`${emoji?.native || " "}${statusMesg}`}
             liveMode={liveMode}
             micOn={micOn}
             speakerOn={speakerOn}
           />
         </div>
         <div className="SingleRoom-2nd-column">
+          <UserStatus
+            emoji={emoji}
+            setEmoji={setEmoji}
+            setStatusMesg={setStatusMesg}
+          />
           <SettingPanel
             roomId={roomId}
             userId={userId}
