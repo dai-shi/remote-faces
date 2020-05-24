@@ -55,18 +55,6 @@ export const SettingPanel = React.memo<{
   setVideoDeviceId: Dispatch<SetStateAction<string>>;
   audioDeviceId: string;
   setAudioDeviceId: Dispatch<SetStateAction<string>>;
-  liveMode: boolean;
-  setLiveMode: Dispatch<SetStateAction<boolean>>;
-  micOn: boolean;
-  setMicOn: Dispatch<SetStateAction<boolean>>;
-  speakerOn: boolean;
-  setSpeakerOn: Dispatch<SetStateAction<boolean>>;
-  screenShareMode: boolean;
-  setScreenShareMode: Dispatch<SetStateAction<boolean>>;
-  videoShareMode: boolean;
-  setVideoShareMode: Dispatch<SetStateAction<boolean>>;
-  collabWBOpen: boolean;
-  setCollabWBOpen: Dispatch<SetStateAction<boolean>>;
 }>(
   ({
     roomId,
@@ -77,18 +65,6 @@ export const SettingPanel = React.memo<{
     setVideoDeviceId,
     audioDeviceId,
     setAudioDeviceId,
-    liveMode,
-    setLiveMode,
-    micOn,
-    setMicOn,
-    speakerOn,
-    setSpeakerOn,
-    screenShareMode,
-    setScreenShareMode,
-    videoShareMode,
-    setVideoShareMode,
-    collabWBOpen,
-    setCollabWBOpen,
   }) => {
     const [configOpen, setConfigOpen] = useState(initialConfigOpen);
     useEffect(() => {
@@ -169,60 +145,6 @@ export const SettingPanel = React.memo<{
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
-              Live Mode:{" "}
-              <button type="button" onClick={() => setLiveMode((x) => !x)}>
-                {liveMode ? "Disable" : "Enable"}
-              </button>
-              {liveMode && <>&#10004;</>}
-              {liveMode && (
-                <div>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={micOn}
-                      onChange={(e) => setMicOn(e.target.checked)}
-                    />
-                    Mic On
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={speakerOn}
-                      onChange={(e) => setSpeakerOn(e.target.checked)}
-                    />
-                    Speaker On
-                  </label>
-                </div>
-              )}
-            </div>
-            <div>
-              Screen Share:{" "}
-              <button
-                type="button"
-                onClick={() => setScreenShareMode((x) => !x)}
-              >
-                {screenShareMode ? "Close" : "Open"}
-              </button>
-              {screenShareMode && <>&#10004;</>}
-            </div>
-            <div>
-              Video Share:{" "}
-              <button
-                type="button"
-                onClick={() => setVideoShareMode((x) => !x)}
-              >
-                {videoShareMode ? "Close" : "Open"}
-              </button>
-              {videoShareMode && <>&#10004;</>}
-            </div>
-            <div>
-              Collab White Board:{" "}
-              <button type="button" onClick={() => setCollabWBOpen((x) => !x)}>
-                {collabWBOpen ? "Close" : "Open"}
-              </button>
-              {collabWBOpen && <>&#10004;</>}
             </div>
             <div className="SettingPanel-status">
               {JSON.stringify(networkStatus)}

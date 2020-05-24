@@ -1,0 +1,31 @@
+.TabPane-container {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  grid-template-rows: 100vh;
+}
+
+.TabPane-tabList {
+  display: flex;
+  flex-direction: column;
+}
+
+.TabPane-tabList button {
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  border: solid 1px gray;
+  border-bottom: none;
+  padding: 0.1rem 4.5rem 0.2rem 0.5rem;
+  opacity: 0.5;
+}
+
+button.TabPane-active {
+  background-color: lightgray;
+  opacity: 1;
+}
+
+.TabPane-tabList button:focus {
+  outline:0;
+}

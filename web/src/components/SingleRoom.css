@@ -1,4 +1,4 @@
-.SingleRoom-body {
+.SingleRoom-container {
   display: grid;
   column-gap: 3px;
   grid-template-columns: 36px 240px 1fr;
@@ -12,13 +12,22 @@
 .SingleRoom-2nd-column {
   display: grid;
   grid-template-rows: auto 1fr;
+  position: relative;
 }
 
 .SingleRoom-3rd-column {
-  display: none;
-  /*
-  display: grid;
-  row-gap: 5px;
-  grid-template-rows: repeat(1fr);
-  */
+}
+
+.SingleRoom-toggle-3rd-column {
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.SingleRoom-toggle-3rd-column:focus {
+  outline:0;
 }

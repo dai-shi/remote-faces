@@ -9,11 +9,8 @@ import { MomentaryChat } from "./MomentaryChat";
 import { ControlPanel } from "./ControlPanel";
 import { SettingPanel } from "./SettingPanel";
 import { UserStatus } from "./UserStatus";
+import { TabPane } from "./TabPane";
 import { EmojiDataType } from "../utils/emoji";
-
-const ScreenShare = React.lazy(() => import("./ScreenShare"));
-const VideoShare = React.lazy(() => import("./VideoShare"));
-const CollabWhiteBoard = React.lazy(() => import("./CollabWhiteBoard"));
 
 const initialNickname = getStringItem("nickname");
 const initialVideoDeviceId = getStringItem("faceimage_video_device_id");
@@ -35,77 +32,72 @@ export const SingleRoom = React.memo<{
   const [liveMode, setLiveMode] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(false);
-  const [screenShareMode, setScreenShareMode] = useState(false);
-  const [videoShareMode, setVideoShareMode] = useState(false);
-  const [collabWBOpen, setCollabWBOpen] = useState(false);
+  const [secondColumnOpen, setSecondColumnOpen] = useState(true);
+  const [thirdColumnOpen, setThirdColumnOpen] = useState(true);
 
   useNicknameMap(roomId, userId); // to enable caching
 
   return (
-    <>
-      <div className="SingleRoom-body">
-        <div className="SingleRoom-1st-column">
-          <ControlPanel
-            liveMode={liveMode}
-            setLiveMode={setLiveMode}
-            micOn={micOn}
-            setMicOn={setMicOn}
-            speakerOn={speakerOn}
-            setSpeakerOn={setSpeakerOn}
-          />
-          <FaceImages
-            roomId={roomId}
-            userId={userId}
-            videoDeviceId={videoDeviceId}
-            audioDeviceId={audioDeviceId}
-            nickname={nickname}
-            statusMesg={`${emoji?.native || " "}${statusMesg}`}
-            liveMode={liveMode}
-            micOn={micOn}
-            speakerOn={speakerOn}
-          />
-        </div>
-        <div className="SingleRoom-2nd-column">
-          <UserStatus
-            emoji={emoji}
-            setEmoji={setEmoji}
-            setStatusMesg={setStatusMesg}
-          />
-          <SettingPanel
-            roomId={roomId}
-            userId={userId}
-            nickname={nickname}
-            setNickname={setNickname}
-            videoDeviceId={videoDeviceId}
-            setVideoDeviceId={setVideoDeviceId}
-            audioDeviceId={audioDeviceId}
-            setAudioDeviceId={setAudioDeviceId}
-            liveMode={liveMode}
-            setLiveMode={setLiveMode}
-            micOn={micOn}
-            setMicOn={setMicOn}
-            speakerOn={speakerOn}
-            setSpeakerOn={setSpeakerOn}
-            screenShareMode={screenShareMode}
-            setScreenShareMode={setScreenShareMode}
-            videoShareMode={videoShareMode}
-            setVideoShareMode={setVideoShareMode}
-            collabWBOpen={collabWBOpen}
-            setCollabWBOpen={setCollabWBOpen}
-          />
-          <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
-        </div>
-        <div className="SingleRoom-3rd-column">
-          {screenShareMode && (
-            <ScreenShare roomId={roomId} userId={userId} nickname={nickname} />
-          )}
-          {videoShareMode && (
-            <VideoShare roomId={roomId} userId={userId} nickname={nickname} />
-          )}
-          {collabWBOpen && <CollabWhiteBoard roomId={roomId} />}
-        </div>
+    <div className="SingleRoom-container">
+      <div className="SingleRoom-1st-column">
+        <ControlPanel
+          liveMode={liveMode}
+          setLiveMode={setLiveMode}
+          micOn={micOn}
+          setMicOn={setMicOn}
+          speakerOn={speakerOn}
+          setSpeakerOn={setSpeakerOn}
+          secondColumnOpen={secondColumnOpen}
+          setSecondColumnOpen={setSecondColumnOpen}
+        />
+        <FaceImages
+          roomId={roomId}
+          userId={userId}
+          videoDeviceId={videoDeviceId}
+          audioDeviceId={audioDeviceId}
+          nickname={nickname}
+          statusMesg={`${emoji?.native || " "}${statusMesg}`}
+          liveMode={liveMode}
+          micOn={micOn}
+          speakerOn={speakerOn}
+        />
       </div>
-    </>
+      <div
+        className="SingleRoom-2nd-column"
+        style={{ display: secondColumnOpen ? "inherit" : "none" }}
+      >
+        <button
+          type="button"
+          className="SingleRoom-toggle-3rd-column"
+          onClick={() => setThirdColumnOpen((x) => !x)}
+          title={thirdColumnOpen ? "Close Right Pane" : "Open Right Pane"}
+        >
+          {thirdColumnOpen ? <>&#9664;</> : <>&#9654;</>}
+        </button>
+        <UserStatus
+          emoji={emoji}
+          setEmoji={setEmoji}
+          setStatusMesg={setStatusMesg}
+        />
+        <SettingPanel
+          roomId={roomId}
+          userId={userId}
+          nickname={nickname}
+          setNickname={setNickname}
+          videoDeviceId={videoDeviceId}
+          setVideoDeviceId={setVideoDeviceId}
+          audioDeviceId={audioDeviceId}
+          setAudioDeviceId={setAudioDeviceId}
+        />
+        <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
+      </div>
+      <div
+        className="SingleRoom-3rd-column"
+        style={{ display: thirdColumnOpen ? "inherit" : "none" }}
+      >
+        <TabPane roomId={roomId} userId={userId} nickname={nickname} />
+      </div>
+    </div>
   );
 });
 

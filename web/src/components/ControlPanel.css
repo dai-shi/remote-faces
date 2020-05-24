@@ -3,7 +3,7 @@
   width: 36px;
   height: 36px;
   overflow: hidden;
-  background-color: silver;
+  background-color: oldlace;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -17,9 +17,13 @@
   position: relative;
 }
 
+.ControlPanel-container button:focus {
+  outline:0;
+}
+
 .ControlPanel-disabled {
   position: absolute;
   top: 0;
-  left: 2px;
+  left: 2px; /* FIXME */
   opacity: 0.5;
 }
