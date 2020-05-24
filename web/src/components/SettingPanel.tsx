@@ -111,9 +111,8 @@ export const SettingPanel = React.memo<{
         {configOpen && (
           <div className="SettingPanel-config">
             <div>
-              Link to this room:
+              Room Link:
               <input value={window.location.href} readOnly />
-              (Share this link with your colleagues)
               <a href={appLink}>Open App</a>
             </div>
             <div>

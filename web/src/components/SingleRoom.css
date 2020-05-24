@@ -5,14 +5,20 @@
   grid-template-rows: 100vh;
 }
 
+.SingleRoom-1st-column {
+  overflow: scroll;
+}
+
 .SingleRoom-2nd-column {
   display: grid;
-  grid-template-columns: 240px;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto 1fr;
 }
 
 .SingleRoom-3rd-column {
+  display: none;
+  /*
   display: grid;
   row-gap: 5px;
   grid-template-rows: repeat(1fr);
+  */
 }

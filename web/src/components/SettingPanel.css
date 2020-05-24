@@ -1,17 +1,20 @@
 .SettingPanel-container {
+  -webkit-app-region: no-drag;
+  overflow: hidden;
+  margin-bottom: 0.2rem;
 }
 
 .SettingPanel-status {
   background-color: lightyellow;
-  font-size: 8px;
+  font-size: 0.5rem;
   font-family: sans-serif;
   word-break: break-all;
-  padding: 2px;
-  min-height: 15px;
+  padding: 0.1rem;
+  min-height: 1rem;
 }
 
 .SettingPanel-config {
-  font-size: 9px;
+  font-size: 0.5rem;
   margin: 2px;
   padding: 6px;
   border: 2px solid gray;
@@ -22,7 +25,10 @@
 .SettingPanel-config input,
 .SettingPanel-config select,
 .SettingPanel-config button {
-  font-size: 9px;
+  font-size: 0.5rem;
+}
+.SettingPanel-config form {
+  display: inline-block;
 }
 
 .SettingPanel-config-toggle {
@@ -30,6 +36,6 @@
   cursor: pointer;
   border: none;
   background: none;
-  padding: 3px;
+  padding: 0.1rem;
   color: gray;
 }
