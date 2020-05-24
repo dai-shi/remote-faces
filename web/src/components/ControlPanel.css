@@ -1,0 +1,25 @@
+.ControlPanel-container {
+  margin: 0 0 2px 0;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  background-color: silver;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.ControlPanel-container button {
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.ControlPanel-disabled {
+  position: absolute;
+  top: 0;
+  left: 2px;
+  opacity: 0.5;
+}

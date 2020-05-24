@@ -6,6 +6,7 @@ import { getStringItem } from "../utils/storage";
 import { useNicknameMap } from "../hooks/useNicknameMap";
 import { FaceImages } from "./FaceImages";
 import { MomentaryChat } from "./MomentaryChat";
+import { ControlPanel } from "./ControlPanel";
 import { SettingPanel } from "./SettingPanel";
 import { UserStatus } from "./UserStatus";
 import { EmojiDataType } from "../utils/emoji";
@@ -44,6 +45,14 @@ export const SingleRoom = React.memo<{
     <>
       <div className="SingleRoom-body">
         <div className="SingleRoom-1st-column">
+          <ControlPanel
+            liveMode={liveMode}
+            setLiveMode={setLiveMode}
+            micOn={micOn}
+            setMicOn={setMicOn}
+            speakerOn={speakerOn}
+            setSpeakerOn={setSpeakerOn}
+          />
           <FaceImages
             roomId={roomId}
             userId={userId}
