@@ -95,7 +95,7 @@ export const FaceImages = React.memo<{
     );
 
     return (
-      <div className="FaceImage-container">
+      <>
         <FaceImage
           image={myImage}
           nickname={nickname}
@@ -115,7 +115,7 @@ export const FaceImages = React.memo<{
             speakerOn={speakerOn}
           />
         ))}
-      </div>
+      </>
     );
   }
 );

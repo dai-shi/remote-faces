@@ -1,0 +1,231 @@
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+
+import "./SettingPanel.css";
+import { setStringItem, getStringItem } from "../utils/storage";
+import { useRoomNetworkStatus } from "../hooks/useRoom";
+import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
+
+const initialConfigOpen = getStringItem("config_hidden") !== "true";
+
+const appLink = `remote-faces://${window.location.href.replace(
+  /^https:\/\//,
+  ""
+)}`;
+
+const TextField = React.memo<{
+  initialText: string;
+  onUpdate: (text: string) => void;
+  buttonLabel?: string;
+  placeholder?: string;
+  clearOnUpdate?: boolean;
+}>(({ initialText, onUpdate, buttonLabel, placeholder, clearOnUpdate }) => {
+  const [text, setText] = useState(initialText);
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (text) {
+      onUpdate(text);
+      if (clearOnUpdate) {
+        setText("");
+      }
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit}>
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder={placeholder}
+      />
+      {buttonLabel && (
+        <button type="submit" disabled={!text}>
+          {buttonLabel}
+        </button>
+      )}
+    </form>
+  );
+});
+
+export const SettingPanel = React.memo<{
+  roomId: string;
+  userId: string;
+  nickname: string;
+  setNickname: Dispatch<SetStateAction<string>>;
+  videoDeviceId: string;
+  setVideoDeviceId: Dispatch<SetStateAction<string>>;
+  audioDeviceId: string;
+  setAudioDeviceId: Dispatch<SetStateAction<string>>;
+  liveMode: boolean;
+  setLiveMode: Dispatch<SetStateAction<boolean>>;
+  micOn: boolean;
+  setMicOn: Dispatch<SetStateAction<boolean>>;
+  speakerOn: boolean;
+  setSpeakerOn: Dispatch<SetStateAction<boolean>>;
+  screenShareMode: boolean;
+  setScreenShareMode: Dispatch<SetStateAction<boolean>>;
+  videoShareMode: boolean;
+  setVideoShareMode: Dispatch<SetStateAction<boolean>>;
+  collabWBOpen: boolean;
+  setCollabWBOpen: Dispatch<SetStateAction<boolean>>;
+}>(
+  ({
+    roomId,
+    userId,
+    nickname,
+    setNickname,
+    videoDeviceId,
+    setVideoDeviceId,
+    audioDeviceId,
+    setAudioDeviceId,
+    liveMode,
+    setLiveMode,
+    micOn,
+    setMicOn,
+    speakerOn,
+    setSpeakerOn,
+    screenShareMode,
+    setScreenShareMode,
+    videoShareMode,
+    setVideoShareMode,
+    collabWBOpen,
+    setCollabWBOpen,
+  }) => {
+    const [configOpen, setConfigOpen] = useState(initialConfigOpen);
+    useEffect(() => {
+      setStringItem("config_hidden", configOpen ? "false" : "true");
+    }, [configOpen]);
+
+    const videoDevices = useVideoDevices();
+    const audioDevices = useAudioDevices();
+    const networkStatus = useRoomNetworkStatus(roomId, userId);
+
+    return (
+      <div className="SettingPanel-container">
+        <button
+          type="button"
+          className="SettingPanel-config-toggle"
+          onClick={() => setConfigOpen((o) => !o)}
+        >
+          Setting{configOpen ? <>&#9660;</> : <>&#9654;</>}
+        </button>
+        {configOpen && (
+          <div className="SettingPanel-config">
+            <div>
+              Link to this room:
+              <input value={window.location.href} readOnly />
+              (Share this link with your colleagues)
+              <a href={appLink}>Open App</a>
+            </div>
+            <div>
+              Your Name:{" "}
+              <TextField
+                initialText={nickname}
+                onUpdate={(text) => {
+                  setNickname(text);
+                  setStringItem("nickname", text);
+                }}
+                placeholder="Enter your name"
+                buttonLabel="Set"
+              />
+            </div>
+            <div>
+              Select Camera:{" "}
+              <select
+                value={videoDeviceId}
+                onChange={(e) => {
+                  setVideoDeviceId(e.target.value);
+                  setStringItem("faceimage_video_device_id", e.target.value);
+                }}
+              >
+                {videoDevices.map((videoDevice) => (
+                  <option
+                    key={videoDevice.deviceId}
+                    value={videoDevice.deviceId}
+                  >
+                    {videoDevice.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              Select Mic:{" "}
+              <select
+                value={audioDeviceId}
+                onChange={(e) => {
+                  setAudioDeviceId(e.target.value);
+                  setStringItem("faceimage_audio_device_id", e.target.value);
+                }}
+              >
+                {audioDevices.map((audioDevice) => (
+                  <option
+                    key={audioDevice.deviceId}
+                    value={audioDevice.deviceId}
+                  >
+                    {audioDevice.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              Live Mode:{" "}
+              <button type="button" onClick={() => setLiveMode((x) => !x)}>
+                {liveMode ? "Disable" : "Enable"}
+              </button>
+              {liveMode && <>&#10004;</>}
+              {liveMode && (
+                <div>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={micOn}
+                      onChange={(e) => setMicOn(e.target.checked)}
+                    />
+                    Mic On
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={speakerOn}
+                      onChange={(e) => setSpeakerOn(e.target.checked)}
+                    />
+                    Speaker On
+                  </label>
+                </div>
+              )}
+            </div>
+            <div>
+              Screen Share:{" "}
+              <button
+                type="button"
+                onClick={() => setScreenShareMode((x) => !x)}
+              >
+                {screenShareMode ? "Close" : "Open"}
+              </button>
+              {screenShareMode && <>&#10004;</>}
+            </div>
+            <div>
+              Video Share:{" "}
+              <button
+                type="button"
+                onClick={() => setVideoShareMode((x) => !x)}
+              >
+                {videoShareMode ? "Close" : "Open"}
+              </button>
+              {videoShareMode && <>&#10004;</>}
+            </div>
+            <div>
+              Collab White Board:{" "}
+              <button type="button" onClick={() => setCollabWBOpen((x) => !x)}>
+                {collabWBOpen ? "Close" : "Open"}
+              </button>
+              {collabWBOpen && <>&#10004;</>}
+            </div>
+            <div className="SettingPanel-status">
+              {JSON.stringify(networkStatus)}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+);
