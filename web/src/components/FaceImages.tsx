@@ -39,7 +39,12 @@ const FaceImage = React.memo<{
         />
       )}
       <div className="FaceImages-name">{nickname}</div>
-      <div className="FaceImages-mesg">{statusMesg}</div>
+      <div
+        className="FaceImages-mesg"
+        title={[...statusMesg][1] ? statusMesg : "Enter status message"}
+      >
+        {[...statusMesg][0]}
+      </div>
       {liveMode && !obsoleted && stream && (
         <div className="FaceImages-live-indicator" title="Live Mode On">
           &#9673;
@@ -95,7 +100,7 @@ export const FaceImages = React.memo<{
     );
 
     return (
-      <div className="FaceImage-container">
+      <>
         <FaceImage
           image={myImage}
           nickname={nickname}
@@ -115,7 +120,7 @@ export const FaceImages = React.memo<{
             speakerOn={speakerOn}
           />
         ))}
-      </div>
+      </>
     );
   }
 );

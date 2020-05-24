@@ -2,21 +2,17 @@ import React, { useEffect, useState } from "react";
 
 import "./SingleRoom.css";
 import { setRoomIdToUrl } from "../utils/url";
-import { setStringItem, getStringItem } from "../utils/storage";
-import { useRoomNetworkStatus } from "../hooks/useRoom";
+import { getStringItem } from "../utils/storage";
 import { useNicknameMap } from "../hooks/useNicknameMap";
-import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import { FaceImages } from "./FaceImages";
 import { MomentaryChat } from "./MomentaryChat";
-import { UserProfile } from "./UserProfile";
+import { ControlPanel } from "./ControlPanel";
+import { SettingPanel } from "./SettingPanel";
+import { UserStatus } from "./UserStatus";
+import { TabPane } from "./TabPane";
 import { EmojiDataType } from "../utils/emoji";
 
-const ScreenShare = React.lazy(() => import("./ScreenShare"));
-const VideoShare = React.lazy(() => import("./VideoShare"));
-const CollabWhiteBoard = React.lazy(() => import("./CollabWhiteBoard"));
-
 const initialNickname = getStringItem("nickname");
-const initialConfigOpen = getStringItem("config_hidden") !== "true";
 const initialVideoDeviceId = getStringItem("faceimage_video_device_id");
 const initialAudioDeviceId = getStringItem("faceimage_audio_device_id");
 
@@ -31,195 +27,77 @@ export const SingleRoom = React.memo<{
     setRoomIdToUrl(roomId);
   }, [roomId]);
 
-  const videoDevices = useVideoDevices();
-  const audioDevices = useAudioDevices();
   const [videoDeviceId, setVideoDeviceId] = useState(initialVideoDeviceId);
   const [audioDeviceId, setAudioDeviceId] = useState(initialAudioDeviceId);
   const [liveMode, setLiveMode] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(false);
-  const [screenShareMode, setScreenShareMode] = useState(false);
-  const [videoShareMode, setVideoShareMode] = useState(false);
-  const [collabWBOpen, setCollabWBOpen] = useState(false);
+  const [secondColumnOpen, setSecondColumnOpen] = useState(true);
+  const [thirdColumnOpen, setThirdColumnOpen] = useState(true);
 
-  const [configOpen, setConfigOpen] = useState(initialConfigOpen);
-  useEffect(() => {
-    setStringItem("config_hidden", configOpen ? "false" : "true");
-  }, [configOpen]);
-
-  const networkStatus = useRoomNetworkStatus(roomId, userId);
   useNicknameMap(roomId, userId); // to enable caching
 
-  const appLink = `remote-faces://${window.location.href.replace(
-    /^https:\/\//,
-    ""
-  )}`;
-
   return (
-    <>
-      <div className="SingleRoom-body">
+    <div className="SingleRoom-container">
+      <div className="SingleRoom-1st-column">
+        <ControlPanel
+          liveMode={liveMode}
+          setLiveMode={setLiveMode}
+          micOn={micOn}
+          setMicOn={setMicOn}
+          speakerOn={speakerOn}
+          setSpeakerOn={setSpeakerOn}
+          secondColumnOpen={secondColumnOpen}
+          setSecondColumnOpen={setSecondColumnOpen}
+        />
         <FaceImages
           roomId={roomId}
           userId={userId}
           videoDeviceId={videoDeviceId}
           audioDeviceId={audioDeviceId}
           nickname={nickname}
-          statusMesg={`${emoji?.native || ""}${statusMesg}`}
+          statusMesg={`${emoji?.native || " "}${statusMesg}`}
           liveMode={liveMode}
           micOn={micOn}
           speakerOn={speakerOn}
         />
-        <div className="SingleRoom-2nd-column">
-          <UserProfile
-            initialNickname={initialNickname}
-            emoji={emoji}
-            onUpdateNickname={(text) => {
-              setNickname(text);
-              setStringItem("nickname", text);
-            }}
-            onUpdateStatusMesg={(text) => {
-              setStatusMesg(text);
-            }}
-            onUpdateEmoji={(e) => {
-              setEmoji(e);
-            }}
-          />
-          <div>
-            <button
-              type="button"
-              className="SingleRoom-config-toggle"
-              onClick={() => setConfigOpen((o) => !o)}
-            >
-              Setting{configOpen ? <>&#9660;</> : <>&#9654;</>}
-            </button>
-            {configOpen && (
-              <div className="SingleRoom-config">
-                <div>
-                  Link to this room:
-                  <input value={window.location.href} readOnly />
-                  (Share this link with your colleagues)
-                  <a href={appLink}>Open App</a>
-                </div>
-                <div>
-                  Select Camera:{" "}
-                  <select
-                    value={videoDeviceId}
-                    onChange={(e) => {
-                      setVideoDeviceId(e.target.value);
-                      setStringItem(
-                        "faceimage_video_device_id",
-                        e.target.value
-                      );
-                    }}
-                  >
-                    {videoDevices.map((videoDevice) => (
-                      <option
-                        key={videoDevice.deviceId}
-                        value={videoDevice.deviceId}
-                      >
-                        {videoDevice.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  Select Mic:{" "}
-                  <select
-                    value={audioDeviceId}
-                    onChange={(e) => {
-                      setAudioDeviceId(e.target.value);
-                      setStringItem(
-                        "faceimage_audio_device_id",
-                        e.target.value
-                      );
-                    }}
-                  >
-                    {audioDevices.map((audioDevice) => (
-                      <option
-                        key={audioDevice.deviceId}
-                        value={audioDevice.deviceId}
-                      >
-                        {audioDevice.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  Live Mode:{" "}
-                  <button type="button" onClick={() => setLiveMode((x) => !x)}>
-                    {liveMode ? "Disable" : "Enable"}
-                  </button>
-                  {liveMode && <>&#10004;</>}
-                  {liveMode && (
-                    <div>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={micOn}
-                          onChange={(e) => setMicOn(e.target.checked)}
-                        />
-                        Mic On
-                      </label>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={speakerOn}
-                          onChange={(e) => setSpeakerOn(e.target.checked)}
-                        />
-                        Speaker On
-                      </label>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  Screen Share:{" "}
-                  <button
-                    type="button"
-                    onClick={() => setScreenShareMode((x) => !x)}
-                  >
-                    {screenShareMode ? "Close" : "Open"}
-                  </button>
-                  {screenShareMode && <>&#10004;</>}
-                </div>
-                <div>
-                  Video Share:{" "}
-                  <button
-                    type="button"
-                    onClick={() => setVideoShareMode((x) => !x)}
-                  >
-                    {videoShareMode ? "Close" : "Open"}
-                  </button>
-                  {videoShareMode && <>&#10004;</>}
-                </div>
-                <div>
-                  Collab White Board:{" "}
-                  <button
-                    type="button"
-                    onClick={() => setCollabWBOpen((x) => !x)}
-                  >
-                    {collabWBOpen ? "Close" : "Open"}
-                  </button>
-                  {collabWBOpen && <>&#10004;</>}
-                </div>
-                <div className="SingleRoom-status">
-                  {JSON.stringify(networkStatus)}
-                </div>
-              </div>
-            )}
-          </div>
-          <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
-        </div>
-        <div className="SingleRoom-3rd-column">
-          {screenShareMode && (
-            <ScreenShare roomId={roomId} userId={userId} nickname={nickname} />
-          )}
-          {videoShareMode && (
-            <VideoShare roomId={roomId} userId={userId} nickname={nickname} />
-          )}
-          {collabWBOpen && <CollabWhiteBoard roomId={roomId} />}
-        </div>
       </div>
-    </>
+      <div
+        className="SingleRoom-2nd-column"
+        style={{ width: secondColumnOpen ? "inherit" : "0" }}
+      >
+        <button
+          type="button"
+          className="SingleRoom-toggle-3rd-column"
+          onClick={() => setThirdColumnOpen((x) => !x)}
+          title={thirdColumnOpen ? "Close Right Pane" : "Open Right Pane"}
+        >
+          {thirdColumnOpen ? <>&#9664;</> : <>&#9654;</>}
+        </button>
+        <UserStatus
+          emoji={emoji}
+          setEmoji={setEmoji}
+          setStatusMesg={setStatusMesg}
+        />
+        <SettingPanel
+          roomId={roomId}
+          userId={userId}
+          nickname={nickname}
+          setNickname={setNickname}
+          videoDeviceId={videoDeviceId}
+          setVideoDeviceId={setVideoDeviceId}
+          audioDeviceId={audioDeviceId}
+          setAudioDeviceId={setAudioDeviceId}
+        />
+        <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
+      </div>
+      <div
+        className="SingleRoom-3rd-column"
+        style={{ display: thirdColumnOpen ? "inherit" : "none" }}
+      >
+        <TabPane roomId={roomId} userId={userId} nickname={nickname} />
+      </div>
+    </div>
   );
 });
 

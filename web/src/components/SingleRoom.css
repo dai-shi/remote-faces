@@ -1,51 +1,35 @@
-.SingleRoom-status {
-  background-color: lightyellow;
-  font-size: 8px;
-  font-family: sans-serif;
-  word-break: break-all;
-  padding: 2px;
-  min-height: 15px;
-}
-
-.SingleRoom-config {
-  font-size: 9px;
-  margin: 2px;
-  padding: 6px;
-  border: 2px solid gray;
-  border-radius: 4px;
-  overflow: hidden;
-  background-color: lightgray;
-}
-.SingleRoom-config input,
-.SingleRoom-config select,
-.SingleRoom-config button {
-  font-size: 9px;
-}
-
-.SingleRoom-config-toggle {
-  text-align: left;
-  cursor: pointer;
-  border: none;
-  background: none;
-  padding: 3px;
-  color: gray;
-}
-
-.SingleRoom-body {
+.SingleRoom-container {
   display: grid;
   column-gap: 3px;
-  grid-template-columns: 36px 240px 1fr;
+  grid-template-columns: 36px auto 1fr;
   grid-template-rows: 100vh;
+}
+
+.SingleRoom-1st-column {
+  overflow: scroll;
 }
 
 .SingleRoom-2nd-column {
   display: grid;
   grid-template-columns: 240px;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  position: relative;
 }
 
 .SingleRoom-3rd-column {
-  display: grid;
-  row-gap: 5px;
-  grid-template-rows: repeat(1fr);
+}
+
+.SingleRoom-toggle-3rd-column {
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.SingleRoom-toggle-3rd-column:focus {
+  outline:0;
 }

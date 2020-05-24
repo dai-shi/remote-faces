@@ -25,3 +25,9 @@
     animation: GitHubCorner-octocat-wave 560ms ease-in-out;
   }
 }
+
+@media (max-width: 300px) {
+  .GitHubCorner-container {
+    display: none;
+  }
+}

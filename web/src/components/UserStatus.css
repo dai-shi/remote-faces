@@ -1,8 +1,8 @@
-.UserProfile-container {
+.UserStatus-container {
   -webkit-app-region: no-drag;
   overflow: hidden;
 }
 
-.UserProfile-status-area {
+.UserStatus-status-area {
   display: flex;
 }

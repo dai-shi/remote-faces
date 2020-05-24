@@ -1,29 +1,33 @@
 .MomentaryChat-container {
   -webkit-app-region: no-drag;
-  margin-top: 5px;
-  border-top: solid 0.1px #bbb;
   overflow: hidden;
   display: grid;
-  grid-template-rows: 3fr auto;
+  grid-template-rows: 1fr auto;
 }
 
 .MomentaryChat-editor {
   border: 1px solid lightgray;
   border-radius: 3px;
-  overflow-x: scroll;
+  overflow: scroll;
 }
 
 .MomentaryChat-list {
   list-style: none;
+  margin: 0;
   padding-inline-start: 0;
   display: flex;
   flex-direction: column-reverse;
-  overflow-y: scroll;
+  overflow: scroll;
 }
 
 .MomentaryChat-text {
   word-break: break-all;
-  overflow-x: scroll;
+  overflow: scroll;
+}
+
+.MomentaryChat-text p,
+.MomentaryChat-editor p {
+  margin: 0;
 }
 
 .MomentaryChat-listPart:hover {
@@ -31,19 +35,19 @@
 }
 
 .MomentaryChat-nickname {
-  font-size: 14px;
+  font-size: 0.7rem;
   font-weight: bold;
 }
 
 .MomentaryChat-time {
   color: grey;
-  margin-left: 10px;
-  font-size: 12px;
+  margin-left: 1rem;
+  font-size: 0.5rem;
 }
 
 .MomentaryChat-iconButton-container {
   position: absolute;
-  right: 0;
+  right: 0.1rem;
 }
 
 .MomentaryChat-iconButton {
@@ -51,7 +55,8 @@
 }
 
 .MomentaryChat-listPart {
-  margin: 5px 0;
+  border-top: solid 1px #eee;
+  padding-bottom: 0.2rem;
 }
 
 .MomentaryChat-listPart:hover .MomentaryChat-iconButton {
@@ -60,17 +65,17 @@
 
 .MomentaryChat-listPart-header {
   position: relative;
-  margin-bottom: 5px;
 }
 
 .MomentaryChat-icon {
   background-color: #eee;
-  border-radius: 35px;
-  width: 35px;
-  font-size: 10px;
-  padding: 2px 1px;
+  border-radius: 1rem;
+  width: 2.4rem;
+  font-size: 0.5rem;
+  padding: 0.1rem;
+  margin-top: 0.1rem;
+  margin-right: 0.1rem;
   text-align: center;
-  margin: 2px;
   display: inline-block;
 }
 
