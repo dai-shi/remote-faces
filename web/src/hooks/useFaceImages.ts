@@ -14,6 +14,8 @@ type FaceInfo = {
   nickname: string;
   message: string;
   liveMode: boolean;
+  micOn: boolean;
+  speakerOn: boolean;
 };
 type ImageData = {
   image: ImageUrl;
@@ -43,6 +45,8 @@ export const useFaceImages = (
   nickname: string,
   statusMesg: string,
   liveMode: boolean,
+  micOn: boolean,
+  speakerOn: boolean,
   deviceId?: string
 ) => {
   const [myImage, setMyImage] = useState<ImageUrl>();
@@ -138,7 +142,13 @@ export const useFaceImages = (
         checkObsoletedImage();
         const image = await takePhoto(deviceId);
         setMyImage(image);
-        const info: FaceInfo = { nickname, message: statusMesg, liveMode };
+        const info: FaceInfo = {
+          nickname,
+          message: statusMesg,
+          liveMode,
+          micOn,
+          speakerOn,
+        };
         const data: ImageData = {
           image,
           info,
@@ -154,7 +164,17 @@ export const useFaceImages = (
     return () => {
       clearTimeout(timer);
     };
-  }, [roomId, userId, deviceId, nickname, statusMesg, liveMode, broadcastData]);
+  }, [
+    roomId,
+    userId,
+    deviceId,
+    nickname,
+    statusMesg,
+    liveMode,
+    micOn,
+    speakerOn,
+    broadcastData,
+  ]);
 
   return {
     myImage,
