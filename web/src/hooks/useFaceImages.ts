@@ -142,7 +142,13 @@ export const useFaceImages = (
         checkObsoletedImage();
         const image = await takePhoto(deviceId);
         setMyImage(image);
-        const info: FaceInfo = { nickname, message: statusMesg, liveMode, micOn, speakerOn };
+        const info: FaceInfo = {
+          nickname,
+          message: statusMesg,
+          liveMode,
+          micOn,
+          speakerOn,
+        };
         const data: ImageData = {
           image,
           info,
@@ -158,7 +164,17 @@ export const useFaceImages = (
     return () => {
       clearTimeout(timer);
     };
-  }, [roomId, userId, deviceId, nickname, statusMesg, liveMode, micOn, speakerOn, broadcastData]);
+  }, [
+    roomId,
+    userId,
+    deviceId,
+    nickname,
+    statusMesg,
+    liveMode,
+    micOn,
+    speakerOn,
+    broadcastData,
+  ]);
 
   return {
     myImage,

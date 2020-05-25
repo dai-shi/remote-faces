@@ -18,7 +18,17 @@ const FaceImage = React.memo<{
   micOn?: boolean;
   speakerOn?: boolean;
 }>(
-  ({ image, nickname, statusMesg, obsoleted, liveMode, stream, mySpeakerOn, micOn, speakerOn }) => (
+  ({
+    image,
+    nickname,
+    statusMesg,
+    obsoleted,
+    liveMode,
+    stream,
+    mySpeakerOn,
+    micOn,
+    speakerOn,
+  }) => (
     <div className="FaceImages-card" style={{ opacity: obsoleted ? 0.2 : 1 }}>
       {liveMode && !obsoleted && stream ? (
         <video
