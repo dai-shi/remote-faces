@@ -14,9 +14,11 @@ const FaceImage = React.memo<{
   obsoleted?: boolean;
   liveMode?: boolean;
   stream?: MediaStream;
+  mySpeakerOn?: boolean;
+  micOn?: boolean;
   speakerOn?: boolean;
 }>(
-  ({ image, nickname, statusMesg, obsoleted, liveMode, stream, speakerOn }) => (
+  ({ image, nickname, statusMesg, obsoleted, liveMode, stream, mySpeakerOn, micOn, speakerOn }) => (
     <div className="FaceImages-card" style={{ opacity: obsoleted ? 0.2 : 1 }}>
       {liveMode && !obsoleted && stream ? (
         <video
@@ -29,7 +31,7 @@ const FaceImage = React.memo<{
           }}
           autoPlay
           playsInline
-          muted={!speakerOn}
+          muted={!mySpeakerOn}
         />
       ) : (
         <img
@@ -53,6 +55,16 @@ const FaceImage = React.memo<{
       {liveMode && !obsoleted && !stream && (
         <div className="FaceImages-live-indicator" title="Live Mode Available">
           &#9678;
+        </div>
+      )}
+      {micOn && (
+        <div className="FaceImages-mic-indicator" title="Mic On">
+          <>&#x1F3A4;</>
+        </div>
+      )}
+      {speakerOn && (
+        <div className="FaceImages-speaker-indicator" title="Speaker On">
+          <>&#x1F508;</>
         </div>
       )}
     </div>
@@ -87,6 +99,8 @@ export const FaceImages = React.memo<{
       nickname,
       statusMesg,
       liveMode,
+      micOn,
+      speakerOn,
       videoDeviceId
     );
     const { faceStream, faceStreamMap } = useFaceVideos(
@@ -117,7 +131,9 @@ export const FaceImages = React.memo<{
             obsoleted={item.obsoleted}
             liveMode={item.info.liveMode}
             stream={(liveMode && faceStreamMap[item.userId]) || undefined}
-            speakerOn={speakerOn}
+            mySpeakerOn={speakerOn}
+            micOn={item.info.micOn}
+            speakerOn={item.info.speakerOn}
           />
         ))}
       </>
