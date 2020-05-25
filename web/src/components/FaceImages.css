@@ -46,26 +46,17 @@
   animation: FaceImagesBlink 1.5s infinite;
 }
 
-.FaceImages-mic-indicator {
+@keyframes FaceImagesBlink {
+   0% { opacity: 0 }
+  50% { opacity: 1 }
+ 100% { opacity: 0 }
+}
+
+.FaceImages-mic-speaker-icons {
   position: absolute;
   bottom: 1px;
   right: 1px;
   font-size: 0.5rem;
   line-height: 0.5rem;
   cursor: default;
-}
-
-.FaceImages-speaker-indicator {
-  position: absolute;
-  bottom: 1px;
-  right: 10px;
-  font-size: 0.5rem;
-  line-height: 0.5rem;
-  cursor: default;
-}
-
-@keyframes FaceImagesBlink {
-   0% { opacity: 0 }
-  50% { opacity: 1 }
- 100% { opacity: 0 }
 }

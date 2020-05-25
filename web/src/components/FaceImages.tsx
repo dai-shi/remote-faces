@@ -12,9 +12,9 @@ const FaceImage = React.memo<{
   nickname: string;
   statusMesg: string;
   obsoleted?: boolean;
-  liveMode?: boolean;
+  liveMode: boolean;
   stream?: MediaStream;
-  mySpeakerOn?: boolean;
+  muted: boolean;
   micOn?: boolean;
   speakerOn?: boolean;
 }>(
@@ -25,7 +25,7 @@ const FaceImage = React.memo<{
     obsoleted,
     liveMode,
     stream,
-    mySpeakerOn,
+    muted,
     micOn,
     speakerOn,
   }) => (
@@ -41,7 +41,7 @@ const FaceImage = React.memo<{
           }}
           autoPlay
           playsInline
-          muted={!mySpeakerOn}
+          muted={muted}
         />
       ) : (
         <img
@@ -67,14 +67,10 @@ const FaceImage = React.memo<{
           &#9678;
         </div>
       )}
-      {micOn && (
-        <div className="FaceImages-mic-indicator" title="Mic On">
-          <>&#x1F3A4;</>
-        </div>
-      )}
-      {speakerOn && (
-        <div className="FaceImages-speaker-indicator" title="Speaker On">
-          <>&#x1F508;</>
+      {liveMode && !obsoleted && (
+        <div className="FaceImages-mic-speaker-icons">
+          {micOn && <span title="Mic On">&#x1F3A4;</span>}
+          {speakerOn && <span title="Speaker On">&#x1F508;</span>}
         </div>
       )}
     </div>
@@ -131,6 +127,7 @@ export const FaceImages = React.memo<{
           statusMesg={statusMesg}
           liveMode={liveMode}
           stream={faceStream || undefined}
+          muted
         />
         {roomImages.map((item) => (
           <FaceImage
@@ -141,7 +138,7 @@ export const FaceImages = React.memo<{
             obsoleted={item.obsoleted}
             liveMode={item.info.liveMode}
             stream={(liveMode && faceStreamMap[item.userId]) || undefined}
-            mySpeakerOn={speakerOn}
+            muted={!speakerOn}
             micOn={item.info.micOn}
             speakerOn={item.info.speakerOn}
           />
