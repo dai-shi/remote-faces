@@ -12,7 +12,7 @@
 .SingleRoom-2nd-column {
   display: grid;
   grid-template-columns: 240px;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   overflow: hidden;
   position: relative;
 }

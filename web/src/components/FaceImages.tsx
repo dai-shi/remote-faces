@@ -53,7 +53,7 @@ const FaceImage = React.memo<{
       <div className="FaceImages-name">{nickname}</div>
       <div
         className="FaceImages-mesg"
-        title={[...statusMesg][1] ? statusMesg : "Enter status message"}
+        title={[...statusMesg][1] ? statusMesg : "(No status message)"}
       >
         {[...statusMesg][0]}
       </div>
