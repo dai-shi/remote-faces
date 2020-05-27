@@ -1,0 +1,1 @@
+{"version":3,"sources":["Landing.css"],"names":[],"mappings":"AAAA,mBACE,YAAa,CACb,sBACF,CAEA,uBACE,WACF","file":"6.d0878d05.chunk.css","sourcesContent":[".Landing-container {\n  display: flex;\n  justify-content: center;\n}\n\n.Landing-container img {\n  height: 50vh;\n}\n"]}
