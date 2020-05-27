@@ -3,7 +3,11 @@ import React, { useState } from "react";
 import "./SingleRoomEntrance.css";
 import { secureRandomId, generateCryptoKey } from "../utils/crypto";
 import { ROOM_ID_PREFIX_LEN } from "../network/peerUtils";
-import { getRoomIdFromUrl, extractRoomIdFromLink } from "../utils/url";
+import {
+  getRoomIdFromUrl,
+  extractRoomIdFromLink,
+  copyHashFromLink,
+} from "../utils/url";
 
 const Landing = React.lazy(() => import("./Landing"));
 const SingleRoom = React.lazy(() => import("./SingleRoom"));
@@ -23,6 +27,7 @@ export const SingleRoomEntrance = React.memo(() => {
   };
 
   const onEnter = () => {
+    copyHashFromLink(linkText);
     setRoomId(extractRoomIdFromLink(linkText));
   };
 
