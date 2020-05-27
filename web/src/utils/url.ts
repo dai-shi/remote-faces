@@ -1,3 +1,18 @@
+export const copyHashFromLink = (link: string) => {
+  try {
+    const srcHash = new URL(link).hash.slice(1);
+    const srcSearchParams = new URLSearchParams(srcHash);
+    const dstHash = window.location.hash.slice(1);
+    const dstSearchParams = new URLSearchParams(dstHash);
+    srcSearchParams.forEach((value, key) => {
+      dstSearchParams.set(key, value);
+    });
+    window.location.hash = dstSearchParams.toString();
+  } catch (e) {
+    // ignore
+  }
+};
+
 export const extractRoomIdFromLink = (link: string) => {
   try {
     const hash = new URL(link).hash.slice(1);
