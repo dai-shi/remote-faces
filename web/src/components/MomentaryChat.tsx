@@ -27,6 +27,7 @@ const MomentaryChatContentPart = React.memo<{
             reply(e.native);
             setOpenEmojiPicker(false);
           }}
+          style={{ width: '100%' }}
         />
       )}
       <div className="MomentaryChat-listPart-header">
