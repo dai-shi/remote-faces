@@ -1,11 +1,12 @@
-name: CI
+name: CD
 
 on:
   push:
-  pull_request:
+    branches:
+      - master
 
 jobs:
-  test:
+  deploy_web:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -27,8 +28,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      - name: Install dependencies
-        run: yarn install
+      - name: Install dependencies (web)
+        run: (cd web; yarn install)
 
-      - name: Test
-        run: yarn test
+      - name: Test (web)
+        run: (cd web; yarn test)
+
+      - name: Copy to dist (web)
+        run: |
+          (cd web; CI=false yarn build)
+          mkdir -p web/dist/d
+          cp -r web/build web/dist/d/`date '+%Y-%m-%d'`
+
+      - name: Deploy (web)
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./web/dist
+          keep_files: true
