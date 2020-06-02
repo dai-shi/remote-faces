@@ -136,8 +136,10 @@ export const useFaceImages = (
         return changed ? next : prev;
       });
     };
+    let didCleanup = false;
     let timer: NodeJS.Timeout;
     const loop = async () => {
+      if (didCleanup) return;
       try {
         checkObsoletedImage();
         const image = await takePhoto(deviceId);
@@ -162,6 +164,7 @@ export const useFaceImages = (
     };
     loop();
     return () => {
+      didCleanup = true;
       clearTimeout(timer);
     };
   }, [
