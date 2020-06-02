@@ -143,6 +143,7 @@ export const useFaceImages = (
       try {
         checkObsoletedImage();
         const image = await takePhoto(deviceId);
+        if (didCleanup) return;
         setMyImage(image);
         const info: FaceInfo = {
           nickname,
