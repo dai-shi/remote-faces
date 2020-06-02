@@ -1,0 +1,2 @@
+(this["webpackJsonpremote-faces-web"]=this["webpackJsonpremote-faces-web"]||[]).push([[9],{104:function(e,t,n){"use strict";n.r(t),n.d(t,"Welcome",(function(){return o}));var c=n(0),a=n.n(c),o=a.a.memo((function(){return a.a.createElement("div",null,a.a.createElement("h1",null,"Welcome to Remote Faces!"))}));t.default=o}}]);
+//# sourceMappingURL=9.9ec88341.chunk.js.map
