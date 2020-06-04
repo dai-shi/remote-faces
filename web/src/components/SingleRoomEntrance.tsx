@@ -37,43 +37,44 @@ export const SingleRoomEntrance = React.memo(() => {
 
   return (
     <div className="SingleRoomEntrance-container">
-      <Landing />
-      <div className="SingleRoomEntrance-input">
-        {!linkShown && (
-          <>
+      <Landing>
+        <div className="SingleRoomEntrance-input">
+          {!linkShown && (
+            <>
+              <div>
+                <button type="button" onClick={onCreateNew}>
+                  Create a new room
+                </button>
+              </div>
+              <div className="SingleRoomEntrance-or">OR</div>
+              <div>
+                <button type="button" onClick={() => setLinkShown(true)}>
+                  Enter an existing room link
+                </button>
+              </div>
+            </>
+          )}
+          {linkShown && (
             <div>
-              <button type="button" onClick={onCreateNew}>
-                Create a new room
+              <input
+                value={linkText}
+                onChange={(e) => setLinkText(e.target.value)}
+                placeholder="Enter room link..."
+              />
+              <button
+                type="button"
+                onClick={onEnter}
+                disabled={!extractRoomIdFromLink(linkText)}
+              >
+                Enter room
+              </button>
+              <button type="button" onClick={() => setLinkShown(false)}>
+                Cancel
               </button>
             </div>
-            <div>OR</div>
-            <div>
-              <button type="button" onClick={() => setLinkShown(true)}>
-                Enter an existing room link
-              </button>
-            </div>
-          </>
-        )}
-        {linkShown && (
-          <div>
-            <input
-              value={linkText}
-              onChange={(e) => setLinkText(e.target.value)}
-              placeholder="Enter room link..."
-            />
-            <button
-              type="button"
-              onClick={onEnter}
-              disabled={!extractRoomIdFromLink(linkText)}
-            >
-              Enter room
-            </button>
-            <button type="button" onClick={() => setLinkShown(false)}>
-              Cancel
-            </button>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </Landing>
     </div>
   );
 });

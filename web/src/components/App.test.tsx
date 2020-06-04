@@ -6,6 +6,6 @@ jest.mock("../utils/crypto");
 
 test("renders App", () => {
   const { getByText } = render(<App />);
-  const linkElement = getByText(/Create a new room/i);
-  expect(linkElement).toBeInTheDocument();
+  const element = getByText(/Loading|Create a new room/i);
+  expect(element).toBeInTheDocument();
 });
