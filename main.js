@@ -351,11 +351,11 @@ const initParams = () => new Promise((resolve) => {
 const main = async () => {
   if (!params.roomid || !params.myself) {
     fetch('https://api.github.com/repos/dai-shi/remote-faces/git/trees/gh-pages')
-      .then(res => res.json())
-      .then(json => json.tree.find(x => x.path === 'd').url)
-      .then(url => fetch(url))
-      .then(res => res.json())
-      .then(json => {
+      .then((res) => res.json())
+      .then((json) => json.tree.find(x => x.path === 'd').url)
+      .then((url) => fetch(url))
+      .then((res) => res.json())
+      .then((json) => {
         const url = 'https://remote-faces.js.org/d/' + json.tree.pop().path + '/';
         window.location.href = url;
       });
