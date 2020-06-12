@@ -391,6 +391,7 @@ export const createRoom = (
               mediaTypes: connMap.getMediaTypes(conn),
             };
             conn.peerConnection.getReceivers().forEach((receiver) => {
+              if (receiver.track.readyState !== "live") return;
               receiveTrack(
                 setupTrackStopOnLongMute(receiver.track, conn.peerConnection),
                 info
