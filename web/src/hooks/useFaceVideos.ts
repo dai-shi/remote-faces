@@ -7,7 +7,7 @@ import { useRoomMedia } from "./useRoom";
 const addTrackToStream = (
   track: MediaStreamTrack,
   stream: MediaStream | null,
-  disposeStream: () => void
+  disposeStream: (s: MediaStream) => void
 ) => {
   const newStream = stream || new MediaStream();
   newStream.addTrack(track);
@@ -15,7 +15,7 @@ const addTrackToStream = (
   track.addEventListener("ended", () => {
     newStream.removeTrack(track);
     if (newStream.getTracks().length === 0) {
-      disposeStream();
+      disposeStream(newStream);
     }
   });
   return newStream;
@@ -37,18 +37,23 @@ export const useFaceVideos = (
 
   const isMounted = useRef(true);
   useEffect(() => {
-    isMounted.current = false;
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   const onTrack = useCallback(async (track, info) => {
     if (track.kind === "video" && !(await isVideoTrackFaceSize(track))) {
       return;
     }
-    const disposeStream = () => {
+    const disposeStream = (s: MediaStream) => {
       if (isMounted.current) {
         setFaceStreamMap((prev) => {
-          const { [info.userId]: _, ...rest } = prev;
-          return rest;
+          const { [info.userId]: oldStream, ...rest } = prev;
+          if (oldStream === s) {
+            return rest;
+          }
+          return prev;
         });
       }
     };
@@ -92,9 +97,9 @@ export const useFaceVideos = (
         } = await getFaceVideoStream(videoDeviceId);
         const [videoTrack] = videoStream.getVideoTracks();
         addVideoTrack(videoTrack);
-        const disposeStream = () => {
+        const disposeStream = (s: MediaStream) => {
           if (isMounted.current) {
-            setFaceStream(null);
+            setFaceStream((prev) => (prev === s ? null : prev));
           }
         };
         setFaceStream((prev) =>
@@ -123,9 +128,9 @@ export const useFaceVideos = (
         } = await getAudioStream(audioDeviceId);
         const [audioTrack] = audioStream.getAudioTracks();
         addAudioTrack(audioTrack);
-        const disposeStream = () => {
+        const disposeStream = (s: MediaStream) => {
           if (isMounted.current) {
-            setFaceStream(null);
+            setFaceStream((prev) => (prev === s ? null : prev));
           }
         };
         setFaceStream((prev) =>
