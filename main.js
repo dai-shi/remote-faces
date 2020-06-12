@@ -357,7 +357,9 @@ const main = async () => {
       .then((res) => res.json())
       .then((json) => {
         const url = 'https://remote-faces.js.org/d/' + json.tree.pop().path + '/';
-        window.location.href = url;
+        setTimeout(() => {
+          window.location.href = url;
+        }, 2000);
       });
     return;
     // await initParams();
@@ -371,4 +373,4 @@ const main = async () => {
 };
 
 window.onload = main;
-document.title = 'Remote Faces (r86)';
+// document.title = 'Remote Faces (r86)';
