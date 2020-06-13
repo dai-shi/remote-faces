@@ -6,19 +6,14 @@ A small app to share webcam still images periodically
 
 ## Motivation
 
-Nowadays, quite a few people work from home.
-Tools for instant messaging and video conferencing
-allow the remote working style.
+Working from home is a working style that has existed
+and is usual nowadays.
+Tools such as instant messaging and video conferencing
+allow working from home.
 Those tools are useful and mandatory, but it turns out that
-it would also be nice to have another tool for working from home.
+it would also be nice to have another tool to feel connected.
 
-The desired tool is something we run all the time passively,
-and we feel connected with others even working from home.
-If you work at office, you would see other people from
-your desk or maybe at least in the same floor.
-
-"Remote Faces" is a small app to share a webcam image;
-not a video, but a still image.
+"Remote Faces" is a small app to share a webcam still image.
 The image will be updated only periodically.
 The size of the image is small enough to keep your privacy to some extent.
 It doesn't involve a server to transfer image data,
@@ -26,25 +21,25 @@ but it's done in a peer-to-peer manner.
 
 ## Goal
 
-The goal of this project is to provide a tool for
-people working from home.
-The tool is something to keep running and used passively.
-In a sense, it's a tool that is complementary to
-more active tools like email, messaging, phone and video calls.
-That doesn't mean the scope of this project doesn't include video calls.
-There might be a "passive" way of using video calls;
-Not a scheduled video call, but a video call for small talk.
+The goal of this project is to provide a tool for people working from home.
+The tool will be kept running during working and used occasionally.
+It would fill the gap between working in office and working from home.
+It would be complementary to more active tools like email,
+messaging, phone and scheduled video calls.
 
 Although not a primary goal, as we take privacy seriously,
 our technology focus is for peer-to-peer network.
 
 ## How to use
 
-Just visit the following links and select "Latest Version."
+Just visit the following link to jump to the latest tool.
+
+<https://remote-faces.js.org>
+
 Google Chrome on PC is recommended.
 It may work on other browsers including some on mobile.
 
-[Select Remote Faces Versions](https://dai-shi.github.io/remote-faces/tools/select.html)
+You may also [Select Remote Faces Versions](https://dai-shi.github.io/remote-faces/tools/select.html) in case the latest version has some issues.
 
 To create a new room, click the button and the app starts immediately.
 Copy the URL and share it with your colleagues.
@@ -54,11 +49,6 @@ but once your colleagues enter the room,
 face images are broacasted within the room.
 Note this app is based on peer-to-peer technology,
 and the images are only transferred in the participants of the room.
-
-You may specify your name in the text field.
-If you type a message in the text field right to your face,
-it will be shared along with your face image
-(so, it updates once every two minuites).
 
 If you are trying this app for the first time,
 you can open the app in multiple tabs in Chrome.
@@ -71,7 +61,7 @@ for it.
 
 ## How to contribute
 
-This is an ongoing project and your contribution is important.
+This is an open source project and your contribution is important.
 The web app is built with [React](https://reactjs.org) and
 [PeerJS](https://peerjs.com).
 
@@ -81,15 +71,17 @@ and to promotion!
 
 For more information, check out [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Screenshots
+## Screenshots (Legacy Version)
 
 ![screenshot](images/screen01.png)
 
-<!--
 ## Downloads
 
+Once you are used the tool, you might want a standalone app.
+Technically, it's just a wrapper and features are basically the same.
+If you are not familiar, you can continue using Chrome to use the app.
+
 <https://github.com/dai-shi/remote-faces/releases>
--->
 
 ## Blogs
 

@@ -8,6 +8,11 @@
   align-items: center;
 }
 
+.SingleRoomEntrance-input input,
+.SingleRoomEntrance-input button {
+  margin-right: 0.1rem;
+}
+
 .SingleRoomEntrance-or {
   margin: 0.4rem;
 }
