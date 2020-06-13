@@ -9,7 +9,7 @@ import { MomentaryChat } from "./MomentaryChat";
 import { ControlPanel } from "./ControlPanel";
 import { SettingPanel } from "./SettingPanel";
 import { UserStatus } from "./UserStatus";
-import { TabPane } from "./TabPane";
+import { SelectivePane } from "./SelectivePane";
 import { EmojiDataType } from "../utils/emoji";
 
 const initialNickname = getStringItem("nickname");
@@ -95,7 +95,7 @@ export const SingleRoom = React.memo<{
         className="SingleRoom-3rd-column"
         style={{ display: thirdColumnOpen ? "inherit" : "none" }}
       >
-        <TabPane roomId={roomId} userId={userId} nickname={nickname} />
+        <SelectivePane roomId={roomId} userId={userId} nickname={nickname} />
       </div>
     </div>
   );
