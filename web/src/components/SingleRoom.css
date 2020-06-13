@@ -1,6 +1,6 @@
 .SingleRoom-container {
   display: grid;
-  column-gap: 3px;
+  column-gap: 12px;
   grid-template-columns: 36px auto 1fr;
   grid-template-rows: 100vh;
 }
@@ -28,6 +28,7 @@
   position: absolute;
   top: 0;
   right: 0;
+  font-size: 0.5rem;
 }
 
 .SingleRoom-toggle-3rd-column:focus {

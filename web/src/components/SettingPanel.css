@@ -10,7 +10,7 @@
   font-family: sans-serif;
   word-break: break-all;
   padding: 0.1rem;
-  min-height: 1rem;
+  min-height: 0.5rem;
 }
 
 .SettingPanel-config {
@@ -22,11 +22,25 @@
   overflow: hidden;
   background-color: lightgray;
 }
-.SettingPanel-config input,
-.SettingPanel-config select,
-.SettingPanel-config button {
+
+.SettingPanel-config-row {
+  margin-bottom: 0.2rem;
+}
+
+.SettingPanel-config input {
   font-size: 0.5rem;
 }
+
+.SettingPanel-config select {
+  font-size: 0.5rem;
+  max-width: 9rem;
+}
+
+.SettingPanel-config button {
+  font-size: 0.5rem;
+  margin-left: 0.1rem;
+}
+
 .SettingPanel-config form {
   display: inline-block;
 }
@@ -38,6 +52,7 @@
   background: none;
   padding: 0.1rem;
   color: gray;
+  font-size: 0.5rem;
 }
 
 .SettingPanel-config-toggle:focus {
