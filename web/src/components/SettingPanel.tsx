@@ -86,7 +86,7 @@ export const SettingPanel = React.memo<{
         </button>
         {configOpen && (
           <div className="SettingPanel-config">
-            <div>
+            <div className="SettingPanel-config-row">
               <span title="Share this link with your colleagues">
                 Room Link:{" "}
               </span>
@@ -95,8 +95,7 @@ export const SettingPanel = React.memo<{
                 Open App
               </a>
             </div>
-            <hr />
-            <div>
+            <div className="SettingPanel-config-row">
               Your Name:{" "}
               <TextField
                 initialText={nickname}
@@ -108,7 +107,7 @@ export const SettingPanel = React.memo<{
                 buttonLabel="Set"
               />
             </div>
-            <div>
+            <div className="SettingPanel-config-row">
               Select Camera:{" "}
               <select
                 value={videoDeviceId}
@@ -127,7 +126,7 @@ export const SettingPanel = React.memo<{
                 ))}
               </select>
             </div>
-            <div>
+            <div className="SettingPanel-config-row">
               Select Mic:{" "}
               <select
                 value={audioDeviceId}

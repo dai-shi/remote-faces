@@ -5,4 +5,30 @@
 
 .UserStatus-status-area {
   display: flex;
+  align-items: flex-end;
+}
+
+.UserStatus-status-area button {
+  font-size: 0.5rem;
+}
+
+.UserStatus-emoji {
+  margin-right: 0.1rem;
+}
+
+.UserStatus-statusmesg {
+  margin-right: 0.1rem;
+}
+
+.UserStatus-statusmesg input {
+  font-size: 0.5rem;
+  margin-right: 0.1rem;
+}
+
+.UserStatus-statusmesg button {
+  font-size: 0.5rem;
+}
+
+.UserStatus-button {
+  font-size: 0.5rem;
 }

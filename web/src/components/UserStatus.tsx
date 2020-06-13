@@ -61,7 +61,7 @@ export const UserStatus = React.memo<{
             <TextField
               initialText=""
               onUpdate={setStatusMesg}
-              placeholder="Enter status message"
+              placeholder="Enter status message..."
               buttonLabel="Set"
             />
           </div>

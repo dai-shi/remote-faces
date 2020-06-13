@@ -23,11 +23,20 @@
 .MomentaryChat-text {
   word-break: break-all;
   overflow: scroll;
+  font-size: 0.7rem;
+}
+
+.MomentaryChat-editor {
+  font-size: 0.7rem;
 }
 
 .MomentaryChat-text p,
 .MomentaryChat-editor p {
   margin: 0;
+}
+
+.MomentaryChat-text.ck-content .image {
+  margin: 0.1rem auto;
 }
 
 .MomentaryChat-listPart:hover {
@@ -81,4 +90,12 @@
 
 .MomentaryChat-icon:focus {
   outline: 0;
+}
+
+.MomentaryChat-button {
+  margin: 0.2rem 0;
+}
+
+.MomentaryChat-button button {
+  font-size: 0.7rem;
 }
