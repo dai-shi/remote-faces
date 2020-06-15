@@ -84,7 +84,7 @@ export const UserStatus = React.memo<{
             setEmoji(e);
             setOpenEmojiPicker(false);
           }}
-          style={{ width: '100%' }}
+          style={{ width: "100%" }}
         />
       )}
     </div>
