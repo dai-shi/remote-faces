@@ -24,6 +24,7 @@
   word-break: break-all;
   overflow: scroll;
   font-size: 0.7rem;
+  padding: 0 0.545rem;
 }
 
 .MomentaryChat-editor {
