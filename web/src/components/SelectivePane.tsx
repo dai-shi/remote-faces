@@ -2,13 +2,19 @@ import React, { createElement, useState } from "react";
 
 import "./SelectivePane.css";
 
-type Name = "Welcome" | "Screen Share" | "Video Share" | "White Board";
+type Name =
+  | "Welcome"
+  | "Screen Share"
+  | "Video Share"
+  | "White Board"
+  | "Go Board";
 
 const components = {
   Welcome: React.lazy(() => import("./Welcome")),
   "Screen Share": React.lazy(() => import("./ScreenShare")),
   "Video Share": React.lazy(() => import("./VideoShare")),
   "White Board": React.lazy(() => import("./CollabWhiteBoard")),
+  "Go Board": React.lazy(() => import("./GoBoard")),
 };
 
 export const SelectivePane = React.memo<{
