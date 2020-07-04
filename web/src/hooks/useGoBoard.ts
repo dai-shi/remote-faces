@@ -1,8 +1,8 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { Color } from "wgo";
 
 import { isObject } from "../utils/types";
-import { useRoomData, useBroadcastData, useRoomNewPeer } from "./useRoom";
+import { useRoomData, useBroadcastData } from "./useRoom";
 
 export type PositionData = {
   size: number;
@@ -37,43 +37,53 @@ export type Action = "play" | "pass" | "undo";
 const isAction = (x: unknown): x is Action =>
   ["play", "pass", "undo"].indexOf(x as string) >= 0;
 
-type GoBoardData = {
+type GoBoardActionData = {
   action: "play" | "pass" | "undo";
   position: PositionData;
   updatedAt: number; // in millisecond
 };
 
-const isGoBoardData = (x: unknown): x is GoBoardData =>
+const isGoBoardActionData = (x: unknown): x is GoBoardData =>
   isObject(x) &&
   isAction((x as { action: unknown }).action) &&
   typeof (x as { updatedAt: unknown }).updatedAt === "number" &&
   isPositionData((x as { position: unknown }).position);
+
+type GoBoardData =
+  | {
+      goBoard: "init";
+    }
+  | {
+      goBoard: "action";
+      actionData: GoBoardActionData;
+    };
+
+const isGoBoardData = (x: unknown): x is GoBoardData =>
+  (isObject(x) && (x as { goBoard: unknown }).goBoard === "init") ||
+  ((x as { goBoard: unknown }).goBoard === "action" &&
+    isGoBoardActionData((x as { actionData: unknown }).actionData));
 
 export const useGoBoard = (
   roomId: string,
   userId: string,
   receiveData: (action: Action, position: PositionData) => void
 ) => {
-  const lastDataRef = useRef<GoBoardData>();
-  useRoomNewPeer(
-    roomId,
-    userId,
-    useCallback(async () => {
-      if (!lastDataRef.current) return null;
-      return lastDataRef.current;
-    }, [])
-  );
+  const lastActionDataRef = useRef<GoBoardActionData>();
 
   const broadcastData = useBroadcastData(roomId, userId);
   const sendData = useCallback(
     (action: Action, position: PositionData) => {
-      const data: GoBoardData = {
+      const actionData: GoBoardActionData = {
         action,
         position,
         updatedAt: Date.now(),
       };
+      const data: GoBoardData = {
+        goBoard: "action",
+        actionData,
+      };
       broadcastData(data);
-      lastDataRef.current = data;
+      lastActionDataRef.current = actionData;
     },
     [broadcastData]
   );
@@ -84,18 +94,36 @@ export const useGoBoard = (
     useCallback(
       (data) => {
         if (!isGoBoardData(data)) return;
+        if (data.goBoard === "init") {
+          if (lastActionDataRef.current) {
+            // TODO we don't need to broadcastData but sendData is enough
+            broadcastData({
+              goBoard: "action",
+              actionData: lastActionDataRef.current,
+            });
+          }
+          return;
+        }
+        // FIXME why do we need this type assertion?
+        const { actionData } = data as { actionData: GoBoardActionData };
         if (
-          lastDataRef.current &&
-          lastDataRef.current.updatedAt > data.updatedAt
+          lastActionDataRef.current &&
+          lastActionDataRef.current.updatedAt > actionData.updatedAt
         ) {
           return;
         }
-        lastDataRef.current = data;
-        receiveData(data.action, data.position);
+        lastActionDataRef.current = actionData;
+        receiveData(actionData.action, actionData.position);
       },
-      [receiveData]
+      [broadcastData, receiveData]
     )
   );
+
+  useEffect(() => {
+    broadcastData({
+      goBoard: "init",
+    });
+  }, [broadcastData]);
 
   return {
     sendData,
