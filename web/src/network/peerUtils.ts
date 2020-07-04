@@ -73,6 +73,12 @@ export const createConnectionMap = () => {
 
   const hasConn = (peerId: string) => map.has(peerId);
 
+  const getConn = (peerId: string) => {
+    const value = map.get(peerId);
+    if (!value) return null;
+    return value.conn;
+  };
+
   const delConn = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
     if (value && value.conn === conn) {
@@ -124,6 +130,7 @@ export const createConnectionMap = () => {
     setMediaTypes,
     getMediaTypes,
     hasConn,
+    getConn,
     delConn,
     getConnectedPeerIds,
     forEachConnectedConns,
