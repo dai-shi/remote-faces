@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { PeerInfo, createRoom, NetworkStatus } from "../network/room";
 
 type NetworkStatusListener = (status: NetworkStatus) => void;
-type NewPeerListener = (sendInitialData: (data: unknown) => void) => void;
+type NewPeerListener = (peerIndex: number) => void;
 type DataListener = (data: unknown, info: PeerInfo) => void;
 type TrackListener = {
   mediaType: string;
@@ -40,9 +40,9 @@ const register = (
         listener(status);
       });
     };
-    const notifyNewPeer = (sendInitialData: (data: unknown) => void) => {
+    const notifyNewPeer = (peerIndex: number) => {
       newPeerListeners.forEach((listener) => {
-        listener(sendInitialData);
+        listener(peerIndex);
       });
     };
     const receiveData = (data: unknown, info: PeerInfo) => {
@@ -128,6 +128,7 @@ const register = (
   };
   return {
     broadcastData: entry.room.broadcastData,
+    sendData: entry.room.sendData,
     addTrack: entry.room.addTrack,
     removeTrack: entry.room.removeTrack,
     unregister,
@@ -158,19 +159,19 @@ export const useRoomNetworkStatus = (
 export const useRoomNewPeer = (
   roomId: string,
   userId: string,
-  getInitialDataIterator: () => AsyncIterable<unknown>
+  getInitialData: () => Promise<unknown | null>
 ) => {
   useEffect(() => {
-    const { unregister } = register(roomId, userId, {
-      newPeerListener: async (sendInitialData: (data: unknown) => void) => {
-        // eslint-disable-next-line no-restricted-syntax
-        for await (const data of getInitialDataIterator()) {
-          sendInitialData(data);
+    const { unregister, sendData } = register(roomId, userId, {
+      newPeerListener: async (peerIndex) => {
+        const data = await getInitialData();
+        if (data !== null) {
+          sendData(data, peerIndex);
         }
       },
     });
     return unregister;
-  }, [roomId, userId, getInitialDataIterator]);
+  }, [roomId, userId, getInitialData]);
 };
 
 type BroadcastData = ReturnType<typeof createRoom>["broadcastData"];

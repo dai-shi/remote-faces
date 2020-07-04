@@ -1,12 +1,10 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
-import { sleep } from "../utils/sleep";
 import { secureRandomId } from "../utils/crypto";
 import { isObject } from "../utils/types";
 import { useRoomData, useBroadcastData, useRoomNewPeer } from "./useRoom";
 
 const MAX_CHAT_LIST_SIZE = 100;
-const MAX_CHAT_HISTORY_SIZE = 1000;
 
 type ChatData = {
   userId: string;
@@ -29,6 +27,15 @@ const isChatData = (x: unknown): x is ChatData =>
 
 type Reply = [string, number];
 
+const isReply = (x: unknown): x is Reply =>
+  Array.isArray(x) &&
+  x.length === 2 &&
+  typeof x[0] === "string" &&
+  typeof x[1] === "number";
+
+const isReplies = (x: unknown): x is Reply[] =>
+  Array.isArray(x) && x.every(isReply);
+
 export type ChatItem = {
   messageId: string;
   nickname: string;
@@ -37,6 +44,20 @@ export type ChatItem = {
   replies: Reply[];
   time: string;
 };
+
+const isChatItem = (x: unknown): x is ChatItem =>
+  isObject(x) &&
+  typeof (x as { messageId: unknown }).messageId === "string" &&
+  typeof (x as { nickname: unknown }).nickname === "string" &&
+  typeof (x as { createdAt: unknown }).createdAt === "number" &&
+  typeof (x as { text: unknown }).text === "string" &&
+  isReplies((x as { replies: unknown }).replies) &&
+  typeof (x as { time: unknown }).time === "string";
+
+type ChatList = ChatItem[];
+
+const isChatList = (x: unknown): x is ChatList =>
+  Array.isArray(x) && x.every(isChatItem);
 
 const compareReply = (a: Reply, b: Reply) => {
   const countDiff = b[1] - a[1];
@@ -51,17 +72,13 @@ export const useMomentaryChat = (
   userId: string,
   nickname: string
 ) => {
-  const chatHistory = useRef<ChatData[]>([]);
-  const [chatList, setChatList] = useState<ChatItem[]>([]);
+  const [chatList, setChatList] = useState<ChatList>([]);
+  const chatListRef = useRef(chatList);
+  useEffect(() => {
+    chatListRef.current = chatList;
+  });
 
   const addChatItem = useCallback((chatData: ChatData) => {
-    if (chatHistory.current.some((x) => x.messageId === chatData.messageId)) {
-      return;
-    }
-    chatHistory.current.unshift(chatData);
-    if (chatHistory.current.length > MAX_CHAT_HISTORY_SIZE) {
-      chatHistory.current.pop();
-    }
     if (chatData.chatInReplyTo) {
       const { chatText, chatInReplyTo } = chatData;
       setChatList((prev) =>
@@ -102,14 +119,9 @@ export const useMomentaryChat = (
   useRoomNewPeer(
     roomId,
     userId,
-    useCallback(async function* getInitialDataIterator() {
+    useCallback(async () => {
       // TODO do not let all peers send initial data
-      // XXX it might be better to return packed chatList
-      for (let i = chatHistory.current.length - 1; i >= 0; i -= 1) {
-        // eslint-disable-next-line no-await-in-loop
-        await sleep(Math.random() * 5000);
-        yield chatHistory.current[i];
-      }
+      return chatListRef.current;
     }, [])
   );
 
@@ -119,8 +131,17 @@ export const useMomentaryChat = (
     userId,
     useCallback(
       (data) => {
-        if (!isChatData(data)) return;
-        addChatItem(data);
+        if (isChatData(data)) {
+          addChatItem(data);
+        } else if (isChatList(data)) {
+          setChatList((prev) => {
+            if (prev.length < data.length) {
+              // assumes they send new list
+              return data;
+            }
+            return prev;
+          });
+        }
       },
       [addChatItem]
     )
