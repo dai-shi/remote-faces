@@ -116,6 +116,7 @@ const createGoBoard = (
     updateFieldObjects();
     setColor(game.turn === Color.B ? "black" : "white");
     setCapCount(game.position.capCount);
+    clearHoverObject();
   };
   const pass = () => {
     game.pass();
