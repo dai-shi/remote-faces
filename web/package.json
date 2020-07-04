@@ -7,7 +7,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test:app": "react-scripts test",
+    "test:app": "react-scripts test --env=jsdom-sixteen",
     "test:lint": "eslint --ext .js,.ts,.tsx src",
     "test:type": "tsc --noEmit",
     "test": "yarn test:lint && yarn test:type && yarn test:app --watchAll=false",
@@ -42,6 +42,7 @@
     "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-react": "^7.20.3",
     "eslint-plugin-react-hooks": "^4.0.5",
+    "jest-environment-jsdom-sixteen": "^1.0.3",
     "prettier": "^2.0.5",
     "react-scripts": "3.4.1",
     "typescript": "~3.9.6"
