@@ -59,9 +59,10 @@ type GoBoardData =
     };
 
 const isGoBoardData = (x: unknown): x is GoBoardData =>
-  (isObject(x) && (x as { goBoard: unknown }).goBoard === "init") ||
-  ((x as { goBoard: unknown }).goBoard === "action" &&
-    isGoBoardActionData((x as { actionData: unknown }).actionData));
+  isObject(x) &&
+  ((x as { goBoard: unknown }).goBoard === "init" ||
+    ((x as { goBoard: unknown }).goBoard === "action" &&
+      isGoBoardActionData((x as { actionData: unknown }).actionData)));
 
 export const useGoBoard = (
   roomId: string,
