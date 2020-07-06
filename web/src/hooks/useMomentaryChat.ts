@@ -107,6 +107,10 @@ export const useMomentaryChat = (
         .slice(0, -3),
     };
     setChatList((prev) => {
+      if (prev.some((item) => item.messageId === chatItem.messageId)) {
+        // Migration: This can happen if a peer with old version is connected.
+        return prev;
+      }
       const newList = [chatItem, ...prev];
       if (newList.length > MAX_CHAT_LIST_SIZE) {
         newList.pop();
@@ -135,8 +139,8 @@ export const useMomentaryChat = (
           addChatItem(data);
         } else if (isChatList(data)) {
           setChatList((prev) => {
-            if (prev.length < data.length) {
-              // assumes they send new list
+            if (prev.length === 0) {
+              // we only replace with the list if it's empty
               return data;
             }
             return prev;
