@@ -1,4 +1,4 @@
-import { ROOM_ID_PREFIX_LEN } from "../network/peerUtils";
+import { ROOM_ID_PREFIX_LEN } from "../network/room";
 import { importCryptoKey } from "./crypto";
 
 export const generateExcalidrawURL = async (roomId: string) => {

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 import "./SingleRoomEntrance.css";
 import { secureRandomId, generateCryptoKey } from "../utils/crypto";
-import { ROOM_ID_PREFIX_LEN } from "../network/peerUtils";
+import { ROOM_ID_PREFIX_LEN } from "../network/room";
 import {
   getRoomIdFromUrl,
   extractRoomIdFromLink,

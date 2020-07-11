@@ -1,6 +1,6 @@
 import Peer from "peerjs";
 
-export const ROOM_ID_PREFIX_LEN = 32;
+import { ROOM_ID_PREFIX_LEN } from "./common";
 
 export const isValidPeerId = (
   roomId: string,
