@@ -361,12 +361,21 @@ export const createRoom: CreateRoom = (
     myPeerId = (await instance.id()).id;
     await instance.pubsub.subscribe(roomTopic, pubsubHandler);
     await instance.pubsub.subscribe(userId, pubsubHandler);
-    const peers = instance.pubsub.peers(roomTopic);
-    peers.forEach(initConnection);
     ipfs = instance;
     if (process.env.NODE_ENV !== "production") {
       (window as any).myIpfs = ipfs;
     }
+    const initPeers = async () => {
+      updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
+      const peers = instance.pubsub.peers(roomTopic);
+      if (peers.length) {
+        peers.forEach(initConnection);
+      } else {
+        await sleep(5000);
+        initPeers();
+      }
+    };
+    initPeers();
   };
   initIpfs();
 
