@@ -1,4 +1,4 @@
-let peerIndexCounter = 1000;
+let peerIndexCounter = 0;
 
 const getNextPeerIndex = () => {
   peerIndexCounter += 1;

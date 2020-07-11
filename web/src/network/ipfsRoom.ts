@@ -283,7 +283,6 @@ export const createRoom: CreateRoom = (
 
   const initConnection = (peerId: string) => {
     const conn = connMap.addConn(peerId);
-    showConnectedStatus();
     notifyNewPeer(conn.peerIndex);
     conn.peerConnection.addEventListener("icegatheringstatechange", () => {
       const pc = conn.peerConnection;
@@ -324,6 +323,10 @@ export const createRoom: CreateRoom = (
     connMap.forEachConns((conn) => {
       if (!peers.includes(conn.peer)) {
         connMap.delConn(conn);
+        updateNetworkStatus({
+          type: "CONNECTION_CLOSED",
+          peerIndex: conn.peerIndex,
+        });
       }
     });
   };
@@ -333,14 +336,27 @@ export const createRoom: CreateRoom = (
     let conn = connMap.getConn(msg.from);
     if (!conn) {
       conn = initConnection(msg.from);
+      updateNetworkStatus({
+        type: "NEW_CONNECTION",
+        peerIndex: conn.peerIndex,
+      });
     }
     handlePayload(conn, msg.data);
     gcConnection();
+    showConnectedStatus();
   };
 
   const initIpfs = async () => {
+    updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
     const instance: IpfsType = await Ipfs.create({
       repo: secureRandomId(),
+      config: {
+        Addresses: {
+          Swarm: [
+            "/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
+          ],
+        },
+      },
     });
     myPeerId = (await instance.id()).id;
     await instance.pubsub.subscribe(roomTopic, pubsubHandler);
