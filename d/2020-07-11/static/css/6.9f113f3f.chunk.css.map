@@ -1,0 +1,1 @@
+{"version":3,"sources":["GoBoard.css"],"names":[],"mappings":"AAAA,mBACE,cAAe,CACf,eAAgB,CAChB,eACF","file":"6.9f113f3f.chunk.css","sourcesContent":[".GoBoard-container {\n  max-width: 100%;\n  max-height: 100%;\n  overflow: scroll;\n}\n"]}
