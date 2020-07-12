@@ -140,7 +140,7 @@ export const createRoom: CreateRoom = (
         JSON.stringify(payload),
         roomId.slice(ROOM_ID_PREFIX_LEN)
       );
-      ipfs.pubsub.publish(topic, encrypted);
+      await ipfs.pubsub.publish(topic, encrypted);
     } catch (e) {
       console.error("sendPayload", e);
     }
@@ -149,7 +149,7 @@ export const createRoom: CreateRoom = (
   const broadcastData = async (data: unknown) => {
     if (disposed) return;
     const payload = { userId, data, mediaTypes };
-    sendPayload(roomTopic, payload);
+    await sendPayload(roomTopic, payload);
   };
 
   const sendData = async (data: unknown, peerIndex: number) => {
@@ -157,7 +157,10 @@ export const createRoom: CreateRoom = (
     const conn = connMap.findConn(peerIndex);
     if (!conn) return;
     const connUserId = connMap.getUserId(conn);
-    if (!connUserId) return;
+    if (!connUserId) {
+      console.warn("conn userId is not set", peerIndex);
+      return;
+    }
     const payload = { userId, data, mediaTypes };
     sendPayload(connUserId, payload);
   };
@@ -283,7 +286,6 @@ export const createRoom: CreateRoom = (
 
   const initConnection = (peerId: string) => {
     const conn = connMap.addConn(peerId);
-    notifyNewPeer(conn.peerIndex);
     conn.peerConnection.addEventListener("icegatheringstatechange", () => {
       const pc = conn.peerConnection;
       if (pc.iceGatheringState === "complete") {
@@ -331,18 +333,21 @@ export const createRoom: CreateRoom = (
     });
   };
 
-  const pubsubHandler: PubsubHandler = (msg) => {
+  const pubsubHandler: PubsubHandler = async (msg) => {
+    gcConnection();
     if (msg.from === myPeerId) return;
     let conn = connMap.getConn(msg.from);
-    if (!conn) {
+    if (conn) {
+      await handlePayload(conn, msg.data);
+    } else {
       conn = initConnection(msg.from);
+      await handlePayload(conn, msg.data);
+      notifyNewPeer(conn.peerIndex);
       updateNetworkStatus({
         type: "NEW_CONNECTION",
         peerIndex: conn.peerIndex,
       });
     }
-    handlePayload(conn, msg.data);
-    gcConnection();
     showConnectedStatus();
   };
 
@@ -367,11 +372,11 @@ export const createRoom: CreateRoom = (
     }
     const initPeers = async () => {
       updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
+      await sleep(5000);
       const peers = instance.pubsub.peers(roomTopic);
       if (peers.length) {
-        peers.forEach(initConnection);
+        await broadcastData(null);
       } else {
-        await sleep(5000);
         initPeers();
       }
     };
