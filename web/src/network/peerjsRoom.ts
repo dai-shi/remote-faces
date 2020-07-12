@@ -186,6 +186,7 @@ export const createRoom: CreateRoom = (
     }
   };
 
+  const scheduledNegotiation = new WeakMap<Peer.DataConnection, boolean>();
   const initConnection = (conn: Peer.DataConnection) => {
     if (connMap.isConnected(conn.peer)) {
       conn.close();
@@ -206,7 +207,6 @@ export const createRoom: CreateRoom = (
         pc.onicecandidate = () => undefined;
       }
     });
-    const scheduledNegotiation = new WeakMap<Peer.DataConnection, boolean>();
     conn.peerConnection.addEventListener("negotiationneeded", async () => {
       if (scheduledNegotiation.has(conn)) return;
       scheduledNegotiation.set(conn, true);
