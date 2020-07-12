@@ -1,5 +1,4 @@
-// @ts-ignore
-import Ipfs from "ipfs";
+import Ipfs, { IpfsType, PubsubHandler } from "ipfs";
 
 import { sleep } from "../utils/sleep";
 import { secureRandomId, encrypt, decrypt } from "../utils/crypto";
@@ -7,37 +6,6 @@ import { isObject } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./ipfsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
-
-type PubsubHandler = (msg: {
-  from: string;
-  seqno: ArrayBuffer;
-  data: ArrayBuffer;
-  topicIDs: string[];
-}) => void;
-
-type IpfsOptions = {
-  timeout: Number;
-  signal: AbortSignal;
-};
-
-type IpfsType = {
-  stop: (options?: IpfsOptions) => Promise<void>;
-  pubsub: {
-    subscribe: (
-      topic: string,
-      handler: PubsubHandler,
-      options?: IpfsOptions
-    ) => Promise<void>;
-    unsubscribe: (
-      topic: string,
-      handler: PubsubHandler,
-      options?: IpfsOptions
-    ) => Promise<void>;
-    publish: (topic: string, data: ArrayBuffer | string) => Promise<void>;
-    peers: (topic: string) => string[];
-  };
-  id: () => Promise<{ id: string }>;
-};
 
 export const createRoom: CreateRoom = (
   roomId,
