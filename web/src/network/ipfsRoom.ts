@@ -134,7 +134,9 @@ export const createRoom: CreateRoom = (
       return;
     }
     const payload = { userId, data, mediaTypes };
-    sendPayload(connUserId, payload);
+    // sendPayload(connUserId, payload);
+    // TODO somehow the above doesn't work, so here's unefficient broadcast
+    sendPayload(roomTopic, { ...payload, to: connUserId });
   };
 
   const acceptMediaTypes = (mTypes: string[]) => {
@@ -267,6 +269,14 @@ export const createRoom: CreateRoom = (
       );
       console.log("decrypted payload", conn.peer, payload);
       if (!isObject(payload)) return;
+
+      // TODO a workaround for topic=userId not working
+      if (
+        (payload as { to?: unknown }).to &&
+        (payload as { to?: unknown }).to !== userId
+      ) {
+        return;
+      }
 
       handlePayloadSDP(conn, (payload as { SDP?: unknown }).SDP);
       handlePayloadIceCandidate(
