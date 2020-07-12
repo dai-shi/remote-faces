@@ -319,22 +319,7 @@ export const createRoom: CreateRoom = (
     return conn;
   };
 
-  const gcConnection = () => {
-    if (!ipfs) return;
-    const peers = ipfs.pubsub.peers(roomTopic);
-    connMap.forEachConns((conn) => {
-      if (!peers.includes(conn.peer)) {
-        connMap.delConn(conn);
-        updateNetworkStatus({
-          type: "CONNECTION_CLOSED",
-          peerIndex: conn.peerIndex,
-        });
-      }
-    });
-  };
-
   const pubsubHandler: PubsubHandler = async (msg) => {
-    gcConnection();
     if (msg.from === myPeerId) return;
     let conn = connMap.getConn(msg.from);
     if (conn) {
@@ -349,6 +334,31 @@ export const createRoom: CreateRoom = (
       });
     }
     showConnectedStatus();
+  };
+
+  const checkPeers = async () => {
+    if (disposed) return;
+    const peers = ipfs ? ipfs.pubsub.peers(roomTopic) : [];
+    connMap.forEachConns((conn) => {
+      if (!peers.includes(conn.peer)) {
+        connMap.delConn(conn);
+        updateNetworkStatus({
+          type: "CONNECTION_CLOSED",
+          peerIndex: conn.peerIndex,
+        });
+      }
+    });
+    if (!peers.length) {
+      updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
+      await sleep(5000);
+      checkPeers();
+      return;
+    }
+    if (!connMap.size()) {
+      await broadcastData(null);
+    }
+    await sleep(10 * 1000);
+    checkPeers();
   };
 
   const initIpfs = async () => {
@@ -370,17 +380,7 @@ export const createRoom: CreateRoom = (
     if (process.env.NODE_ENV !== "production") {
       (window as any).myIpfs = ipfs;
     }
-    const initPeers = async () => {
-      updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
-      await sleep(5000);
-      const peers = instance.pubsub.peers(roomTopic);
-      if (peers.length) {
-        await broadcastData(null);
-      } else {
-        initPeers();
-      }
-    };
-    initPeers();
+    checkPeers();
   };
   initIpfs();
 

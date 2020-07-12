@@ -99,6 +99,8 @@ export const createConnectionMap = () => {
     });
   };
 
+  const size = () => map.size;
+
   return {
     setUserId,
     getUserId,
@@ -111,5 +113,6 @@ export const createConnectionMap = () => {
     getPeerIndexList,
     forEachConns,
     forEachConnsAcceptingMedia,
+    size,
   };
 };
