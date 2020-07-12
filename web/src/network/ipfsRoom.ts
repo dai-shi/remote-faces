@@ -19,6 +19,9 @@ export const createRoom: CreateRoom = (
   let ipfs: IpfsType | null = null;
   let myPeerId: string | null = null;
   const connMap = createConnectionMap();
+  if (process.env.NODE_ENV !== "production") {
+    (window as any).myConnMap = connMap;
+  }
   let mediaTypes: string[] = [];
   let localStream: MediaStream | null = null;
 
@@ -104,6 +107,7 @@ export const createRoom: CreateRoom = (
   const sendPayload = async (topic: string, payload: unknown) => {
     if (!ipfs) return;
     try {
+      console.log("payload to encrypt", topic, payload);
       const encrypted = await encrypt(
         JSON.stringify(payload),
         roomId.slice(ROOM_ID_PREFIX_LEN)
