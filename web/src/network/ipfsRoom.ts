@@ -126,7 +126,7 @@ export const createRoom: CreateRoom = (
     if (!conn) return;
     const connUserId = connMap.getUserId(conn);
     if (!connUserId) {
-      console.warn("conn userId is not set", peerIndex);
+      console.warn("sendData: conn userId is not set", peerIndex);
       return;
     }
     const payload = { userId, data, mediaTypes };
@@ -163,7 +163,10 @@ export const createRoom: CreateRoom = (
 
   const sendSDP = (conn: Connection, sdp: unknown) => {
     const connUserId = connMap.getUserId(conn);
-    if (!connUserId) return;
+    if (!connUserId) {
+      console.warn("sendSDP: conn userId is not set");
+      return;
+    }
     sendPayload(connUserId, { SDP: sdp });
   };
 
@@ -192,6 +195,27 @@ export const createRoom: CreateRoom = (
       }
     } else {
       console.warn("unknown SDP", sdp);
+    }
+  };
+
+  const sendIceCandidate = (conn: Connection, iceCandidate: unknown) => {
+    const connUserId = connMap.getUserId(conn);
+    if (!connUserId) {
+      console.warn("sendIceCandidate: conn userId is not set");
+      return;
+    }
+    sendPayload(connUserId, { iceCandidate });
+  };
+
+  const handlePayloadIceCandidate = async (
+    conn: Connection,
+    iceCandidate: unknown
+  ) => {
+    if (!isObject(iceCandidate)) return;
+    try {
+      conn.peerConnection.addIceCandidate(iceCandidate as any);
+    } catch (e) {
+      console.info("handleCandidate failed", e);
     }
   };
 
@@ -241,6 +265,10 @@ export const createRoom: CreateRoom = (
       if (!isObject(payload)) return;
 
       handlePayloadSDP(conn, (payload as { SDP?: unknown }).SDP);
+      handlePayloadIceCandidate(
+        conn,
+        (payload as { iceCandidate?: unknown }).iceCandidate
+      );
       handlePayloadUserId(conn, (payload as { userId?: unknown }).userId);
       handlePayloadMediaTypes(
         conn,
@@ -252,15 +280,14 @@ export const createRoom: CreateRoom = (
     }
   };
 
+  const scheduledNegotiation = new WeakMap<Connection, boolean>();
   const initConnection = (peerId: string) => {
     const conn = connMap.addConn(peerId);
-    conn.peerConnection.addEventListener("icegatheringstatechange", () => {
-      const pc = conn.peerConnection;
-      if (pc.iceGatheringState === "complete") {
-        pc.onicecandidate = () => undefined;
+    conn.peerConnection.addEventListener("icecandidate", (evt) => {
+      if (evt.candidate) {
+        sendIceCandidate(conn, evt.candidate);
       }
     });
-    const scheduledNegotiation = new WeakMap<Connection, boolean>();
     conn.peerConnection.addEventListener("negotiationneeded", async () => {
       if (scheduledNegotiation.has(conn)) return;
       scheduledNegotiation.set(conn, true);

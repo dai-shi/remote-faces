@@ -11,6 +11,18 @@ export type Connection = {
   peerConnection: RTCPeerConnection;
 };
 
+const DEFAULT_CONFIG = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    {
+      urls: "turn:0.peerjs.com:3478",
+      username: "peerjs",
+      credential: "peerjsp",
+    },
+  ],
+  sdpSemantics: "unified-plan",
+};
+
 export const createConnectionMap = () => {
   type Value = {
     conn: Connection;
@@ -51,7 +63,7 @@ export const createConnectionMap = () => {
     const conn: Connection = {
       peerIndex: getNextPeerIndex(),
       peer: peerId,
-      peerConnection: new RTCPeerConnection(),
+      peerConnection: new RTCPeerConnection(DEFAULT_CONFIG),
     };
     map.set(conn.peer, { conn, mediaTypes: [] });
     return conn;
