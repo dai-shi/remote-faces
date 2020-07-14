@@ -269,7 +269,6 @@ export const createRoom: CreateRoom = (
       );
       console.log("decrypted payload", conn.peer, payload);
       if (!isObject(payload)) return;
-      handlePayloadUserId(conn, (payload as { userId?: unknown }).userId);
 
       // TODO a workaround for topic=userId not working
       if (
@@ -284,6 +283,7 @@ export const createRoom: CreateRoom = (
         conn,
         (payload as { iceCandidate?: unknown }).iceCandidate
       );
+      handlePayloadUserId(conn, (payload as { userId?: unknown }).userId);
       handlePayloadMediaTypes(
         conn,
         (payload as { mediaTypes?: unknown }).mediaTypes
