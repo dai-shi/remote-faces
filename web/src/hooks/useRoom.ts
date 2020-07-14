@@ -159,19 +159,16 @@ export const useRoomNetworkStatus = (
 export const useRoomNewPeer = (
   roomId: string,
   userId: string,
-  getInitialData: () => Promise<unknown | null>
+  sendInitialData: (send: (data: unknown) => void) => void
 ) => {
   useEffect(() => {
     const { unregister, sendData } = register(roomId, userId, {
-      newPeerListener: async (peerIndex) => {
-        const data = await getInitialData();
-        if (data !== null) {
-          sendData(data, peerIndex);
-        }
+      newPeerListener: (peerIndex) => {
+        sendInitialData((data) => sendData(data, peerIndex));
       },
     });
     return unregister;
-  }, [roomId, userId, getInitialData]);
+  }, [roomId, userId, sendInitialData]);
 };
 
 type BroadcastData = ReturnType<typeof createRoom>["broadcastData"];

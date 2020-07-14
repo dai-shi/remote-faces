@@ -123,9 +123,10 @@ export const useMomentaryChat = (
   useRoomNewPeer(
     roomId,
     userId,
-    useCallback(async () => {
+    useCallback((send) => {
       // TODO do not let all peers send initial data
-      return chatListRef.current;
+      // TODO chatList can be too big
+      send(chatListRef.current);
     }, [])
   );
 

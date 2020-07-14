@@ -61,9 +61,10 @@ export const useFaceImages = (
   useRoomNewPeer(
     roomId,
     userId,
-    useCallback(async () => {
-      if (!lastDataRef.current) return null;
-      return lastDataRef.current;
+    useCallback((send) => {
+      if (lastDataRef.current) {
+        send(lastDataRef.current);
+      }
     }, [])
   );
 

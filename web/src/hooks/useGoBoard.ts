@@ -72,7 +72,7 @@ export const useGoBoard = (
   const lastActionDataRef = useRef<GoBoardActionData>();
 
   const broadcastData = useBroadcastData(roomId, userId);
-  const sendData = useCallback(
+  const sendActionData = useCallback(
     (action: Action, position: PositionData) => {
       const actionData: GoBoardActionData = {
         action,
@@ -127,6 +127,6 @@ export const useGoBoard = (
   }, [broadcastData]);
 
   return {
-    sendData,
+    sendActionData,
   };
 };

@@ -24,7 +24,7 @@ const createGoBoard = (
   element: HTMLDivElement,
   setColor: (c: "black" | "white") => void,
   setCapCount: (capCount: { black: number; white: number }) => void,
-  sendData: (action: Action, positionData: PositionData) => void
+  sendActionData: (action: Action, positionData: PositionData) => void
 ) => {
   const game = new Game(6);
   const board = new CanvasBoard(element, {
@@ -106,7 +106,7 @@ const createGoBoard = (
       updateFieldObjects();
       setColor(game.turn === Color.B ? "black" : "white");
       setCapCount(game.position.capCount);
-      sendData("play", game.position);
+      sendActionData("play", game.position);
     }
   });
   setColor(game.turn === Color.B ? "black" : "white");
@@ -121,14 +121,14 @@ const createGoBoard = (
   const pass = () => {
     game.pass();
     setColor(game.turn === Color.B ? "black" : "white");
-    sendData("pass", game.position);
+    sendActionData("pass", game.position);
   };
   const undo = () => {
     game.popPosition();
     updateFieldObjects();
     setColor(game.turn === Color.B ? "black" : "white");
     setCapCount(game.position.capCount);
-    sendData("undo", game.position);
+    sendActionData("undo", game.position);
   };
   const resize = () => {
     board.setWidth(element.clientWidth);
@@ -154,7 +154,7 @@ export const GoBoard = React.memo<{
     },
     []
   );
-  const { sendData } = useGoBoard(roomId, userId, receiveData);
+  const { sendActionData } = useGoBoard(roomId, userId, receiveData);
   const [color, setColor] = useState<"black" | "white">("black");
   const [capCount, setCapCount] = useState<{
     black: number;
@@ -164,7 +164,7 @@ export const GoBoard = React.memo<{
   useEffect(() => {
     if (divRef.current) {
       const div = divRef.current;
-      const actions = createGoBoard(div, setColor, setCapCount, sendData);
+      const actions = createGoBoard(div, setColor, setCapCount, sendActionData);
       actionsRef.current = actions;
       window.addEventListener("resize", actions.resize);
       return () => {
@@ -172,7 +172,7 @@ export const GoBoard = React.memo<{
       };
     }
     return undefined;
-  }, [sendData]);
+  }, [sendActionData]);
   const pass = () => {
     if (actionsRef.current) {
       actionsRef.current.pass();
