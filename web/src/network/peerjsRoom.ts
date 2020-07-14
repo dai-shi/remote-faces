@@ -105,7 +105,7 @@ export const createRoom: CreateRoom = (
     payloadUserId: unknown
   ) => {
     if (typeof payloadUserId === "string") {
-      connMap.setUserId(conn, payloadUserId as string);
+      connMap.setUserId(conn, payloadUserId);
     }
   };
 

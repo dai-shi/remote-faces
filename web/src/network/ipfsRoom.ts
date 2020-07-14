@@ -128,15 +128,8 @@ export const createRoom: CreateRoom = (
     if (disposed) return;
     const conn = connMap.findConn(peerIndex);
     if (!conn) return;
-    const connUserId = connMap.getUserId(conn);
-    if (!connUserId) {
-      console.warn("sendData: conn userId is not set", peerIndex);
-      return;
-    }
     const payload = { userId, data, mediaTypes };
-    // sendPayload(connUserId, payload);
-    // TODO somehow the above doesn't work, so here's unefficient broadcast
-    sendPayload(roomTopic, { ...payload, to: connUserId });
+    sendPayload(`${roomTopic} ${conn.peer}`, payload);
   };
 
   const acceptMediaTypes = (mTypes: string[]) => {
@@ -168,12 +161,7 @@ export const createRoom: CreateRoom = (
   };
 
   const sendSDP = (conn: Connection, sdp: unknown) => {
-    const connUserId = connMap.getUserId(conn);
-    if (!connUserId) {
-      console.warn("sendSDP: conn userId is not set");
-      return;
-    }
-    sendPayload(connUserId, { SDP: sdp });
+    sendPayload(`${roomTopic} ${conn.peer}`, { SDP: sdp });
   };
 
   const handlePayloadSDP = async (conn: Connection, sdp: unknown) => {
@@ -205,12 +193,7 @@ export const createRoom: CreateRoom = (
   };
 
   const sendIceCandidate = (conn: Connection, iceCandidate: unknown) => {
-    const connUserId = connMap.getUserId(conn);
-    if (!connUserId) {
-      console.warn("sendIceCandidate: conn userId is not set");
-      return;
-    }
-    sendPayload(connUserId, { iceCandidate });
+    sendPayload(`${roomTopic} ${conn.peer}`, { iceCandidate });
   };
 
   const handlePayloadIceCandidate = async (
@@ -227,7 +210,7 @@ export const createRoom: CreateRoom = (
 
   const handlePayloadUserId = (conn: Connection, payloadUserId: unknown) => {
     if (typeof payloadUserId === "string") {
-      connMap.setUserId(conn, payloadUserId as string);
+      connMap.setUserId(conn, payloadUserId);
     }
   };
 
@@ -269,14 +252,6 @@ export const createRoom: CreateRoom = (
       );
       console.log("decrypted payload", conn.peer, payload);
       if (!isObject(payload)) return;
-
-      // TODO a workaround for topic=userId not working
-      if (
-        (payload as { to?: unknown }).to &&
-        (payload as { to?: unknown }).to !== userId
-      ) {
-        return;
-      }
 
       handlePayloadSDP(conn, (payload as { SDP?: unknown }).SDP);
       handlePayloadIceCandidate(
@@ -384,7 +359,7 @@ export const createRoom: CreateRoom = (
     });
     myPeerId = (await instance.id()).id;
     await instance.pubsub.subscribe(roomTopic, pubsubHandler);
-    await instance.pubsub.subscribe(userId, pubsubHandler);
+    await instance.pubsub.subscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
     ipfs = instance;
     if (process.env.NODE_ENV !== "production") {
       (window as any).myIpfs = ipfs;
@@ -397,7 +372,7 @@ export const createRoom: CreateRoom = (
     disposed = true;
     if (ipfs) {
       await ipfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
-      await ipfs.pubsub.unsubscribe(userId, pubsubHandler);
+      await ipfs.pubsub.unsubscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
       await ipfs.stop();
     }
   };
