@@ -112,6 +112,11 @@ export const createRoom: CreateRoom = (
         JSON.stringify(payload),
         roomId.slice(ROOM_ID_PREFIX_LEN)
       );
+      console.log("sending encrypted", encrypted.byteLength);
+      if (encrypted.byteLength > 262144) {
+        console.warn("encrypted message too large, aborting");
+        return;
+      }
       await ipfs.pubsub.publish(topic, encrypted);
     } catch (e) {
       console.error("sendPayload", e);

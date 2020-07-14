@@ -88,6 +88,8 @@ export const createConnectionMap = () => {
     if (value && value.conn === conn) {
       map.delete(conn.peer);
       conn.peerConnection.close();
+    } else {
+      throw new Error("delConn: does not exist");
     }
   };
 
