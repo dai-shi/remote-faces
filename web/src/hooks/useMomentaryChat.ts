@@ -6,25 +6,6 @@ import { useRoomData, useBroadcastData, useRoomNewPeer } from "./useRoom";
 
 const MAX_CHAT_LIST_SIZE = 100;
 
-type ChatData = {
-  userId: string;
-  nickname: string;
-  messageId: string;
-  createdAt: number; // in millisecond
-  chatText: string;
-  chatInReplyTo?: string; // messageId
-};
-
-const isChatData = (x: unknown): x is ChatData =>
-  isObject(x) &&
-  typeof (x as { userId: unknown }).userId === "string" &&
-  typeof (x as { nickname: unknown }).nickname === "string" &&
-  typeof (x as { messageId: unknown }).messageId === "string" &&
-  typeof (x as { createdAt: unknown }).createdAt === "number" &&
-  typeof (x as { chatText: unknown }).chatText === "string" &&
-  (typeof (x as { chatInReplyTo: unknown }).chatInReplyTo === "undefined" ||
-    typeof (x as { chatInReplyTo: unknown }).chatInReplyTo === "string");
-
 type Reply = [string, number];
 
 const isReply = (x: unknown): x is Reply =>
@@ -37,27 +18,31 @@ const isReplies = (x: unknown): x is Reply[] =>
   Array.isArray(x) && x.every(isReply);
 
 export type ChatItem = {
-  messageId: string;
   nickname: string;
+  messageId: string;
   createdAt: number; // in millisecond
   text: string;
-  replies: Reply[];
-  time: string;
+  inReplyTo?: string; // messageId
+  replies?: Reply[];
 };
 
 const isChatItem = (x: unknown): x is ChatItem =>
   isObject(x) &&
-  typeof (x as { messageId: unknown }).messageId === "string" &&
   typeof (x as { nickname: unknown }).nickname === "string" &&
+  typeof (x as { messageId: unknown }).messageId === "string" &&
   typeof (x as { createdAt: unknown }).createdAt === "number" &&
   typeof (x as { text: unknown }).text === "string" &&
-  isReplies((x as { replies: unknown }).replies) &&
-  typeof (x as { time: unknown }).time === "string";
+  (typeof (x as { inReplyTo: unknown }).inReplyTo === "undefined" ||
+    typeof (x as { inReplyTo: unknown }).inReplyTo === "string") &&
+  (typeof (x as { replies: unknown }).replies === "undefined" ||
+    isReplies((x as { replies: unknown }).replies));
 
-type ChatList = ChatItem[];
+type ChatData = {
+  chat: ChatItem;
+};
 
-const isChatList = (x: unknown): x is ChatList =>
-  Array.isArray(x) && x.every(isChatItem);
+const isChatData = (x: unknown): x is ChatData =>
+  isObject(x) && isChatItem((x as { chat: unknown }).chat);
 
 const compareReply = (a: Reply, b: Reply) => {
   const countDiff = b[1] - a[1];
@@ -72,20 +57,20 @@ export const useMomentaryChat = (
   userId: string,
   nickname: string
 ) => {
-  const [chatList, setChatList] = useState<ChatList>([]);
+  const [chatList, setChatList] = useState<ChatItem[]>([]);
   const chatListRef = useRef(chatList);
   useEffect(() => {
     chatListRef.current = chatList;
   });
 
-  const addChatItem = useCallback((chatData: ChatData) => {
-    if (chatData.chatInReplyTo) {
-      const { chatText, chatInReplyTo } = chatData;
+  const addChatItem = useCallback((chatItem: ChatItem) => {
+    if (chatItem.inReplyTo) {
+      const { text, inReplyTo } = chatItem;
       setChatList((prev) =>
         prev.map((item) => {
-          if (item.messageId === chatInReplyTo) {
+          if (item.messageId === inReplyTo) {
             const replyMap = new Map(item.replies);
-            replyMap.set(chatText, (replyMap.get(chatText) || 0) + 1);
+            replyMap.set(text, (replyMap.get(text) || 0) + 1);
             const replies = [...replyMap.entries()];
             replies.sort(compareReply);
             return { ...item, replies };
@@ -95,17 +80,6 @@ export const useMomentaryChat = (
       );
       return;
     }
-    const chatItem: ChatItem = {
-      messageId: chatData.messageId,
-      nickname: chatData.nickname,
-      createdAt: chatData.createdAt,
-      text: chatData.chatText,
-      replies: [],
-      time: new Date(chatData.createdAt)
-        .toLocaleString()
-        .split(" ")[1]
-        .slice(0, -3),
-    };
     setChatList((prev) => {
       if (prev.some((item) => item.messageId === chatItem.messageId)) {
         // Migration: This can happen if a peer with old version is connected.
@@ -125,27 +99,24 @@ export const useMomentaryChat = (
     userId,
     useCallback((send) => {
       // TODO do not let all peers send initial data
-      // TODO chatList can be too big
-      send(chatListRef.current);
+      chatListRef.current.forEach((chatItem) => {
+        const data: ChatData = {
+          chat: chatItem,
+        };
+        send(data);
+      });
     }, [])
   );
 
   const broadcastData = useBroadcastData(roomId, userId);
+
   useRoomData(
     roomId,
     userId,
     useCallback(
       (data) => {
         if (isChatData(data)) {
-          addChatItem(data);
-        } else if (isChatList(data)) {
-          setChatList((prev) => {
-            if (prev.length === 0) {
-              // we only replace with the list if it's empty
-              return data;
-            }
-            return prev;
-          });
+          addChatItem(data.chat);
         }
       },
       [addChatItem]
@@ -154,33 +125,37 @@ export const useMomentaryChat = (
 
   const sendChat = useCallback(
     (text: string) => {
-      const data: ChatData = {
-        userId,
+      const chatItem: ChatItem = {
         nickname,
         messageId: secureRandomId(),
         createdAt: Date.now(),
-        chatText: text,
+        text,
+      };
+      const data: ChatData = {
+        chat: chatItem,
       };
       broadcastData(data);
-      addChatItem(data);
+      addChatItem(chatItem);
     },
-    [broadcastData, userId, nickname, addChatItem]
+    [broadcastData, nickname, addChatItem]
   );
 
   const replyChat = useCallback(
     (text: string, inReplyTo: string) => {
-      const data: ChatData = {
-        userId,
+      const chatItem: ChatItem = {
         nickname,
         messageId: secureRandomId(),
         createdAt: Date.now(),
-        chatText: text,
-        chatInReplyTo: inReplyTo,
+        text,
+        inReplyTo,
+      };
+      const data: ChatData = {
+        chat: chatItem,
       };
       broadcastData(data);
-      addChatItem(data);
+      addChatItem(chatItem);
     },
-    [broadcastData, userId, nickname, addChatItem]
+    [broadcastData, nickname, addChatItem]
   );
 
   return {

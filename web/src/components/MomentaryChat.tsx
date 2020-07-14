@@ -13,6 +13,9 @@ const sanitize = (text: string) => ({
   __html: DOMPurify.sanitize(text, { ADD_ATTR: ["target"] }),
 });
 
+const getChatTime = (item: ChatItem) =>
+  new Date(item.createdAt).toLocaleString().split(" ")[1].slice(0, -3);
+
 const MomentaryChatContentPart = React.memo<{
   item: ChatItem;
   replyChat: ReplyChat;
@@ -46,13 +49,13 @@ const MomentaryChatContentPart = React.memo<{
         <span className="MomentaryChat-nickname">
           {item.nickname || "No Name"}
         </span>
-        <span className="MomentaryChat-time">{item.time}</span>
+        <span className="MomentaryChat-time">{getChatTime(item)}</span>
       </div>
       <div
         className="MomentaryChat-text ck-content"
         dangerouslySetInnerHTML={sanitize(item.text)}
       />
-      {item.replies.map(([text, count]) => (
+      {(item.replies || []).map(([text, count]) => (
         <button
           key={text}
           className="MomentaryChat-icon"
