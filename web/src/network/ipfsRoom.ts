@@ -16,7 +16,7 @@ export const createRoom: CreateRoom = (
   receiveTrack
 ) => {
   let disposed = false;
-  let ipfs: IpfsType | null = null;
+  let myIpfs: IpfsType | null = null;
   let myPeerId: string | null = null;
   const connMap = createConnectionMap();
   if (process.env.NODE_ENV !== "production") {
@@ -105,7 +105,7 @@ export const createRoom: CreateRoom = (
   };
 
   const sendPayload = async (topic: string, payload: unknown) => {
-    if (!ipfs) return;
+    if (!myIpfs) return;
     try {
       console.log("payload to encrypt", topic, payload);
       const encrypted = await encrypt(
@@ -117,7 +117,7 @@ export const createRoom: CreateRoom = (
         console.warn("encrypted message too large, aborting");
         return;
       }
-      await ipfs.pubsub.publish(topic, encrypted);
+      await myIpfs.pubsub.publish(topic, encrypted);
     } catch (e) {
       console.error("sendPayload", e);
     }
@@ -327,7 +327,7 @@ export const createRoom: CreateRoom = (
 
   const checkPeers = async () => {
     if (disposed) return;
-    const peers = ipfs ? ipfs.pubsub.peers(roomTopic) : [];
+    const peers = myIpfs ? myIpfs.pubsub.peers(roomTopic) : [];
     connMap.forEachConns((conn) => {
       if (!peers.includes(conn.peer)) {
         connMap.delConn(conn);
@@ -352,7 +352,7 @@ export const createRoom: CreateRoom = (
 
   const initIpfs = async () => {
     updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
-    const instance: IpfsType = await Ipfs.create({
+    const ipfs: IpfsType = await Ipfs.create({
       repo: secureRandomId(),
       config: {
         Addresses: {
@@ -362,12 +362,12 @@ export const createRoom: CreateRoom = (
         },
       },
     });
-    myPeerId = (await instance.id()).id;
-    await instance.pubsub.subscribe(roomTopic, pubsubHandler);
-    await instance.pubsub.subscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
-    ipfs = instance;
+    myPeerId = (await ipfs.id()).id;
+    await ipfs.pubsub.subscribe(roomTopic, pubsubHandler);
+    await ipfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
+    myIpfs = ipfs;
     if (process.env.NODE_ENV !== "production") {
-      (window as any).myIpfs = ipfs;
+      (window as any).myIpfs = myIpfs;
     }
     checkPeers();
   };
@@ -375,10 +375,13 @@ export const createRoom: CreateRoom = (
 
   const dispose = async () => {
     disposed = true;
-    if (ipfs) {
-      await ipfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
-      await ipfs.pubsub.unsubscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
-      await ipfs.stop();
+    if (myIpfs) {
+      await myIpfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
+      await myIpfs.pubsub.unsubscribe(
+        `${roomTopic} ${myPeerId}`,
+        pubsubHandler
+      );
+      await myIpfs.stop();
     }
   };
 
