@@ -25,77 +25,6 @@ export const createRoom: CreateRoom = (
   let mediaTypes: string[] = [];
   let localStream: MediaStream | null = null;
 
-  const trackMediaTypeMap = new WeakMap<MediaStreamTrack, string>();
-
-  const addTrack = (mediaType: string, track: MediaStreamTrack) => {
-    if (!localStream) return;
-    trackMediaTypeMap.set(track, mediaType);
-    localStream.addTrack(track);
-    connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
-      try {
-        if (!localStream) return;
-        conn.sendPc.addTrack(track, localStream);
-      } catch (e) {
-        if (e.name === "InvalidAccessError") {
-          // ignore
-        } else {
-          throw e;
-        }
-      }
-    });
-  };
-
-  const removeTrack = (mediaType: string, track: MediaStreamTrack) => {
-    if (localStream) {
-      localStream.removeTrack(track);
-    }
-    connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
-      const senders = conn.sendPc.getSenders();
-      const sender = senders.find((s) => s.track === track);
-      if (sender) {
-        conn.sendPc.removeTrack(sender);
-      }
-    });
-  };
-
-  const syncAllTracks = (conn: Connection) => {
-    const senders = conn.sendPc.getSenders();
-    const mTypes = connMap.getMediaTypes(conn);
-    if (localStream) {
-      localStream.getTracks().forEach((track) => {
-        const mType = trackMediaTypeMap.get(track);
-        if (
-          localStream &&
-          mType &&
-          mTypes.includes(mType) &&
-          senders.every((sender) => sender.track !== track)
-        ) {
-          conn.sendPc.addTrack(track, localStream);
-        }
-      });
-    }
-    senders.forEach((sender) => {
-      if (sender.track) {
-        const mType = trackMediaTypeMap.get(sender.track);
-        if (!mType || !mTypes.includes(mType)) {
-          conn.sendPc.removeTrack(sender);
-        }
-      }
-    });
-    if (senders.some((sender) => sender.track && !sender.transport)) {
-      conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
-    }
-  };
-
-  const removeAllTracks = (conn: Connection) => {
-    const senders = conn.sendPc.getSenders();
-    senders.forEach((sender) => {
-      if (sender.track) {
-        conn.sendPc.removeTrack(sender);
-      }
-    });
-  };
-
   const roomTopic = roomId.slice(0, ROOM_ID_PREFIX_LEN);
 
   const showConnectedStatus = () => {
@@ -105,7 +34,6 @@ export const createRoom: CreateRoom = (
   };
 
   const sendPayload = async (topic: string, payload: unknown) => {
-    if (!myIpfs) return;
     try {
       console.log("payload to encrypt", topic, payload);
       const encrypted = await encrypt(
@@ -117,6 +45,7 @@ export const createRoom: CreateRoom = (
         console.warn("encrypted message too large, aborting");
         return;
       }
+      if (!myIpfs) return;
       await myIpfs.pubsub.publish(topic, encrypted);
     } catch (e) {
       console.error("sendPayload", e);
@@ -329,6 +258,7 @@ export const createRoom: CreateRoom = (
   const checkPeers = async () => {
     if (disposed) return;
     const peers = myIpfs ? myIpfs.pubsub.peers(roomTopic) : [];
+    const prevConnMapSize = connMap.size();
     connMap.forEachConns((conn) => {
       if (!peers.includes(conn.peer)) {
         connMap.delConn(conn);
@@ -338,6 +268,15 @@ export const createRoom: CreateRoom = (
         });
       }
     });
+    const prevIpfs = myIpfs;
+    if (prevIpfs && prevConnMapSize > 0 && connMap.size() === 0) {
+      myIpfs = null;
+      myPeerId = null;
+      await closeIpfs(prevIpfs);
+      await sleep(20 * 1000);
+      await initIpfs();
+      return;
+    }
     if (!peers.length) {
       updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
       await sleep(5000);
@@ -374,15 +313,87 @@ export const createRoom: CreateRoom = (
   };
   initIpfs();
 
+  const closeIpfs = async (ipfs: IpfsType) => {
+    await ipfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
+    await ipfs.pubsub.unsubscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
+    await ipfs.stop();
+  };
+
+  const trackMediaTypeMap = new WeakMap<MediaStreamTrack, string>();
+
+  const addTrack = (mediaType: string, track: MediaStreamTrack) => {
+    if (!localStream) return;
+    trackMediaTypeMap.set(track, mediaType);
+    localStream.addTrack(track);
+    connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
+      try {
+        if (!localStream) return;
+        conn.sendPc.addTrack(track, localStream);
+      } catch (e) {
+        if (e.name === "InvalidAccessError") {
+          // ignore
+        } else {
+          throw e;
+        }
+      }
+    });
+  };
+
+  const removeTrack = (mediaType: string, track: MediaStreamTrack) => {
+    if (localStream) {
+      localStream.removeTrack(track);
+    }
+    connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
+      const senders = conn.sendPc.getSenders();
+      const sender = senders.find((s) => s.track === track);
+      if (sender) {
+        conn.sendPc.removeTrack(sender);
+      }
+    });
+  };
+
+  const syncAllTracks = (conn: Connection) => {
+    const senders = conn.sendPc.getSenders();
+    const mTypes = connMap.getMediaTypes(conn);
+    if (localStream) {
+      localStream.getTracks().forEach((track) => {
+        const mType = trackMediaTypeMap.get(track);
+        if (
+          localStream &&
+          mType &&
+          mTypes.includes(mType) &&
+          senders.every((sender) => sender.track !== track)
+        ) {
+          conn.sendPc.addTrack(track, localStream);
+        }
+      });
+    }
+    senders.forEach((sender) => {
+      if (sender.track) {
+        const mType = trackMediaTypeMap.get(sender.track);
+        if (!mType || !mTypes.includes(mType)) {
+          conn.sendPc.removeTrack(sender);
+        }
+      }
+    });
+    if (senders.some((sender) => sender.track && !sender.transport)) {
+      conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
+    }
+  };
+
+  const removeAllTracks = (conn: Connection) => {
+    const senders = conn.sendPc.getSenders();
+    senders.forEach((sender) => {
+      if (sender.track) {
+        conn.sendPc.removeTrack(sender);
+      }
+    });
+  };
+
   const dispose = async () => {
     disposed = true;
     if (myIpfs) {
-      await myIpfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
-      await myIpfs.pubsub.unsubscribe(
-        `${roomTopic} ${myPeerId}`,
-        pubsubHandler
-      );
-      await myIpfs.stop();
+      closeIpfs(myIpfs);
     }
   };
 
