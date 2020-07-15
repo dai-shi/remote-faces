@@ -1,3 +1,5 @@
+import pako from "pako";
+
 export const sha256 = async (text: string) => {
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
@@ -50,14 +52,17 @@ export const importCryptoKey = async (
   return cryptoKey;
 };
 
+// encrypt with compression
 export const encrypt = async (data: string, key: string) => {
   const encoder = new TextEncoder();
+  const encoded = encoder.encode(data);
+  const compressed = pako.deflate(encoded);
   const cryptoKey = await importCryptoKey(key, ["encrypt"]);
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
   const encrypted = await window.crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     cryptoKey,
-    encoder.encode(data)
+    compressed
   );
   const buf = new Uint8Array(iv.length + encrypted.byteLength);
   buf.set(iv);
@@ -65,6 +70,7 @@ export const encrypt = async (data: string, key: string) => {
   return buf;
 };
 
+// decrypt with decompression
 export const decrypt = async (buf: ArrayBuffer, key: string) => {
   const cryptoKey = await importCryptoKey(key, ["decrypt"]);
   const decrypted = await window.crypto.subtle.decrypt(
@@ -72,7 +78,8 @@ export const decrypt = async (buf: ArrayBuffer, key: string) => {
     cryptoKey,
     buf.slice(12)
   );
+  const decompressed = pako.inflate(new Uint8Array(decrypted));
   const decoder = new TextDecoder("utf-8");
-  const data = decoder.decode(new Uint8Array(decrypted));
+  const data = decoder.decode(decompressed);
   return data;
 };
