@@ -34,7 +34,7 @@ export const createRoom: CreateRoom = (
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       try {
         if (!localStream) return;
-        conn.peerConnection.addTrack(track, localStream);
+        conn.sendPc.addTrack(track, localStream);
       } catch (e) {
         if (e.name === "InvalidAccessError") {
           // ignore
@@ -50,16 +50,16 @@ export const createRoom: CreateRoom = (
       localStream.removeTrack(track);
     }
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
-      const senders = conn.peerConnection.getSenders();
+      const senders = conn.sendPc.getSenders();
       const sender = senders.find((s) => s.track === track);
       if (sender) {
-        conn.peerConnection.removeTrack(sender);
+        conn.sendPc.removeTrack(sender);
       }
     });
   };
 
   const syncAllTracks = (conn: Connection) => {
-    const senders = conn.peerConnection.getSenders();
+    const senders = conn.sendPc.getSenders();
     const mTypes = connMap.getMediaTypes(conn);
     if (localStream) {
       localStream.getTracks().forEach((track) => {
@@ -70,7 +70,7 @@ export const createRoom: CreateRoom = (
           mTypes.includes(mType) &&
           senders.every((sender) => sender.track !== track)
         ) {
-          conn.peerConnection.addTrack(track, localStream);
+          conn.sendPc.addTrack(track, localStream);
         }
       });
     }
@@ -78,20 +78,20 @@ export const createRoom: CreateRoom = (
       if (sender.track) {
         const mType = trackMediaTypeMap.get(sender.track);
         if (!mType || !mTypes.includes(mType)) {
-          conn.peerConnection.removeTrack(sender);
+          conn.sendPc.removeTrack(sender);
         }
       }
     });
     if (senders.some((sender) => sender.track && !sender.transport)) {
-      conn.peerConnection.dispatchEvent(new Event("negotiationneeded"));
+      conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
     }
   };
 
   const removeAllTracks = (conn: Connection) => {
-    const senders = conn.peerConnection.getSenders();
+    const senders = conn.sendPc.getSenders();
     senders.forEach((sender) => {
       if (sender.track) {
-        conn.peerConnection.removeTrack(sender);
+        conn.sendPc.removeTrack(sender);
       }
     });
   };
@@ -144,16 +144,19 @@ export const createRoom: CreateRoom = (
         localStream = new MediaStream();
         connMap.forEachConns((conn) => {
           const connUserId = connMap.getUserId(conn);
-          if (!connUserId) return;
+          if (!connUserId) {
+            console.error("conn userId not set", conn);
+            return;
+          }
           const info: PeerInfo = {
             userId: connUserId,
             peerIndex: conn.peerIndex,
             mediaTypes: connMap.getMediaTypes(conn),
           };
-          conn.peerConnection.getReceivers().forEach((receiver) => {
+          conn.recvPc.getReceivers().forEach((receiver) => {
             if (receiver.track.readyState !== "live") return;
             receiveTrack(
-              setupTrackStopOnLongMute(receiver.track, conn.peerConnection),
+              setupTrackStopOnLongMute(receiver.track, conn.recvPc),
               info
             );
           });
@@ -174,10 +177,9 @@ export const createRoom: CreateRoom = (
     if (isObject((sdp as { offer: unknown }).offer)) {
       const { offer } = sdp as { offer: object };
       try {
-        await conn.peerConnection.setRemoteDescription(offer as any);
-        syncAllTracks(conn);
-        const answer = await conn.peerConnection.createAnswer();
-        await conn.peerConnection.setLocalDescription(answer);
+        await conn.recvPc.setRemoteDescription(offer as any);
+        const answer = await conn.recvPc.createAnswer();
+        await conn.recvPc.setLocalDescription(answer);
         sendSDP(conn, { answer });
       } catch (e) {
         console.info("handleSDP offer failed", e);
@@ -185,7 +187,7 @@ export const createRoom: CreateRoom = (
     } else if (isObject((sdp as { answer: unknown }).answer)) {
       const { answer } = sdp as { answer: object };
       try {
-        await conn.peerConnection.setRemoteDescription(answer as any);
+        await conn.sendPc.setRemoteDescription(answer as any);
       } catch (e) {
         console.info("handleSDP answer failed", e);
         await sleep(Math.random() * 30 * 1000);
@@ -207,7 +209,7 @@ export const createRoom: CreateRoom = (
   ) => {
     if (!isObject(iceCandidate)) return;
     try {
-      conn.peerConnection.addIceCandidate(iceCandidate as any);
+      conn.recvPc.addIceCandidate(iceCandidate as any);
     } catch (e) {
       console.info("handleCandidate failed", e);
     }
@@ -277,21 +279,21 @@ export const createRoom: CreateRoom = (
   const scheduledNegotiation = new WeakMap<Connection, boolean>();
   const initConnection = (peerId: string) => {
     const conn = connMap.addConn(peerId);
-    conn.peerConnection.addEventListener("icecandidate", (evt) => {
+    conn.sendPc.addEventListener("icecandidate", (evt) => {
       if (evt.candidate) {
         sendIceCandidate(conn, evt.candidate);
       }
     });
-    conn.peerConnection.addEventListener("negotiationneeded", async () => {
+    conn.sendPc.addEventListener("negotiationneeded", async () => {
       if (scheduledNegotiation.has(conn)) return;
       scheduledNegotiation.set(conn, true);
       await sleep(2000);
       scheduledNegotiation.delete(conn);
-      const offer = await conn.peerConnection.createOffer();
-      await conn.peerConnection.setLocalDescription(offer);
+      const offer = await conn.sendPc.createOffer();
+      await conn.sendPc.setLocalDescription(offer);
       sendSDP(conn, { offer });
     });
-    conn.peerConnection.addEventListener("track", (event: RTCTrackEvent) => {
+    conn.recvPc.addEventListener("track", (event: RTCTrackEvent) => {
       const connUserId = connMap.getUserId(conn);
       if (connUserId) {
         const info: PeerInfo = {
@@ -299,10 +301,9 @@ export const createRoom: CreateRoom = (
           peerIndex: conn.peerIndex,
           mediaTypes: connMap.getMediaTypes(conn),
         };
-        receiveTrack(
-          setupTrackStopOnLongMute(event.track, conn.peerConnection),
-          info
-        );
+        receiveTrack(setupTrackStopOnLongMute(event.track, conn.recvPc), info);
+      } else {
+        console.error("conn userId not set", conn);
       }
     });
     return conn;

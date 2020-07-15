@@ -8,7 +8,8 @@ const getNextPeerIndex = () => {
 export type Connection = {
   peerIndex: number;
   peer: string; // ipfsId
-  peerConnection: RTCPeerConnection;
+  sendPc: RTCPeerConnection;
+  recvPc: RTCPeerConnection;
 };
 
 const DEFAULT_CONFIG = {
@@ -63,7 +64,8 @@ export const createConnectionMap = () => {
     const conn: Connection = {
       peerIndex: getNextPeerIndex(),
       peer: peerId,
-      peerConnection: new RTCPeerConnection(DEFAULT_CONFIG),
+      sendPc: new RTCPeerConnection(DEFAULT_CONFIG),
+      recvPc: new RTCPeerConnection(DEFAULT_CONFIG),
     };
     map.set(conn.peer, { conn, mediaTypes: [] });
     return conn;
@@ -87,7 +89,8 @@ export const createConnectionMap = () => {
     const value = map.get(conn.peer);
     if (value && value.conn === conn) {
       map.delete(conn.peer);
-      conn.peerConnection.close();
+      conn.sendPc.close();
+      conn.recvPc.close();
     } else {
       throw new Error("delConn: does not exist");
     }
