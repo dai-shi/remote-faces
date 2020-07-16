@@ -2,7 +2,7 @@ import Peer from "peerjs";
 
 import { sleep } from "../utils/sleep";
 import { rand4, encrypt, decrypt } from "../utils/crypto";
-import { getServerConfigFromUrl } from "../utils/url";
+import { getPeerJsConfigFromUrl } from "../utils/url";
 import { isObject } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import {
@@ -267,10 +267,7 @@ export const createRoom: CreateRoom = (
     updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex });
     const id = generatePeerId(roomId, peerIndex);
     console.log("initMyPeer start", index, id);
-    const peer = new Peer(id, {
-      ...(getServerConfigFromUrl() || {}),
-      debug: 3,
-    });
+    const peer = new Peer(id, getPeerJsConfigFromUrl());
     myPeer = peer;
     peer.on("open", () => {
       myPeer = peer;
