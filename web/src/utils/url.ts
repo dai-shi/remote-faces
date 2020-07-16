@@ -36,10 +36,16 @@ export const setRoomIdToUrl = (roomId: string) => {
   window.location.hash = searchParams.toString();
 };
 
-export const getServerConfigFromUrl = () => {
+export const hasPeerJsConfigInUrl = () => {
   const hash = window.location.hash.slice(1);
   const searchParams = new URLSearchParams(hash);
-  const server = searchParams.get("server");
+  return searchParams.has("peerjs");
+};
+
+export const getPeerJsConfigFromUrl = () => {
+  const hash = window.location.hash.slice(1);
+  const searchParams = new URLSearchParams(hash);
+  const server = searchParams.get("peerjs");
   try {
     const url = new URL(server || "");
     const secure = url.protocol === "https:";
@@ -53,5 +59,5 @@ export const getServerConfigFromUrl = () => {
   } catch (e) {
     // ignore
   }
-  return null;
+  return undefined;
 };

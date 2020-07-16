@@ -33,6 +33,19 @@ export const createRoom: CreateRoom = (
     updateNetworkStatus({ type: "CONNECTED_PEERS", peerIndexList });
   };
 
+  const parsePayload = async (encrypted: ArrayBuffer): Promise<unknown> => {
+    try {
+      const payload = JSON.parse(
+        await decrypt(encrypted, roomId.slice(ROOM_ID_PREFIX_LEN))
+      );
+      console.log("decrypted payload", payload);
+      return payload;
+    } catch (e) {
+      console.info("Error in parsePayload", e, encrypted);
+      return undefined;
+    }
+  };
+
   const sendPayload = async (topic: string, payload: unknown) => {
     try {
       console.log("payload to encrypt", topic, payload);
@@ -72,13 +85,8 @@ export const createRoom: CreateRoom = (
       if (!localStream) {
         localStream = new MediaStream();
         connMap.forEachConns((conn) => {
-          const connUserId = connMap.getUserId(conn);
-          if (!connUserId) {
-            console.error("conn userId not set", conn);
-            return;
-          }
           const info: PeerInfo = {
-            userId: connUserId,
+            userId: conn.userId,
             peerIndex: conn.peerIndex,
             mediaTypes: connMap.getMediaTypes(conn),
           };
@@ -132,7 +140,7 @@ export const createRoom: CreateRoom = (
     sendPayload(`${roomTopic} ${conn.peer}`, { iceCandidate });
   };
 
-  const handlePayloadIceCandidate = async (
+  const handlePayloadIceCandidate = (
     conn: Connection,
     iceCandidate: unknown
   ) => {
@@ -141,12 +149,6 @@ export const createRoom: CreateRoom = (
       conn.recvPc.addIceCandidate(iceCandidate as any);
     } catch (e) {
       console.info("handleCandidate failed", e);
-    }
-  };
-
-  const handlePayloadUserId = (conn: Connection, payloadUserId: unknown) => {
-    if (typeof payloadUserId === "string") {
-      connMap.setUserId(conn, payloadUserId);
     }
   };
 
@@ -165,28 +167,21 @@ export const createRoom: CreateRoom = (
   };
 
   const handlePayloadData = (conn: Connection, data: unknown) => {
-    const connUserId = connMap.getUserId(conn);
-    if (connUserId) {
-      const info: PeerInfo = {
-        userId: connUserId,
-        peerIndex: conn.peerIndex,
-        mediaTypes: connMap.getMediaTypes(conn),
-      };
-      try {
-        receiveData(data, info);
-      } catch (e) {
-        console.warn("receiveData", e);
-      }
+    const info: PeerInfo = {
+      userId: conn.userId,
+      peerIndex: conn.peerIndex,
+      mediaTypes: connMap.getMediaTypes(conn),
+    };
+    try {
+      receiveData(data, info);
+    } catch (e) {
+      console.warn("receiveData", e);
     }
   };
 
-  const handlePayload = async (conn: Connection, encrypted: ArrayBuffer) => {
+  const handlePayload = async (conn: Connection, payload: unknown) => {
     if (disposed) return;
     try {
-      const payload = JSON.parse(
-        await decrypt(encrypted, roomId.slice(ROOM_ID_PREFIX_LEN))
-      );
-      console.log("decrypted payload", conn.peer, payload);
       if (!isObject(payload)) return;
 
       handlePayloadSDP(conn, (payload as { SDP?: unknown }).SDP);
@@ -194,20 +189,19 @@ export const createRoom: CreateRoom = (
         conn,
         (payload as { iceCandidate?: unknown }).iceCandidate
       );
-      handlePayloadUserId(conn, (payload as { userId?: unknown }).userId);
       handlePayloadMediaTypes(
         conn,
         (payload as { mediaTypes?: unknown }).mediaTypes
       );
       handlePayloadData(conn, (payload as { data?: unknown }).data);
     } catch (e) {
-      console.info("Error in handlePayload", e, encrypted);
+      console.info("Error in handlePayload", e, payload);
     }
   };
 
   const scheduledNegotiation = new WeakMap<Connection, boolean>();
-  const initConnection = (peerId: string) => {
-    const conn = connMap.addConn(peerId);
+  const initConnection = (peerId: string, payloadUserId: string) => {
+    const conn = connMap.addConn(peerId, payloadUserId);
     conn.sendPc.addEventListener("icecandidate", (evt) => {
       if (evt.candidate) {
         sendIceCandidate(conn, evt.candidate);
@@ -223,34 +217,38 @@ export const createRoom: CreateRoom = (
       sendSDP(conn, { offer });
     });
     conn.recvPc.addEventListener("track", (event: RTCTrackEvent) => {
-      const connUserId = connMap.getUserId(conn);
-      if (connUserId) {
-        const info: PeerInfo = {
-          userId: connUserId,
-          peerIndex: conn.peerIndex,
-          mediaTypes: connMap.getMediaTypes(conn),
-        };
-        receiveTrack(setupTrackStopOnLongMute(event.track, conn.recvPc), info);
-      } else {
-        console.error("conn userId not set", conn);
-      }
+      const info: PeerInfo = {
+        userId: conn.userId,
+        peerIndex: conn.peerIndex,
+        mediaTypes: connMap.getMediaTypes(conn),
+      };
+      receiveTrack(setupTrackStopOnLongMute(event.track, conn.recvPc), info);
+    });
+    notifyNewPeer(conn.peerIndex);
+    updateNetworkStatus({
+      type: "NEW_CONNECTION",
+      peerIndex: conn.peerIndex,
     });
     return conn;
   };
 
+  const getUserIdFromPayload = (payload: unknown) => {
+    if (!Object(payload)) return null;
+    const payloadUserId = (payload as { userId: unknown }).userId;
+    if (typeof payloadUserId !== "string") return null;
+    return payloadUserId;
+  };
+
   const pubsubHandler: PubsubHandler = async (msg) => {
     if (msg.from === myPeerId) return;
+    const payload = await parsePayload(msg.data);
+    const payloadUserId = getUserIdFromPayload(payload);
     let conn = connMap.getConn(msg.from);
+    if (!conn && payloadUserId) {
+      conn = initConnection(msg.from, payloadUserId);
+    }
     if (conn) {
-      await handlePayload(conn, msg.data);
-    } else {
-      conn = initConnection(msg.from);
-      await handlePayload(conn, msg.data);
-      notifyNewPeer(conn.peerIndex);
-      updateNetworkStatus({
-        type: "NEW_CONNECTION",
-        peerIndex: conn.peerIndex,
-      });
+      await handlePayload(conn, payload);
     }
     showConnectedStatus();
   };
@@ -279,14 +277,14 @@ export const createRoom: CreateRoom = (
     }
     if (!peers.length) {
       updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
-      await sleep(5000);
+      await sleep(1000);
       checkPeers();
       return;
     }
     if (!connMap.size()) {
       await broadcastData(null);
     }
-    await sleep(10 * 1000);
+    await sleep(5 * 1000);
     checkPeers();
   };
 

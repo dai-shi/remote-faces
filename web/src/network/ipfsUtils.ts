@@ -8,6 +8,7 @@ const getNextPeerIndex = () => {
 export type Connection = {
   peerIndex: number;
   peer: string; // ipfsId
+  userId: string;
   sendPc: RTCPeerConnection;
   recvPc: RTCPeerConnection;
 };
@@ -27,22 +28,9 @@ const DEFAULT_CONFIG = {
 export const createConnectionMap = () => {
   type Value = {
     conn: Connection;
-    userId?: string;
     mediaTypes: string[];
   };
   const map = new Map<string, Value>();
-
-  const setUserId = (conn: Connection, userId: string) => {
-    const value = map.get(conn.peer);
-    if (value) {
-      value.userId = userId;
-    }
-  };
-
-  const getUserId = (conn: Connection) => {
-    const value = map.get(conn.peer);
-    return value && value.userId;
-  };
 
   const setMediaTypes = (conn: Connection, mediaTypes: string[]) => {
     const value = map.get(conn.peer);
@@ -56,7 +44,7 @@ export const createConnectionMap = () => {
     return (value && value.mediaTypes) || [];
   };
 
-  const addConn = (peerId: string) => {
+  const addConn = (peerId: string, userId: string) => {
     const value = map.get(peerId);
     if (value) {
       throw new Error("addConn: already exists");
@@ -64,6 +52,7 @@ export const createConnectionMap = () => {
     const conn: Connection = {
       peerIndex: getNextPeerIndex(),
       peer: peerId,
+      userId,
       sendPc: new RTCPeerConnection(DEFAULT_CONFIG),
       recvPc: new RTCPeerConnection(DEFAULT_CONFIG),
     };
@@ -119,8 +108,6 @@ export const createConnectionMap = () => {
   const size = () => map.size;
 
   return {
-    setUserId,
-    getUserId,
     setMediaTypes,
     getMediaTypes,
     addConn,
