@@ -76,7 +76,7 @@ export const createRoom: CreateRoom = (
     const conn = connMap.findConn(peerIndex);
     if (!conn) return;
     const payload = { userId, data, mediaTypes };
-    sendPayload(`${roomTopic} ${conn.peer}`, payload);
+    await sendPayload(`${roomTopic} ${conn.peer}`, payload);
   };
 
   const acceptMediaTypes = (mTypes: string[]) => {
@@ -327,6 +327,7 @@ export const createRoom: CreateRoom = (
       try {
         if (!localStream) return;
         conn.sendPc.addTrack(track, localStream);
+        conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
       } catch (e) {
         if (e.name === "InvalidAccessError") {
           // ignore
@@ -346,6 +347,7 @@ export const createRoom: CreateRoom = (
       const sender = senders.find((s) => s.track === track);
       if (sender) {
         conn.sendPc.removeTrack(sender);
+        conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
       }
     });
   };
@@ -386,6 +388,7 @@ export const createRoom: CreateRoom = (
         conn.sendPc.removeTrack(sender);
       }
     });
+    conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
   };
 
   const dispose = async () => {
