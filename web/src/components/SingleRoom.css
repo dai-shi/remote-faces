@@ -1,3 +1,7 @@
+::-webkit-scrollbar {
+  display: none;
+}
+
 .SingleRoom-container {
   display: grid;
   column-gap: 12px;
@@ -32,5 +36,5 @@
 }
 
 .SingleRoom-toggle-3rd-column:focus {
-  outline:0;
+  outline: 0;
 }
