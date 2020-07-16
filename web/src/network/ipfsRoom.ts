@@ -76,7 +76,9 @@ export const createRoom: CreateRoom = (
     const conn = connMap.findConn(peerIndex);
     if (!conn) return;
     const payload = { userId, data, mediaTypes };
-    await sendPayload(`${roomTopic} ${conn.peer}`, payload);
+    await sendPayload(roomTopic, { ...payload, to: conn.peer });
+    // TODO direct connection
+    // await sendPayload(`${roomTopic} ${conn.peer}`, payload);
   };
 
   const acceptMediaTypes = (mTypes: string[]) => {
@@ -106,7 +108,9 @@ export const createRoom: CreateRoom = (
   };
 
   const sendSDP = (conn: Connection, sdp: unknown) => {
-    sendPayload(`${roomTopic} ${conn.peer}`, { SDP: sdp });
+    sendPayload(roomTopic, { SDP: sdp, to: conn.peer });
+    // TODO direct connection
+    // sendPayload(`${roomTopic} ${conn.peer}`, { SDP: sdp });
   };
 
   const handlePayloadSDP = async (conn: Connection, sdp: unknown) => {
@@ -137,7 +141,9 @@ export const createRoom: CreateRoom = (
   };
 
   const sendIceCandidate = (conn: Connection, iceCandidate: unknown) => {
-    sendPayload(`${roomTopic} ${conn.peer}`, { iceCandidate });
+    sendPayload(roomTopic, { iceCandidate, to: conn.peer });
+    // TODO direct connection
+    // sendPayload(`${roomTopic} ${conn.peer}`, { iceCandidate });
   };
 
   const handlePayloadIceCandidate = (
@@ -232,6 +238,14 @@ export const createRoom: CreateRoom = (
     return conn;
   };
 
+  // TODO direct connection
+  const getToFromPayload = (payload: unknown) => {
+    if (!Object(payload)) return null;
+    const payloadTo = (payload as { to: unknown }).to;
+    if (typeof payloadTo !== "string") return null;
+    return payloadTo;
+  };
+
   const getUserIdFromPayload = (payload: unknown) => {
     if (!Object(payload)) return null;
     const payloadUserId = (payload as { userId: unknown }).userId;
@@ -242,6 +256,9 @@ export const createRoom: CreateRoom = (
   const pubsubHandler: PubsubHandler = async (msg) => {
     if (msg.from === myPeerId) return;
     const payload = await parsePayload(msg.data);
+    // TODO direct connection
+    const payloadTo = getToFromPayload(payload);
+    if (payloadTo && payloadTo !== myPeerId) return;
     const payloadUserId = getUserIdFromPayload(payload);
     let conn = connMap.getConn(msg.from);
     if (!conn && payloadUserId) {
@@ -302,7 +319,8 @@ export const createRoom: CreateRoom = (
     });
     myPeerId = (await ipfs.id()).id;
     await ipfs.pubsub.subscribe(roomTopic, pubsubHandler);
-    await ipfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
+    // TODO direct connection
+    // await ipfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
     myIpfs = ipfs;
     if (process.env.NODE_ENV !== "production") {
       (window as any).myIpfs = myIpfs;
@@ -313,7 +331,8 @@ export const createRoom: CreateRoom = (
 
   const closeIpfs = async (ipfs: IpfsType) => {
     await ipfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
-    await ipfs.pubsub.unsubscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
+    // TODO direct connection
+    // await ipfs.pubsub.unsubscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
     await ipfs.stop();
   };
 
