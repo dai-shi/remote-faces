@@ -7,11 +7,6 @@ import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 
 const initialConfigOpen = getStringItem("config_hidden") !== "true";
 
-const appLink = `remote-faces://${window.location.href.replace(
-  /^https:\/\//,
-  ""
-)}`;
-
 const TextField = React.memo<{
   initialText: string;
   onUpdate: (text: string) => void;
@@ -74,6 +69,11 @@ export const SettingPanel = React.memo<{
     const videoDevices = useVideoDevices();
     const audioDevices = useAudioDevices();
     const networkStatus = useRoomNetworkStatus(roomId, userId);
+
+    const appLink = `remote-faces://${window.location.href.replace(
+      /^https:\/\//,
+      ""
+    )}`;
 
     return (
       <div className="SettingPanel-container">
