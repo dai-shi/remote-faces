@@ -76,9 +76,7 @@ export const createRoom: CreateRoom = (
     const conn = connMap.findConn(peerIndex);
     if (!conn) return;
     const payload = { userId, data, mediaTypes };
-    await sendPayload(roomTopic, { ...payload, to: conn.peer });
-    // TODO direct connection
-    // await sendPayload(`${roomTopic} ${conn.peer}`, payload);
+    await sendPayload(`${roomTopic} ${conn.peer}`, payload);
   };
 
   const acceptMediaTypes = (mTypes: string[]) => {
@@ -108,51 +106,78 @@ export const createRoom: CreateRoom = (
   };
 
   const sendSDP = (conn: Connection, sdp: unknown) => {
-    sendPayload(roomTopic, { SDP: sdp, to: conn.peer });
-    // TODO direct connection
-    // sendPayload(`${roomTopic} ${conn.peer}`, { SDP: sdp });
+    sendPayload(`${roomTopic} ${conn.peer}`, { SDP: sdp });
   };
 
   const handlePayloadSDP = async (conn: Connection, sdp: unknown) => {
     if (!isObject(sdp)) return;
+    if (typeof (sdp as { negotiationId: unknown }).negotiationId !== "string") {
+      console.warn("negotiationId not found in SDP");
+      return;
+    }
+    const { negotiationId } = sdp as { negotiationId: string };
     if (isObject((sdp as { offer: unknown }).offer)) {
       const { offer } = sdp as { offer: object };
       try {
         await conn.recvPc.setRemoteDescription(offer as any);
         const answer = await conn.recvPc.createAnswer();
         await conn.recvPc.setLocalDescription(answer);
-        sendSDP(conn, { answer });
+        sendSDP(conn, { negotiationId, answer });
       } catch (e) {
         console.info("handleSDP offer failed", e);
       }
     } else if (isObject((sdp as { answer: unknown }).answer)) {
+      if (negotiationIdMap.get(conn) === negotiationId) {
+        negotiationIdMap.delete(conn);
+      }
       const { answer } = sdp as { answer: object };
       try {
         await conn.sendPc.setRemoteDescription(answer as any);
       } catch (e) {
         console.info("handleSDP answer failed", e);
-        await sleep(Math.random() * 30 * 1000);
-        removeAllTracks(conn);
-        syncAllTracks(conn);
       }
     } else {
       console.warn("unknown SDP", sdp);
     }
   };
 
-  const sendIceCandidate = (conn: Connection, iceCandidate: unknown) => {
-    sendPayload(roomTopic, { iceCandidate, to: conn.peer });
-    // TODO direct connection
-    // sendPayload(`${roomTopic} ${conn.peer}`, { iceCandidate });
+  const negotiationIdMap = new WeakMap<Connection, string>();
+  const startNegotiation = (conn: Connection) => {
+    const running = negotiationIdMap.has(conn);
+    negotiationIdMap.set(conn, secureRandomId());
+    if (running) return;
+    const negotiate = async () => {
+      const negotiationId = negotiationIdMap.get(conn);
+      if (!negotiationId) return;
+      const offer = await conn.sendPc.createOffer();
+      await conn.sendPc.setLocalDescription(offer);
+      sendSDP(conn, { negotiationId, offer });
+      await sleep(5000);
+      negotiate();
+    };
+    negotiate();
+  };
+
+  const sendIceCandidate = (
+    conn: Connection,
+    iceDirection: "send" | "recv",
+    iceCandidate: unknown
+  ) => {
+    sendPayload(`${roomTopic} ${conn.peer}`, { iceDirection, iceCandidate });
   };
 
   const handlePayloadIceCandidate = (
     conn: Connection,
+    iceDirection: unknown,
     iceCandidate: unknown
   ) => {
     if (!isObject(iceCandidate)) return;
     try {
-      conn.recvPc.addIceCandidate(iceCandidate as any);
+      if (iceDirection === "send") {
+        conn.recvPc.addIceCandidate(iceCandidate as any);
+      } else if (iceDirection === "recv") {
+        conn.sendPc.addIceCandidate(iceCandidate as any);
+      }
     } catch (e) {
       console.info("handleCandidate failed", e);
     }
@@ -193,6 +218,7 @@ export const createRoom: CreateRoom = (
       handlePayloadSDP(conn, (payload as { SDP?: unknown }).SDP);
       handlePayloadIceCandidate(
         conn,
+        (payload as { iceDirection?: unknown }).iceDirection,
         (payload as { iceCandidate?: unknown }).iceCandidate
       );
       handlePayloadMediaTypes(
@@ -205,22 +231,17 @@ export const createRoom: CreateRoom = (
     }
   };
 
-  const scheduledNegotiation = new WeakMap<Connection, boolean>();
   const initConnection = (peerId: string, payloadUserId: string) => {
     const conn = connMap.addConn(peerId, payloadUserId);
     conn.sendPc.addEventListener("icecandidate", (evt) => {
       if (evt.candidate) {
-        sendIceCandidate(conn, evt.candidate);
+        sendIceCandidate(conn, "send", evt.candidate);
       }
     });
-    conn.sendPc.addEventListener("negotiationneeded", async () => {
-      if (scheduledNegotiation.has(conn)) return;
-      scheduledNegotiation.set(conn, true);
-      await sleep(2000);
-      scheduledNegotiation.delete(conn);
-      const offer = await conn.sendPc.createOffer();
-      await conn.sendPc.setLocalDescription(offer);
-      sendSDP(conn, { offer });
+    conn.recvPc.addEventListener("icecandidate", (evt) => {
+      if (evt.candidate) {
+        sendIceCandidate(conn, "recv", evt.candidate);
+      }
     });
     conn.recvPc.addEventListener("track", (event: RTCTrackEvent) => {
       const info: PeerInfo = {
@@ -238,16 +259,8 @@ export const createRoom: CreateRoom = (
     return conn;
   };
 
-  // TODO direct connection
-  const getToFromPayload = (payload: unknown) => {
-    if (!Object(payload)) return null;
-    const payloadTo = (payload as { to: unknown }).to;
-    if (typeof payloadTo !== "string") return null;
-    return payloadTo;
-  };
-
   const getUserIdFromPayload = (payload: unknown) => {
-    if (!Object(payload)) return null;
+    if (!isObject(payload)) return null;
     const payloadUserId = (payload as { userId: unknown }).userId;
     if (typeof payloadUserId !== "string") return null;
     return payloadUserId;
@@ -256,9 +269,6 @@ export const createRoom: CreateRoom = (
   const pubsubHandler: PubsubHandler = async (msg) => {
     if (msg.from === myPeerId) return;
     const payload = await parsePayload(msg.data);
-    // TODO direct connection
-    const payloadTo = getToFromPayload(payload);
-    if (payloadTo && payloadTo !== myPeerId) return;
     const payloadUserId = getUserIdFromPayload(payload);
     let conn = connMap.getConn(msg.from);
     if (!conn && payloadUserId) {
@@ -319,8 +329,7 @@ export const createRoom: CreateRoom = (
     });
     myPeerId = (await ipfs.id()).id;
     await ipfs.pubsub.subscribe(roomTopic, pubsubHandler);
-    // TODO direct connection
-    // await ipfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
+    await ipfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
     myIpfs = ipfs;
     if (process.env.NODE_ENV !== "production") {
       (window as any).myIpfs = myIpfs;
@@ -331,8 +340,7 @@ export const createRoom: CreateRoom = (
 
   const closeIpfs = async (ipfs: IpfsType) => {
     await ipfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
-    // TODO direct connection
-    // await ipfs.pubsub.unsubscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
+    await ipfs.pubsub.unsubscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
     await ipfs.stop();
   };
 
@@ -346,7 +354,7 @@ export const createRoom: CreateRoom = (
       try {
         if (!localStream) return;
         conn.sendPc.addTrack(track, localStream);
-        conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
+        startNegotiation(conn);
       } catch (e) {
         if (e.name === "InvalidAccessError") {
           // ignore
@@ -366,7 +374,7 @@ export const createRoom: CreateRoom = (
       const sender = senders.find((s) => s.track === track);
       if (sender) {
         conn.sendPc.removeTrack(sender);
-        conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
+        startNegotiation(conn);
       }
     });
   };
@@ -384,6 +392,7 @@ export const createRoom: CreateRoom = (
           senders.every((sender) => sender.track !== track)
         ) {
           conn.sendPc.addTrack(track, localStream);
+          startNegotiation(conn);
         }
       });
     }
@@ -392,22 +401,10 @@ export const createRoom: CreateRoom = (
         const mType = trackMediaTypeMap.get(sender.track);
         if (!mType || !mTypes.includes(mType)) {
           conn.sendPc.removeTrack(sender);
+          startNegotiation(conn);
         }
       }
     });
-    if (senders.some((sender) => sender.track && !sender.transport)) {
-      conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
-    }
-  };
-
-  const removeAllTracks = (conn: Connection) => {
-    const senders = conn.sendPc.getSenders();
-    senders.forEach((sender) => {
-      if (sender.track) {
-        conn.sendPc.removeTrack(sender);
-      }
-    });
-    conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
   };
 
   const dispose = async () => {
