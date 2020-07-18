@@ -10,6 +10,7 @@ import {
 } from "./useRoom";
 
 type ImageUrl = string;
+
 type FaceInfo = {
   nickname: string;
   message: string;
@@ -17,27 +18,31 @@ type FaceInfo = {
   micOn: boolean;
   speakerOn: boolean;
 };
+
+const isFaceInfo = (x: unknown): x is FaceInfo =>
+  isObject(x) &&
+  typeof (x as { nickname: unknown }).nickname === "string" &&
+  typeof (x as { message: unknown }).message === "string" &&
+  typeof (x as { liveMode: unknown }).liveMode === "boolean" &&
+  typeof (x as { micOn: unknown }).micOn === "boolean" &&
+  typeof (x as { speakerOn: unknown }).speakerOn === "boolean";
+
 type ImageData = {
   image: ImageUrl;
   info: FaceInfo;
 };
+
+const isImageData = (x: unknown): x is ImageData =>
+  isObject(x) &&
+  typeof (x as { image: unknown }).image === "string" &&
+  isFaceInfo((x as { info: unknown }).info);
+
 type RoomImage = ImageData & {
   userId: string;
   received: number; // in milliseconds
   obsoleted: boolean;
   peerIndex: number;
 };
-
-const isFaceInfo = (x: unknown): x is FaceInfo =>
-  isObject(x) &&
-  typeof (x as { nickname: unknown }).nickname === "string" &&
-  typeof (x as { message: unknown }).message === "string" &&
-  typeof (x as { liveMode: unknown }).liveMode === "boolean";
-
-const isImageData = (x: unknown): x is ImageData =>
-  isObject(x) &&
-  typeof (x as { image: unknown }).image === "string" &&
-  isFaceInfo((x as { info: unknown }).info);
 
 export const useFaceImages = (
   roomId: string,
