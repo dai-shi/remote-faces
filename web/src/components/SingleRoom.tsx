@@ -29,6 +29,7 @@ export const SingleRoom = React.memo<{
 
   const [videoDeviceId, setVideoDeviceId] = useState(initialVideoDeviceId);
   const [audioDeviceId, setAudioDeviceId] = useState(initialAudioDeviceId);
+  const [suspended, setSuspended] = useState(false);
   const [liveMode, setLiveMode] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(false);
@@ -41,6 +42,8 @@ export const SingleRoom = React.memo<{
     <div className="SingleRoom-container">
       <div className="SingleRoom-1st-column">
         <ControlPanel
+          suspended={suspended}
+          setSuspended={setSuspended}
           liveMode={liveMode}
           setLiveMode={setLiveMode}
           micOn={micOn}
@@ -57,6 +60,7 @@ export const SingleRoom = React.memo<{
           audioDeviceId={audioDeviceId}
           nickname={nickname}
           statusMesg={`${emoji?.native || " "}${statusMesg}`}
+          suspended={suspended}
           liveMode={liveMode}
           micOn={micOn}
           speakerOn={speakerOn}

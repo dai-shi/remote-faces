@@ -3,6 +3,8 @@ import React, { Dispatch, SetStateAction } from "react";
 import "./ControlPanel.css";
 
 export const ControlPanel = React.memo<{
+  suspended: boolean;
+  setSuspended: Dispatch<SetStateAction<boolean>>;
   liveMode: boolean;
   setLiveMode: Dispatch<SetStateAction<boolean>>;
   micOn: boolean;
@@ -13,11 +15,11 @@ export const ControlPanel = React.memo<{
   setSecondColumnOpen: Dispatch<SetStateAction<boolean>>;
 }>(
   ({
+    suspended,
+    setSuspended,
     liveMode,
     setLiveMode,
-    micOn,
     setMicOn,
-    speakerOn,
     setSpeakerOn,
     secondColumnOpen,
     setSecondColumnOpen,
@@ -25,11 +27,11 @@ export const ControlPanel = React.memo<{
     <div className="ControlPanel-container">
       <button
         type="button"
-        onClick={() => setLiveMode((x) => !x)}
-        title={liveMode ? "Disable Live Mode" : "Enable Live Mode"}
+        onClick={() => setSuspended((x) => !x)}
+        title={suspended ? "Enable Camera" : "Disable Camera"}
       >
-        &#x1F3A5;
-        {!liveMode && <span className="ControlPanel-disabled">&#10060;</span>}
+        &#x1F4F7;
+        {suspended && <span className="ControlPanel-disabled">&#10060;</span>}
       </button>
       <button
         type="button"
@@ -40,20 +42,39 @@ export const ControlPanel = React.memo<{
       </button>
       <button
         type="button"
-        onClick={() => setMicOn((x) => !x)}
-        title={micOn ? "Disable Mic" : "Enable Mic"}
+        onClick={() => setLiveMode((x) => !x)}
+        title={liveMode ? "Disable Live Mode" : "Enable Live Mode"}
       >
-        &#x1F3A4;
-        {!micOn && <span className="ControlPanel-disabled">&#10060;</span>}
+        &#x1F3A5;
+        {!liveMode && <span className="ControlPanel-disabled">&#10060;</span>}
       </button>
-      <button
-        type="button"
-        onClick={() => setSpeakerOn((x) => !x)}
-        title={speakerOn ? "Disable Speaker" : "Enable Speaker"}
-      >
-        <>&#x1F508;</>
-        {!speakerOn && <span className="ControlPanel-disabled">&#10060;</span>}
-      </button>
+      <div className="ControlPanel-select">
+        &#x1F39B;
+        <select
+          onChange={(e) => {
+            switch (e.target.value) {
+              case "off":
+                setSpeakerOn(false);
+                setMicOn(false);
+                break;
+              case "speaker":
+                setSpeakerOn(true);
+                setMicOn(false);
+                break;
+              case "mic":
+                setSpeakerOn(true);
+                setMicOn(true);
+                break;
+              default:
+                throw new Error("no option");
+            }
+          }}
+        >
+          <option value="off">Audio Off</option>
+          <option value="speaker">Speaker Only</option>
+          <option value="mic">Mic + Speaker</option>
+        </select>
+      </div>
     </div>
   )
 );

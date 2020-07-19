@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 
 import { isObject } from "../utils/types";
+import { NEUTRAL_FACE } from "../media/imagePresets";
 import { takePhoto } from "../media/capture";
 import {
   useRoomData,
@@ -49,6 +50,7 @@ export const useFaceImages = (
   userId: string,
   nickname: string,
   statusMesg: string,
+  suspended: boolean,
   liveMode: boolean,
   micOn: boolean,
   speakerOn: boolean,
@@ -148,7 +150,7 @@ export const useFaceImages = (
       if (didCleanup) return;
       try {
         checkObsoletedImage();
-        const image = await takePhoto(deviceId);
+        const image = suspended ? NEUTRAL_FACE : await takePhoto(deviceId);
         if (didCleanup) return;
         setMyImage(image);
         const info: FaceInfo = {
@@ -180,6 +182,7 @@ export const useFaceImages = (
     deviceId,
     nickname,
     statusMesg,
+    suspended,
     liveMode,
     micOn,
     speakerOn,

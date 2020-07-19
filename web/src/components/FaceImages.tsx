@@ -1,11 +1,9 @@
 import React from "react";
 
 import "./FaceImages.css";
+import { BLANK_IMAGE } from "../media/imagePresets";
 import { useFaceImages } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
-
-const BLANK_IMAGE =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQI12NgYAAAAAMAASDVlMcAAAAASUVORK5CYII=";
 
 const FaceImage = React.memo<{
   image?: string;
@@ -15,8 +13,8 @@ const FaceImage = React.memo<{
   liveMode: boolean;
   stream?: MediaStream;
   muted: boolean;
-  micOn?: boolean;
-  speakerOn?: boolean;
+  micOn: boolean;
+  speakerOn: boolean;
 }>(
   ({
     image,
@@ -82,6 +80,7 @@ export const FaceImages = React.memo<{
   userId: string;
   nickname: string;
   statusMesg: string;
+  suspended: boolean;
   liveMode: boolean;
   micOn: boolean;
   speakerOn: boolean;
@@ -93,6 +92,7 @@ export const FaceImages = React.memo<{
     userId,
     nickname,
     statusMesg,
+    suspended,
     liveMode,
     micOn,
     speakerOn,
@@ -104,6 +104,7 @@ export const FaceImages = React.memo<{
       userId,
       nickname,
       statusMesg,
+      suspended,
       liveMode,
       micOn,
       speakerOn,
@@ -128,6 +129,8 @@ export const FaceImages = React.memo<{
           liveMode={liveMode}
           stream={faceStream || undefined}
           muted
+          micOn={micOn}
+          speakerOn={speakerOn}
         />
         {roomImages.map((item) => (
           <FaceImage
