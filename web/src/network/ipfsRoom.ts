@@ -58,7 +58,10 @@ export const createRoom: CreateRoom = (
         console.warn("encrypted message too large, aborting");
         return;
       }
-      if (!myIpfs) return;
+      if (!myIpfs) {
+        console.warn("no myIpfs initialized");
+        return;
+      }
       await myIpfs.pubsub.publish(topic, encrypted);
     } catch (e) {
       console.error("sendPayload", e);
@@ -78,6 +81,9 @@ export const createRoom: CreateRoom = (
     const payload = { userId, data, mediaTypes };
     await sendPayload(`${roomTopic} ${conn.peer}`, payload);
   };
+  if (process.env.NODE_ENV !== "production") {
+    (window as any).sendData = sendData;
+  }
 
   const acceptMediaTypes = (mTypes: string[]) => {
     mediaTypes = mTypes;
@@ -105,8 +111,8 @@ export const createRoom: CreateRoom = (
     broadcastData(null);
   };
 
-  const sendSDP = (conn: Connection, sdp: unknown) => {
-    sendPayload(`${roomTopic} ${conn.peer}`, { SDP: sdp });
+  const sendSDP = async (conn: Connection, sdp: unknown) => {
+    await sendPayload(`${roomTopic} ${conn.peer}`, { SDP: sdp });
   };
 
   const handlePayloadSDP = async (conn: Connection, sdp: unknown) => {
@@ -151,7 +157,7 @@ export const createRoom: CreateRoom = (
       if (!negotiationId) return;
       const offer = await conn.sendPc.createOffer();
       await conn.sendPc.setLocalDescription(offer);
-      sendSDP(conn, { negotiationId, offer });
+      await sendSDP(conn, { negotiationId, offer });
       await sleep(5000);
       negotiate();
     };
@@ -271,8 +277,12 @@ export const createRoom: CreateRoom = (
     const payload = await parsePayload(msg.data);
     const payloadUserId = getUserIdFromPayload(payload);
     let conn = connMap.getConn(msg.from);
-    if (!conn && payloadUserId) {
-      conn = initConnection(msg.from, payloadUserId);
+    if (!conn) {
+      if (payloadUserId) {
+        conn = initConnection(msg.from, payloadUserId);
+      } else {
+        console.warn("cannot initialize conn without user id");
+      }
     }
     if (conn) {
       await handlePayload(conn, payload);
@@ -283,7 +293,6 @@ export const createRoom: CreateRoom = (
   const checkPeers = async () => {
     if (disposed) return;
     const peers = myIpfs ? myIpfs.pubsub.peers(roomTopic) : [];
-    const prevConnMapSize = connMap.size();
     connMap.forEachConns((conn) => {
       if (!peers.includes(conn.peer)) {
         connMap.delConn(conn);
@@ -293,8 +302,12 @@ export const createRoom: CreateRoom = (
         });
       }
     });
-    const prevIpfs = myIpfs;
-    if (prevIpfs && prevConnMapSize > 0 && connMap.size() === 0) {
+    if (
+      myIpfs &&
+      connMap.size() === 0 &&
+      lastInitIpfsTime + 3 * 60 * 1000 < Date.now()
+    ) {
+      const prevIpfs = myIpfs;
       myIpfs = null;
       myPeerId = null;
       await closeIpfs(prevIpfs);
@@ -311,11 +324,13 @@ export const createRoom: CreateRoom = (
     if (!connMap.size()) {
       await broadcastData(null);
     }
-    await sleep(5 * 1000);
+    await sleep(5000);
     checkPeers();
   };
 
+  let lastInitIpfsTime = 0;
   const initIpfs = async () => {
+    lastInitIpfsTime = Date.now();
     updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
     const ipfs: IpfsType = await Ipfs.create({
       repo: secureRandomId(),
@@ -339,8 +354,8 @@ export const createRoom: CreateRoom = (
   initIpfs();
 
   const closeIpfs = async (ipfs: IpfsType) => {
-    await ipfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
     await ipfs.pubsub.unsubscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
+    await ipfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
     await ipfs.stop();
   };
 
