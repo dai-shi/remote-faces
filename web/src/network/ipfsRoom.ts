@@ -2,7 +2,7 @@ import Ipfs, { IpfsType, PubsubHandler } from "ipfs";
 
 import { sleep } from "../utils/sleep";
 import { secureRandomId, encrypt, decrypt } from "../utils/crypto";
-import { isObject } from "../utils/types";
+import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./ipfsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
@@ -68,6 +68,17 @@ export const createRoom: CreateRoom = (
     }
   };
 
+  const sendPayloadDirectly = async (conn: Connection, payload: unknown) => {
+    const topic = `${roomTopic} ${conn.peer}`;
+    // HACK somehow, publish doesn't work without this
+    if (myIpfs) {
+      const noop = () => null;
+      await myIpfs.pubsub.subscribe(topic, noop);
+      await myIpfs.pubsub.unsubscribe(topic, noop);
+    }
+    await sendPayload(topic, payload);
+  };
+
   const broadcastData = async (data: unknown) => {
     if (disposed) return;
     const payload = { userId, data, mediaTypes };
@@ -79,7 +90,7 @@ export const createRoom: CreateRoom = (
     const conn = connMap.findConn(peerIndex);
     if (!conn) return;
     const payload = { userId, data, mediaTypes };
-    await sendPayload(`${roomTopic} ${conn.peer}`, payload);
+    await sendPayloadDirectly(conn, payload);
   };
   if (process.env.NODE_ENV !== "production") {
     (window as any).sendData = sendData;
@@ -111,34 +122,43 @@ export const createRoom: CreateRoom = (
     broadcastData(null);
   };
 
-  const sendSDP = async (conn: Connection, sdp: unknown) => {
-    await sendPayload(`${roomTopic} ${conn.peer}`, { SDP: sdp });
+  const sendSDP = async (
+    conn: Connection,
+    sdp:
+      | {
+          negotiationId: string;
+          offer: RTCSessionDescriptionInit;
+        }
+      | {
+          negotiationId: string;
+          answer: RTCSessionDescriptionInit;
+        }
+  ) => {
+    await sendPayloadDirectly(conn, { SDP: sdp });
   };
 
   const handlePayloadSDP = async (conn: Connection, sdp: unknown) => {
     if (!isObject(sdp)) return;
-    if (typeof (sdp as { negotiationId: unknown }).negotiationId !== "string") {
+    if (!hasStringProp(sdp, "negotiationId")) {
       console.warn("negotiationId not found in SDP");
       return;
     }
-    const { negotiationId } = sdp as { negotiationId: string };
-    if (isObject((sdp as { offer: unknown }).offer)) {
-      const { offer } = sdp as { offer: object };
+    const { negotiationId } = sdp;
+    if (hasObjectProp(sdp, "offer")) {
       try {
-        await conn.recvPc.setRemoteDescription(offer as any);
+        await conn.recvPc.setRemoteDescription(sdp.offer);
         const answer = await conn.recvPc.createAnswer();
         await conn.recvPc.setLocalDescription(answer);
         sendSDP(conn, { negotiationId, answer });
       } catch (e) {
         console.info("handleSDP offer failed", e);
       }
-    } else if (isObject((sdp as { answer: unknown }).answer)) {
+    } else if (hasObjectProp(sdp, "answer")) {
       if (negotiationIdMap.get(conn) === negotiationId) {
         negotiationIdMap.delete(conn);
       }
-      const { answer } = sdp as { answer: object };
       try {
-        await conn.sendPc.setRemoteDescription(answer as any);
+        await conn.sendPc.setRemoteDescription(sdp.answer);
       } catch (e) {
         console.info("handleSDP answer failed", e);
       }
@@ -164,25 +184,31 @@ export const createRoom: CreateRoom = (
     negotiate();
   };
 
-  const sendIceCandidate = (
+  const sendIce = (
     conn: Connection,
-    iceDirection: "send" | "recv",
-    iceCandidate: unknown
+    ice: {
+      direction: "send" | "recv";
+      candidate: RTCIceCandidate;
+    }
   ) => {
-    sendPayload(`${roomTopic} ${conn.peer}`, { iceDirection, iceCandidate });
+    sendPayloadDirectly(conn, { ICE: ice });
   };
 
-  const handlePayloadIceCandidate = (
-    conn: Connection,
-    iceDirection: unknown,
-    iceCandidate: unknown
-  ) => {
-    if (!isObject(iceCandidate)) return;
+  const handlePayloadIce = (conn: Connection, ice: unknown) => {
+    if (!isObject(ice)) return;
+    if (!hasStringProp(ice, "direction")) {
+      console.warn("direction not found in ICE");
+      return;
+    }
+    if (!hasObjectProp(ice, "candidate")) {
+      console.warn("candidate not found in ICE");
+      return;
+    }
     try {
-      if (iceDirection === "send") {
-        conn.recvPc.addIceCandidate(iceCandidate as any);
-      } else if (iceDirection === "recv") {
-        conn.sendPc.addIceCandidate(iceCandidate as any);
+      if (ice.direction === "send") {
+        conn.recvPc.addIceCandidate(ice.candidate);
+      } else if (ice.direction === "recv") {
+        conn.sendPc.addIceCandidate(ice.candidate);
       }
     } catch (e) {
       console.info("handleCandidate failed", e);
@@ -222,11 +248,7 @@ export const createRoom: CreateRoom = (
       if (!isObject(payload)) return;
 
       handlePayloadSDP(conn, (payload as { SDP?: unknown }).SDP);
-      handlePayloadIceCandidate(
-        conn,
-        (payload as { iceDirection?: unknown }).iceDirection,
-        (payload as { iceCandidate?: unknown }).iceCandidate
-      );
+      handlePayloadIce(conn, (payload as { ICE?: unknown }).ICE);
       handlePayloadMediaTypes(
         conn,
         (payload as { mediaTypes?: unknown }).mediaTypes
@@ -239,14 +261,14 @@ export const createRoom: CreateRoom = (
 
   const initConnection = (peerId: string, payloadUserId: string) => {
     const conn = connMap.addConn(peerId, payloadUserId);
-    conn.sendPc.addEventListener("icecandidate", (evt) => {
-      if (evt.candidate) {
-        sendIceCandidate(conn, "send", evt.candidate);
+    conn.sendPc.addEventListener("icecandidate", ({ candidate }) => {
+      if (candidate) {
+        sendIce(conn, { direction: "send", candidate });
       }
     });
-    conn.recvPc.addEventListener("icecandidate", (evt) => {
-      if (evt.candidate) {
-        sendIceCandidate(conn, "recv", evt.candidate);
+    conn.recvPc.addEventListener("icecandidate", ({ candidate }) => {
+      if (candidate) {
+        sendIce(conn, { direction: "recv", candidate });
       }
     });
     conn.recvPc.addEventListener("track", (event: RTCTrackEvent) => {
