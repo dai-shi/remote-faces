@@ -124,8 +124,29 @@ export const createRoom: CreateRoom = (
             if (!c.audioCtx) {
               c.audioCtx = new AudioContext();
               const destination = c.audioCtx.createMediaStreamDestination();
+              const pcIn = new RTCPeerConnection();
+              const pcOut = new RTCPeerConnection();
+              pcIn.addEventListener("icecandidate", ({ candidate }) => {
+                if (candidate) {
+                  pcOut.addIceCandidate(candidate);
+                }
+              });
+              pcOut.addEventListener("icecandidate", ({ candidate }) => {
+                if (candidate) {
+                  pcIn.addIceCandidate(candidate);
+                }
+              });
+              pcOut.addEventListener("track", (event: RTCTrackEvent) => {
+                receiveTrack(event.track, info);
+              });
               const audioTrack = destination.stream.getAudioTracks()[0];
-              receiveTrack(audioTrack, info);
+              pcIn.addTrack(audioTrack);
+              const offer = await pcIn.createOffer();
+              await pcIn.setLocalDescription(offer);
+              await pcOut.setRemoteDescription(offer);
+              const answer = await pcOut.createAnswer();
+              await pcOut.setLocalDescription(answer);
+              await pcIn.setRemoteDescription(answer);
             }
             const buf = msg.data.buffer.slice(
               msg.data.byteOffset,
@@ -431,8 +452,7 @@ export const createRoom: CreateRoom = (
     if (!localStream) return;
     if (mediaType === "faceAudio") {
       // XXX trial
-      const stream = new MediaStream();
-      stream.addTrack(track);
+      const stream = new MediaStream([track]);
       const audioCtx = new AudioContext();
       const trackSource = audioCtx.createMediaStreamSource(stream);
       const processor = audioCtx.createScriptProcessor(1024, 1, 1);
