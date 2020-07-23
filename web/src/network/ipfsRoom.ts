@@ -4,7 +4,11 @@ import { sleep } from "../utils/sleep";
 import { secureRandomId, encrypt, decrypt } from "../utils/crypto";
 import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
-import { Connection, createConnectionMap } from "./ipfsUtils";
+import {
+  Connection,
+  createConnectionMap,
+  getTopicForMediaType,
+} from "./ipfsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
 
 export const createRoom: CreateRoom = (
@@ -96,8 +100,48 @@ export const createRoom: CreateRoom = (
     (window as any).sendData = sendData;
   }
 
-  const acceptMediaTypes = (mTypes: string[]) => {
-    mediaTypes = mTypes;
+  const acceptMediaTypes = async (mTypes: string[]) => {
+    if (mTypes.includes("faceAudio")) {
+      // XXX trial
+      if (myIpfs) {
+        myIpfs.pubsub.subscribe(
+          await getTopicForMediaType(roomId, "faceAudio"),
+          async (msg) => {
+            if (msg.from === myPeerId) return;
+            const conn = connMap.getConn(msg.from);
+            if (!conn) {
+              console.warn("conn not ready");
+              return;
+            }
+            const info: PeerInfo = {
+              userId: conn.userId,
+              peerIndex: conn.peerIndex,
+              mediaTypes: connMap.getMediaTypes(conn),
+            };
+            const c: {
+              audioCtx: AudioContext;
+            } = conn as any;
+            if (!c.audioCtx) {
+              c.audioCtx = new AudioContext();
+              const destination = c.audioCtx.createMediaStreamDestination();
+              const audioTrack = destination.stream.getAudioTracks()[0];
+              receiveTrack(audioTrack, info);
+            }
+            const buf = msg.data.buffer.slice(
+              msg.data.byteOffset,
+              msg.data.byteOffset + msg.data.byteLength
+            );
+            const audioBuffer = c.audioCtx.createBuffer(1, 1024, 44100);
+            const audioBufferSource = c.audioCtx.createBufferSource();
+            audioBuffer.copyToChannel(new Float32Array(buf), 0);
+            audioBufferSource.connect(c.audioCtx.destination);
+            audioBufferSource.buffer = audioBuffer;
+            audioBufferSource.start();
+          }
+        );
+      }
+    }
+    mediaTypes = mTypes.filter((t) => t !== "faceAudio");
     if (mediaTypes.length) {
       if (!localStream) {
         localStream = new MediaStream();
@@ -385,6 +429,26 @@ export const createRoom: CreateRoom = (
 
   const addTrack = (mediaType: string, track: MediaStreamTrack) => {
     if (!localStream) return;
+    if (mediaType === "faceAudio") {
+      // XXX trial
+      const stream = new MediaStream();
+      stream.addTrack(track);
+      const audioCtx = new AudioContext();
+      const trackSource = audioCtx.createMediaStreamSource(stream);
+      const processor = audioCtx.createScriptProcessor(1024, 1, 1);
+      trackSource.connect(processor);
+      processor.connect(audioCtx.destination);
+      processor.onaudioprocess = async (e) => {
+        const inputData = e.inputBuffer.getChannelData(0);
+        if (myIpfs) {
+          myIpfs.pubsub.publish(
+            await getTopicForMediaType(roomId, "faceAudio"),
+            inputData.buffer
+          );
+        }
+      };
+      return;
+    }
     trackMediaTypeMap.set(track, mediaType);
     localStream.addTrack(track);
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {

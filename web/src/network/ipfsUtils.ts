@@ -1,8 +1,26 @@
+import { sha256 } from "../utils/crypto";
+import { ROOM_ID_PREFIX_LEN } from "./common";
+
 let peerIndexCounter = 0;
 
 const getNextPeerIndex = () => {
   peerIndexCounter += 1;
   return peerIndexCounter;
+};
+
+const topicsForMediaTypes = new Map<string, string>();
+
+export const getTopicForMediaType = async (
+  roomId: string,
+  mediaType: string
+) => {
+  const key = `${roomId} ${mediaType}`;
+  let topic = topicsForMediaTypes.get(key);
+  if (!topic) {
+    topic = (await sha256(key)).slice(0, ROOM_ID_PREFIX_LEN);
+    topicsForMediaTypes.set(key, topic);
+  }
+  return topic;
 };
 
 export type Connection = {
