@@ -1,0 +1,6 @@
+[submodule "libopus/opus"]
+	path = libopus/opus
+	url = https://github.com/xiph/opus.git
+[submodule "libopus/speexdsp"]
+	path = libopus/speexdsp
+	url = https://github.com/xiph/speexdsp.git

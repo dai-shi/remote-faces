@@ -119,9 +119,19 @@ export const createRoom: CreateRoom = (
               mediaTypes: connMap.getMediaTypes(conn),
             };
             const c: {
+              worker: Worker;
               audioCtx: AudioContext;
             } = conn as any;
             if (!c.audioCtx) {
+              c.worker = new Worker("audio-decoder.js", { type: "module" });
+              c.worker.onmessage = (e) => {
+                const audioBuffer = c.audioCtx.createBuffer(1, 2880, 48000);
+                const audioBufferSource = c.audioCtx.createBufferSource();
+                audioBuffer.copyToChannel(new Float32Array(e.data), 0);
+                audioBufferSource.connect(c.audioCtx.destination);
+                audioBufferSource.buffer = audioBuffer;
+                audioBufferSource.start();
+              };
               c.audioCtx = new AudioContext();
               const destination = c.audioCtx.createMediaStreamDestination();
               const pcIn = new RTCPeerConnection();
@@ -152,12 +162,7 @@ export const createRoom: CreateRoom = (
               msg.data.byteOffset,
               msg.data.byteOffset + msg.data.byteLength
             );
-            const audioBuffer = c.audioCtx.createBuffer(1, 1024, 44100);
-            const audioBufferSource = c.audioCtx.createBufferSource();
-            audioBuffer.copyToChannel(new Float32Array(buf), 0);
-            audioBufferSource.connect(c.audioCtx.destination);
-            audioBufferSource.buffer = audioBuffer;
-            audioBufferSource.start();
+            c.worker.postMessage([buf], [buf]);
           }
         );
       }
@@ -448,25 +453,24 @@ export const createRoom: CreateRoom = (
 
   const trackMediaTypeMap = new WeakMap<MediaStreamTrack, string>();
 
-  const addTrack = (mediaType: string, track: MediaStreamTrack) => {
+  const addTrack = async (mediaType: string, track: MediaStreamTrack) => {
     if (!localStream) return;
     if (mediaType === "faceAudio") {
       // XXX trial
       const stream = new MediaStream([track]);
       const audioCtx = new AudioContext();
       const trackSource = audioCtx.createMediaStreamSource(stream);
-      const processor = audioCtx.createScriptProcessor(1024, 1, 1);
-      trackSource.connect(processor);
-      processor.connect(audioCtx.destination);
-      processor.onaudioprocess = async (e) => {
-        const inputData = e.inputBuffer.getChannelData(0);
+      await audioCtx.audioWorklet.addModule("audio-encoder.js");
+      const audioEncoder = new AudioWorkletNode(audioCtx, "audio-encoder");
+      const topic = await getTopicForMediaType(roomId, "faceAudio");
+      audioEncoder.port.onmessage = (event) => {
+        const buf: ArrayBuffer = event.data;
         if (myIpfs) {
-          myIpfs.pubsub.publish(
-            await getTopicForMediaType(roomId, "faceAudio"),
-            inputData.buffer
-          );
+          myIpfs.pubsub.publish(topic, buf);
         }
       };
+      trackSource.connect(audioEncoder);
+      audioEncoder.connect(audioCtx.destination);
       return;
     }
     trackMediaTypeMap.set(track, mediaType);
