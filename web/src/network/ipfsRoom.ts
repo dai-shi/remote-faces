@@ -121,16 +121,28 @@ export const createRoom: CreateRoom = (
             const c: {
               worker: Worker;
               audioCtx: AudioContext;
+              bufferList: Float32Array[];
             } = conn as any;
             if (!c.audioCtx) {
+              c.bufferList = [];
+              setInterval(() => {
+                // TODO too big delay?
+                if (c.bufferList.length > 5) {
+                  c.bufferList.shift();
+                }
+                const buffer = c.bufferList.shift();
+                if (buffer) {
+                  const audioBuffer = c.audioCtx.createBuffer(1, 2880, 48000);
+                  const audioBufferSource = c.audioCtx.createBufferSource();
+                  audioBuffer.copyToChannel(buffer, 0);
+                  audioBufferSource.connect(c.audioCtx.destination);
+                  audioBufferSource.buffer = audioBuffer;
+                  audioBufferSource.start();
+                }
+              }, 60);
               c.worker = new Worker("audio-decoder.js", { type: "module" });
               c.worker.onmessage = (e) => {
-                const audioBuffer = c.audioCtx.createBuffer(1, 2880, 48000);
-                const audioBufferSource = c.audioCtx.createBufferSource();
-                audioBuffer.copyToChannel(new Float32Array(e.data), 0);
-                audioBufferSource.connect(c.audioCtx.destination);
-                audioBufferSource.buffer = audioBuffer;
-                audioBufferSource.start();
+                c.bufferList.push(new Float32Array(e.data));
               };
               c.audioCtx = new AudioContext();
               const destination = c.audioCtx.createMediaStreamDestination();
