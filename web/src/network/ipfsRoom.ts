@@ -120,32 +120,31 @@ export const createRoom: CreateRoom = (
             };
             const c: {
               worker: Worker;
-              audioCtx: AudioContext;
-              bufferList: Float32Array[];
             } = conn as any;
-            if (!c.audioCtx) {
-              c.bufferList = [];
-              setInterval(() => {
-                // TODO too big delay?
-                if (c.bufferList.length > 5) {
-                  c.bufferList.shift();
-                }
-                const buffer = c.bufferList.shift();
-                if (buffer) {
-                  const audioBuffer = c.audioCtx.createBuffer(1, 2880, 48000);
-                  const audioBufferSource = c.audioCtx.createBufferSource();
-                  audioBuffer.copyToChannel(buffer, 0);
-                  audioBufferSource.connect(c.audioCtx.destination);
-                  audioBufferSource.buffer = audioBuffer;
-                  audioBufferSource.start();
-                }
-              }, 60);
+            if (!c.worker) {
+              const audioCtx = new AudioContext();
+              // const audioTimestamp = audioCtx.getOutputTimestamp();
+              let currTime = 0;
+              let pending = 0;
               c.worker = new Worker("audio-decoder.js", { type: "module" });
               c.worker.onmessage = (e) => {
-                c.bufferList.push(new Float32Array(e.data));
+                const buffer = new Float32Array(e.data);
+                if (!pending) {
+                  currTime = audioCtx.currentTime;
+                }
+                currTime += 0.06; // 60ms
+                pending += 1;
+                const audioBuffer = audioCtx.createBuffer(1, 2880, 48000);
+                const audioBufferSource = audioCtx.createBufferSource();
+                audioBuffer.copyToChannel(buffer, 0);
+                audioBufferSource.connect(audioCtx.destination);
+                audioBufferSource.buffer = audioBuffer;
+                audioBufferSource.onended = () => {
+                  pending -= 1;
+                };
+                audioBufferSource.start(currTime);
               };
-              c.audioCtx = new AudioContext();
-              const destination = c.audioCtx.createMediaStreamDestination();
+              const destination = audioCtx.createMediaStreamDestination();
               const pcIn = new RTCPeerConnection();
               const pcOut = new RTCPeerConnection();
               pcIn.addEventListener("icecandidate", ({ candidate }) => {
