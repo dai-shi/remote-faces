@@ -22,6 +22,11 @@ const init = async () => {
 };
 init();
 
+const isSilent = (pcm) => {
+  const muted = pcm.every((x) => x === 0);
+  return muted;
+};
+
 class AudioEncoder extends AudioWorkletProcessor {
   constructor() {
     super();
@@ -56,6 +61,9 @@ class AudioEncoder extends AudioWorkletProcessor {
   process(inputs) {
     const input = inputs[0];
     const channel = input[0];
+    if (isSilent(channel)) {
+      return true;
+    }
     libopus.HEAPF32.set(channel, (this.ptrResample >> 2) + this.resampleLen);
     this.resampleLen += channel.length;
     if (this.resampleLen >= RESAMPLE_FRAME_SIZE) {
