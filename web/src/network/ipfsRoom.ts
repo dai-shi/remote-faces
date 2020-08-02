@@ -1,7 +1,14 @@
 import Ipfs, { IpfsType, PubsubHandler } from "ipfs";
 
 import { sleep } from "../utils/sleep";
-import { secureRandomId, encrypt, decrypt } from "../utils/crypto";
+import {
+  secureRandomId,
+  importCryptoKey,
+  encryptBuffer,
+  decryptBuffer,
+  encrypt,
+  decrypt,
+} from "../utils/crypto";
 import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import {
@@ -30,6 +37,10 @@ export const createRoom: CreateRoom = (
   let localStream: MediaStream | null = null;
 
   const roomTopic = roomId.slice(0, ROOM_ID_PREFIX_LEN);
+  let cryptoKey: CryptoKey;
+  (async () => {
+    cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
+  })();
 
   const showConnectedStatus = () => {
     if (disposed) return;
@@ -169,9 +180,12 @@ export const createRoom: CreateRoom = (
               await pcOut.setLocalDescription(answer);
               await pcIn.setRemoteDescription(answer);
             }
-            const buf = msg.data.buffer.slice(
-              msg.data.byteOffset,
-              msg.data.byteOffset + msg.data.byteLength
+            const buf = await decryptBuffer(
+              msg.data.buffer.slice(
+                msg.data.byteOffset,
+                msg.data.byteOffset + msg.data.byteLength
+              ),
+              cryptoKey
             );
             c.worker.postMessage([buf], [buf]);
           }
@@ -474,10 +488,10 @@ export const createRoom: CreateRoom = (
       await audioCtx.audioWorklet.addModule("audio-encoder.js");
       const audioEncoder = new AudioWorkletNode(audioCtx, "audio-encoder");
       const topic = await getTopicForMediaType(roomId, "faceAudio");
-      audioEncoder.port.onmessage = (event) => {
-        const buf: ArrayBuffer = event.data;
+      audioEncoder.port.onmessage = async (event) => {
+        const encrypted = await encryptBuffer(event.data, cryptoKey);
         if (myIpfs) {
-          myIpfs.pubsub.publish(topic, buf);
+          myIpfs.pubsub.publish(topic, encrypted);
         }
       };
       trackSource.connect(audioEncoder);
