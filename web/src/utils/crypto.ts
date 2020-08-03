@@ -70,12 +70,14 @@ export const encryptBuffer = async (
 
 export const decryptBuffer = async (
   input: ArrayBuffer,
+  byteOffset: number,
+  byteLength: number,
   key: CryptoKey
 ): Promise<ArrayBuffer> => {
   const decrypted = await window.crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: input.slice(0, 12) },
+    { name: "AES-GCM", iv: input.slice(byteOffset, byteOffset + 12) },
     key,
-    input.slice(12)
+    input.slice(byteOffset + 12, byteOffset + byteLength)
   );
   return decrypted;
 };
@@ -92,7 +94,7 @@ export const encrypt = async (data: string, key: string) => {
 // decrypt with decompression
 export const decrypt = async (buf: ArrayBuffer, key: string) => {
   const cryptoKey = await importCryptoKey(key, ["decrypt"]);
-  const decrypted = await decryptBuffer(buf, cryptoKey);
+  const decrypted = await decryptBuffer(buf, 0, buf.byteLength, cryptoKey);
   const decompressed = pako.inflate(new Uint8Array(decrypted));
   const decoder = new TextDecoder("utf-8");
   const data = decoder.decode(decompressed);

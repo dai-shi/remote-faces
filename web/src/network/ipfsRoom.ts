@@ -181,10 +181,9 @@ export const createRoom: CreateRoom = (
               await pcIn.setRemoteDescription(answer);
             }
             const buf = await decryptBuffer(
-              msg.data.buffer.slice(
-                msg.data.byteOffset,
-                msg.data.byteOffset + msg.data.byteLength
-              ),
+              msg.data.buffer,
+              msg.data.byteOffset,
+              msg.data.byteLength,
               cryptoKey
             );
             c.worker.postMessage([buf], [buf]);
