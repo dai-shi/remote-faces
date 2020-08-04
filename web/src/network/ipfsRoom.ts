@@ -15,6 +15,7 @@ import {
   Connection,
   createConnectionMap,
   getTopicForMediaType,
+  createLoopbackPeerConnection,
 } from "./ipfsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
 
@@ -155,30 +156,14 @@ export const createRoom: CreateRoom = (
                 };
                 audioBufferSource.start(currTime);
               };
+              const { addTrack } = await createLoopbackPeerConnection(
+                (event) => {
+                  receiveTrack(event.track, info);
+                }
+              );
               const destination = audioCtx.createMediaStreamDestination();
-              const pcIn = new RTCPeerConnection();
-              const pcOut = new RTCPeerConnection();
-              pcIn.addEventListener("icecandidate", ({ candidate }) => {
-                if (candidate) {
-                  pcOut.addIceCandidate(candidate);
-                }
-              });
-              pcOut.addEventListener("icecandidate", ({ candidate }) => {
-                if (candidate) {
-                  pcIn.addIceCandidate(candidate);
-                }
-              });
-              pcOut.addEventListener("track", (event: RTCTrackEvent) => {
-                receiveTrack(event.track, info);
-              });
               const audioTrack = destination.stream.getAudioTracks()[0];
-              pcIn.addTrack(audioTrack);
-              const offer = await pcIn.createOffer();
-              await pcIn.setLocalDescription(offer);
-              await pcOut.setRemoteDescription(offer);
-              const answer = await pcOut.createAnswer();
-              await pcOut.setLocalDescription(answer);
-              await pcIn.setRemoteDescription(answer);
+              addTrack(audioTrack);
             }
             const buf = await decryptBuffer(
               msg.data.buffer,
