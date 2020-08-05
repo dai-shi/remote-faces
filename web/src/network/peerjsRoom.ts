@@ -21,7 +21,7 @@ const guessSeed = (id: string) => {
   return MIN_SEED_PEER_INDEX <= peerIndex && peerIndex <= MAX_SEED_PEER_INDEX;
 };
 
-export const createRoom: CreateRoom = (
+export const createRoom: CreateRoom = async (
   roomId,
   userId,
   updateNetworkStatus,

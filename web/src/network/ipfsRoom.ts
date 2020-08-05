@@ -7,7 +7,7 @@ import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./ipfsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
 
-export const createRoom: CreateRoom = (
+export const createRoom: CreateRoom = async (
   roomId,
   userId,
   updateNetworkStatus,

@@ -27,7 +27,7 @@ const getTopicForMediaType = async (roomId: string, mediaType: string) => {
   return topic;
 };
 
-export const createRoom: CreateRoom = (
+export const createRoom: CreateRoom = async (
   roomId,
   userId,
   updateNetworkStatus,
@@ -46,10 +46,7 @@ export const createRoom: CreateRoom = (
   let localStream: MediaStream | null = null;
 
   const roomTopic = roomId.slice(0, ROOM_ID_PREFIX_LEN);
-  let cryptoKey: CryptoKey;
-  (async () => {
-    cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
-  })();
+  const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
   const showConnectedStatus = () => {
     if (disposed) return;
