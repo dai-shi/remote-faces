@@ -112,63 +112,84 @@ export const createRoom: CreateRoom = async (
     (window as any).sendData = sendData;
   }
 
+  // TODO very limited use case for now
+  const faceAudioDisposeList: (() => void)[] = [];
+
   const acceptMediaTypes = async (mTypes: string[]) => {
-    if (mTypes.includes("faceAudio")) {
-      // XXX trial
+    if (mTypes.includes("faceAudio") && !faceAudioDisposeList.length) {
+      // XXX experimental
       if (myIpfs) {
-        myIpfs.pubsub.subscribe(
-          await getTopicForMediaType(roomId, "faceAudio"),
-          async (msg) => {
-            if (msg.from === myPeerId) return;
-            const conn = connMap.getConn(msg.from);
-            if (!conn) {
-              console.warn("conn not ready");
-              return;
-            }
-            const info: PeerInfo = {
-              userId: conn.userId,
-              peerIndex: conn.peerIndex,
-              mediaTypes: connMap.getMediaTypes(conn),
-            };
-            const c: {
-              worker: Worker;
-            } = conn as any;
-            if (!c.worker) {
-              const audioCtx = new AudioContext();
-              const destination = audioCtx.createMediaStreamDestination();
-              let currTime = 0;
-              let pending = 0;
-              c.worker = new Worker("audio-decoder.js", { type: "module" });
-              c.worker.onmessage = (e) => {
-                const buffer = new Float32Array(e.data);
-                if (!pending) {
-                  currTime = audioCtx.currentTime;
-                }
-                currTime += 0.06; // 60ms
-                pending += 1;
-                const audioBuffer = audioCtx.createBuffer(1, 2880, 48000);
-                const audioBufferSource = audioCtx.createBufferSource();
-                audioBuffer.copyToChannel(buffer, 0);
-                audioBufferSource.connect(destination);
-                audioBufferSource.buffer = audioBuffer;
-                audioBufferSource.onended = () => {
-                  pending -= 1;
-                };
-                audioBufferSource.start(currTime);
+        const topic = await getTopicForMediaType(roomId, "faceAudio");
+        const faceAudioHandler: PubsubHandler = async (msg) => {
+          if (msg.from === myPeerId) return;
+          const conn = connMap.getConn(msg.from);
+          if (!conn) {
+            console.warn("conn not ready");
+            return;
+          }
+          const info: PeerInfo = {
+            userId: conn.userId,
+            peerIndex: conn.peerIndex,
+            mediaTypes: connMap.getMediaTypes(conn),
+          };
+          const c: {
+            worker: Worker;
+          } = conn as any; // TODO do it more cleanly
+          if (!c.worker) {
+            const audioCtx = new AudioContext();
+            const destination = audioCtx.createMediaStreamDestination();
+            let currTime = 0;
+            let pending = 0;
+            const worker = new Worker("audio-decoder.js", { type: "module" });
+            worker.onmessage = (e) => {
+              const buffer = new Float32Array(e.data);
+              if (!pending) {
+                currTime = audioCtx.currentTime;
+              }
+              currTime += 0.06; // 60ms
+              pending += 1;
+              const audioBuffer = audioCtx.createBuffer(1, 2880, 48000);
+              audioBuffer.copyToChannel(buffer, 0);
+              const audioBufferSource = audioCtx.createBufferSource();
+              audioBufferSource.buffer = audioBuffer;
+              audioBufferSource.connect(destination);
+              audioBufferSource.onended = () => {
+                pending -= 1;
               };
-              const audioTrack = destination.stream.getAudioTracks()[0];
-              receiveTrack(await loopbackPeerConnection(audioTrack), info);
-            }
-            const buf = await decryptBuffer(
-              msg.data.buffer,
-              msg.data.byteOffset,
-              msg.data.byteLength,
-              cryptoKey
-            );
+              audioBufferSource.start(currTime);
+            };
+            c.worker = worker;
+            const audioTrack = destination.stream.getAudioTracks()[0];
+            receiveTrack(await loopbackPeerConnection(audioTrack), info);
+            faceAudioDisposeList.push(() => {
+              audioCtx.close();
+              audioTrack.dispatchEvent(new Event("ended"));
+              worker.terminate();
+              if (c.worker === worker) {
+                delete c.worker;
+              }
+            });
+          }
+          const buf = await decryptBuffer(
+            msg.data.buffer,
+            msg.data.byteOffset,
+            msg.data.byteLength,
+            cryptoKey
+          );
+          if (c.worker) {
             c.worker.postMessage([buf], [buf]);
           }
-        );
+        };
+        myIpfs.pubsub.subscribe(topic, faceAudioHandler);
+        faceAudioDisposeList.push(() => {
+          if (myIpfs) {
+            myIpfs.pubsub.unsubscribe(topic, faceAudioHandler);
+          }
+        });
       }
+    } else {
+      faceAudioDisposeList.forEach((dispose) => dispose());
+      faceAudioDisposeList.splice(0, faceAudioDisposeList.length);
     }
     mediaTypes = mTypes.filter((t) => t !== "faceAudio");
     if (mediaTypes.length) {
@@ -455,11 +476,17 @@ export const createRoom: CreateRoom = async (
   };
 
   const trackMediaTypeMap = new WeakMap<MediaStreamTrack, string>();
+  const trackDisposeMap = new WeakMap<MediaStreamTrack, () => void>();
+  const runDispose = (dispose?: () => void) => {
+    if (dispose) {
+      dispose();
+    }
+  };
 
   const addTrack = async (mediaType: string, track: MediaStreamTrack) => {
-    if (!localStream) return;
     if (mediaType === "faceAudio") {
-      // XXX trial
+      // XXX experimental
+      runDispose(trackDisposeMap.get(track));
       const stream = new MediaStream([track]);
       const audioCtx = new AudioContext();
       const trackSource = audioCtx.createMediaStreamSource(stream);
@@ -473,8 +500,12 @@ export const createRoom: CreateRoom = async (
         }
       };
       trackSource.connect(audioEncoder);
+      trackDisposeMap.set(track, () => {
+        audioCtx.close();
+      });
       return;
     }
+    if (!localStream) return;
     trackMediaTypeMap.set(track, mediaType);
     localStream.addTrack(track);
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
@@ -493,6 +524,11 @@ export const createRoom: CreateRoom = async (
   };
 
   const removeTrack = (mediaType: string, track: MediaStreamTrack) => {
+    if (mediaType === "faceAudio") {
+      // XXX experimental
+      runDispose(trackDisposeMap.get(track));
+      return;
+    }
     if (localStream) {
       localStream.removeTrack(track);
     }
