@@ -15,7 +15,7 @@ import {
   Connection,
   createConnectionMap,
   getTopicForMediaType,
-  createLoopbackPeerConnection,
+  loopbackPeerConnection,
 } from "./ipfsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
 
@@ -135,7 +135,7 @@ export const createRoom: CreateRoom = (
             } = conn as any;
             if (!c.worker) {
               const audioCtx = new AudioContext();
-              // const audioTimestamp = audioCtx.getOutputTimestamp();
+              const destination = audioCtx.createMediaStreamDestination();
               let currTime = 0;
               let pending = 0;
               c.worker = new Worker("audio-decoder.js", { type: "module" });
@@ -149,21 +149,15 @@ export const createRoom: CreateRoom = (
                 const audioBuffer = audioCtx.createBuffer(1, 2880, 48000);
                 const audioBufferSource = audioCtx.createBufferSource();
                 audioBuffer.copyToChannel(buffer, 0);
-                audioBufferSource.connect(audioCtx.destination);
+                audioBufferSource.connect(destination);
                 audioBufferSource.buffer = audioBuffer;
                 audioBufferSource.onended = () => {
                   pending -= 1;
                 };
                 audioBufferSource.start(currTime);
               };
-              const { addTrack } = await createLoopbackPeerConnection(
-                (event) => {
-                  receiveTrack(event.track, info);
-                }
-              );
-              const destination = audioCtx.createMediaStreamDestination();
               const audioTrack = destination.stream.getAudioTracks()[0];
-              addTrack(audioTrack);
+              receiveTrack(await loopbackPeerConnection(audioTrack), info);
             }
             const buf = await decryptBuffer(
               msg.data.buffer,
@@ -479,7 +473,6 @@ export const createRoom: CreateRoom = (
         }
       };
       trackSource.connect(audioEncoder);
-      audioEncoder.connect(audioCtx.destination);
       return;
     }
     trackMediaTypeMap.set(track, mediaType);

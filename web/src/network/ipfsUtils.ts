@@ -139,34 +139,39 @@ export const createConnectionMap = () => {
   };
 };
 
-export const createLoopbackPeerConnection = async (
-  ontrack: (event: RTCTrackEvent) => void
-) => {
-  const pcIn = new RTCPeerConnection();
-  const pcOut = new RTCPeerConnection();
-  pcIn.addEventListener("icecandidate", ({ candidate }) => {
-    if (candidate) {
-      pcOut.addIceCandidate(candidate);
+export const loopbackPeerConnection = (
+  track: MediaStreamTrack
+): Promise<MediaStreamTrack> =>
+  // eslint-disable-next-line no-async-promise-executor
+  new Promise(async (resolve, reject) => {
+    try {
+      const pcIn = new RTCPeerConnection();
+      const pcOut = new RTCPeerConnection();
+      pcIn.addEventListener("icecandidate", ({ candidate }) => {
+        if (candidate) {
+          pcOut.addIceCandidate(candidate);
+        }
+      });
+      pcOut.addEventListener("icecandidate", ({ candidate }) => {
+        if (candidate) {
+          pcIn.addIceCandidate(candidate);
+        }
+      });
+      pcOut.addEventListener("track", (event) => {
+        resolve(event.track);
+      });
+      track.addEventListener("ended", () => {
+        pcIn.close();
+        pcOut.close();
+      });
+      pcIn.addTrack(track);
+      const offer = await pcIn.createOffer();
+      await pcIn.setLocalDescription(offer);
+      await pcOut.setRemoteDescription(offer);
+      const answer = await pcOut.createAnswer();
+      await pcOut.setLocalDescription(answer);
+      await pcIn.setRemoteDescription(answer);
+    } catch (e) {
+      reject(e);
     }
   });
-  pcOut.addEventListener("icecandidate", ({ candidate }) => {
-    if (candidate) {
-      pcIn.addIceCandidate(candidate);
-    }
-  });
-  pcOut.addEventListener("track", ontrack);
-  const offer = await pcIn.createOffer();
-  await pcIn.setLocalDescription(offer);
-  await pcOut.setRemoteDescription(offer);
-  const answer = await pcOut.createAnswer();
-  await pcOut.setLocalDescription(answer);
-  await pcIn.setRemoteDescription(answer);
-  const addTrack = (track: MediaStreamTrack) => {
-    pcIn.addTrack(track);
-  };
-  const close = () => {
-    pcIn.close();
-    pcOut.close();
-  };
-  return { addTrack, close };
-};
