@@ -56,9 +56,7 @@ export const createRoom: CreateRoom = async (
 
   const parsePayload = async (encrypted: ArrayBuffer): Promise<unknown> => {
     try {
-      const payload = JSON.parse(
-        await decrypt(encrypted, roomId.slice(ROOM_ID_PREFIX_LEN))
-      );
+      const payload = JSON.parse(await decrypt(encrypted, cryptoKey));
       console.log("decrypted payload", payload);
       return payload;
     } catch (e) {
@@ -70,10 +68,7 @@ export const createRoom: CreateRoom = async (
   const sendPayload = async (topic: string, payload: unknown) => {
     try {
       console.log("payload to encrypt", topic, payload);
-      const encrypted = await encrypt(
-        JSON.stringify(payload),
-        roomId.slice(ROOM_ID_PREFIX_LEN)
-      );
+      const encrypted = await encrypt(JSON.stringify(payload), cryptoKey);
       console.log("sending encrypted", encrypted.byteLength);
       if (encrypted.byteLength > 262144) {
         console.warn("encrypted message too large, aborting");

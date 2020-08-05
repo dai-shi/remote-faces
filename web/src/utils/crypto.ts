@@ -83,17 +83,15 @@ export const decryptBuffer = async (
 };
 
 // encrypt with compression
-export const encrypt = async (data: string, key: string) => {
+export const encrypt = async (data: string, cryptoKey: CryptoKey) => {
   const encoder = new TextEncoder();
   const encoded = encoder.encode(data);
   const compressed = pako.deflate(encoded);
-  const cryptoKey = await importCryptoKey(key, ["encrypt"]);
   return encryptBuffer(compressed, cryptoKey);
 };
 
 // decrypt with decompression
-export const decrypt = async (buf: ArrayBuffer, key: string) => {
-  const cryptoKey = await importCryptoKey(key, ["decrypt"]);
+export const decrypt = async (buf: ArrayBuffer, cryptoKey: CryptoKey) => {
   const decrypted = await decryptBuffer(buf, 0, buf.byteLength, cryptoKey);
   const decompressed = pako.inflate(new Uint8Array(decrypted));
   const decoder = new TextDecoder("utf-8");

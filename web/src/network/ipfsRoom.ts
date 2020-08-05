@@ -1,7 +1,12 @@
 import Ipfs, { IpfsType, PubsubHandler } from "ipfs";
 
 import { sleep } from "../utils/sleep";
-import { secureRandomId, encrypt, decrypt } from "../utils/crypto";
+import {
+  secureRandomId,
+  importCryptoKey,
+  encrypt,
+  decrypt,
+} from "../utils/crypto";
 import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./ipfsUtils";
@@ -26,6 +31,7 @@ export const createRoom: CreateRoom = async (
   let localStream: MediaStream | null = null;
 
   const roomTopic = roomId.slice(0, ROOM_ID_PREFIX_LEN);
+  const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
   const showConnectedStatus = () => {
     if (disposed) return;
@@ -35,9 +41,7 @@ export const createRoom: CreateRoom = async (
 
   const parsePayload = async (encrypted: ArrayBuffer): Promise<unknown> => {
     try {
-      const payload = JSON.parse(
-        await decrypt(encrypted, roomId.slice(ROOM_ID_PREFIX_LEN))
-      );
+      const payload = JSON.parse(await decrypt(encrypted, cryptoKey));
       console.log("decrypted payload", payload);
       return payload;
     } catch (e) {
@@ -49,10 +53,7 @@ export const createRoom: CreateRoom = async (
   const sendPayload = async (topic: string, payload: unknown) => {
     try {
       console.log("payload to encrypt", topic, payload);
-      const encrypted = await encrypt(
-        JSON.stringify(payload),
-        roomId.slice(ROOM_ID_PREFIX_LEN)
-      );
+      const encrypted = await encrypt(JSON.stringify(payload), cryptoKey);
       console.log("sending encrypted", encrypted.byteLength);
       if (encrypted.byteLength > 262144) {
         console.warn("encrypted message too large, aborting");
