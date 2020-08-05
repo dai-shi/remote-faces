@@ -110,7 +110,8 @@
       {
         "files": [
           "src/network/peerjsRoom.ts",
-          "src/network/ipfsRoom.ts"
+          "src/network/ipfsRoom.ts",
+          "src/network/pubsubRoom.ts"
         ],
         "rules": {
           "no-use-before-define": "off"

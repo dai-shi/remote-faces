@@ -1,11 +1,31 @@
 import Ipfs, { IpfsType, PubsubHandler } from "ipfs";
 
 import { sleep } from "../utils/sleep";
-import { secureRandomId, encrypt, decrypt } from "../utils/crypto";
+import {
+  sha256,
+  secureRandomId,
+  importCryptoKey,
+  encryptBuffer,
+  decryptBuffer,
+  encrypt,
+  decrypt,
+} from "../utils/crypto";
 import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./ipfsUtils";
-import { setupTrackStopOnLongMute } from "./trackUtils";
+import { setupTrackStopOnLongMute, loopbackPeerConnection } from "./trackUtils";
+
+const topicsForMediaTypes = new Map<string, string>();
+
+const getTopicForMediaType = async (roomId: string, mediaType: string) => {
+  const key = `${roomId} ${mediaType}`;
+  let topic = topicsForMediaTypes.get(key);
+  if (!topic) {
+    topic = (await sha256(key)).slice(0, ROOM_ID_PREFIX_LEN);
+    topicsForMediaTypes.set(key, topic);
+  }
+  return topic;
+};
 
 export const createRoom: CreateRoom = (
   roomId,
@@ -26,6 +46,10 @@ export const createRoom: CreateRoom = (
   let localStream: MediaStream | null = null;
 
   const roomTopic = roomId.slice(0, ROOM_ID_PREFIX_LEN);
+  let cryptoKey: CryptoKey;
+  (async () => {
+    cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
+  })();
 
   const showConnectedStatus = () => {
     if (disposed) return;
@@ -96,8 +120,65 @@ export const createRoom: CreateRoom = (
     (window as any).sendData = sendData;
   }
 
-  const acceptMediaTypes = (mTypes: string[]) => {
-    mediaTypes = mTypes;
+  const acceptMediaTypes = async (mTypes: string[]) => {
+    if (mTypes.includes("faceAudio")) {
+      // XXX trial
+      if (myIpfs) {
+        myIpfs.pubsub.subscribe(
+          await getTopicForMediaType(roomId, "faceAudio"),
+          async (msg) => {
+            if (msg.from === myPeerId) return;
+            const conn = connMap.getConn(msg.from);
+            if (!conn) {
+              console.warn("conn not ready");
+              return;
+            }
+            const info: PeerInfo = {
+              userId: conn.userId,
+              peerIndex: conn.peerIndex,
+              mediaTypes: connMap.getMediaTypes(conn),
+            };
+            const c: {
+              worker: Worker;
+            } = conn as any;
+            if (!c.worker) {
+              const audioCtx = new AudioContext();
+              const destination = audioCtx.createMediaStreamDestination();
+              let currTime = 0;
+              let pending = 0;
+              c.worker = new Worker("audio-decoder.js", { type: "module" });
+              c.worker.onmessage = (e) => {
+                const buffer = new Float32Array(e.data);
+                if (!pending) {
+                  currTime = audioCtx.currentTime;
+                }
+                currTime += 0.06; // 60ms
+                pending += 1;
+                const audioBuffer = audioCtx.createBuffer(1, 2880, 48000);
+                const audioBufferSource = audioCtx.createBufferSource();
+                audioBuffer.copyToChannel(buffer, 0);
+                audioBufferSource.connect(destination);
+                audioBufferSource.buffer = audioBuffer;
+                audioBufferSource.onended = () => {
+                  pending -= 1;
+                };
+                audioBufferSource.start(currTime);
+              };
+              const audioTrack = destination.stream.getAudioTracks()[0];
+              receiveTrack(await loopbackPeerConnection(audioTrack), info);
+            }
+            const buf = await decryptBuffer(
+              msg.data.buffer,
+              msg.data.byteOffset,
+              msg.data.byteLength,
+              cryptoKey
+            );
+            c.worker.postMessage([buf], [buf]);
+          }
+        );
+      }
+    }
+    mediaTypes = mTypes.filter((t) => t !== "faceAudio");
     if (mediaTypes.length) {
       if (!localStream) {
         localStream = new MediaStream();
@@ -383,8 +464,25 @@ export const createRoom: CreateRoom = (
 
   const trackMediaTypeMap = new WeakMap<MediaStreamTrack, string>();
 
-  const addTrack = (mediaType: string, track: MediaStreamTrack) => {
+  const addTrack = async (mediaType: string, track: MediaStreamTrack) => {
     if (!localStream) return;
+    if (mediaType === "faceAudio") {
+      // XXX trial
+      const stream = new MediaStream([track]);
+      const audioCtx = new AudioContext();
+      const trackSource = audioCtx.createMediaStreamSource(stream);
+      await audioCtx.audioWorklet.addModule("audio-encoder.js");
+      const audioEncoder = new AudioWorkletNode(audioCtx, "audio-encoder");
+      const topic = await getTopicForMediaType(roomId, "faceAudio");
+      audioEncoder.port.onmessage = async (event) => {
+        const encrypted = await encryptBuffer(event.data, cryptoKey);
+        if (myIpfs) {
+          myIpfs.pubsub.publish(topic, encrypted);
+        }
+      };
+      trackSource.connect(audioEncoder);
+      return;
+    }
     trackMediaTypeMap.set(track, mediaType);
     localStream.addTrack(track);
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {

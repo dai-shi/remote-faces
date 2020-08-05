@@ -61,3 +61,9 @@ export const getPeerJsConfigFromUrl = () => {
   }
   return undefined;
 };
+
+export const hasPubsubConfigInUrl = () => {
+  const hash = window.location.hash.slice(1);
+  const searchParams = new URLSearchParams(hash);
+  return searchParams.has("pubsub");
+};
