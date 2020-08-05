@@ -1,26 +1,8 @@
-import { sha256 } from "../utils/crypto";
-import { ROOM_ID_PREFIX_LEN } from "./common";
-
 let peerIndexCounter = 0;
 
 const getNextPeerIndex = () => {
   peerIndexCounter += 1;
   return peerIndexCounter;
-};
-
-const topicsForMediaTypes = new Map<string, string>();
-
-export const getTopicForMediaType = async (
-  roomId: string,
-  mediaType: string
-) => {
-  const key = `${roomId} ${mediaType}`;
-  let topic = topicsForMediaTypes.get(key);
-  if (!topic) {
-    topic = (await sha256(key)).slice(0, ROOM_ID_PREFIX_LEN);
-    topicsForMediaTypes.set(key, topic);
-  }
-  return topic;
 };
 
 export type Connection = {
@@ -138,40 +120,3 @@ export const createConnectionMap = () => {
     size,
   };
 };
-
-export const loopbackPeerConnection = (
-  track: MediaStreamTrack
-): Promise<MediaStreamTrack> =>
-  // eslint-disable-next-line no-async-promise-executor
-  new Promise(async (resolve, reject) => {
-    try {
-      const pcIn = new RTCPeerConnection();
-      const pcOut = new RTCPeerConnection();
-      pcIn.addEventListener("icecandidate", ({ candidate }) => {
-        if (candidate) {
-          pcOut.addIceCandidate(candidate);
-        }
-      });
-      pcOut.addEventListener("icecandidate", ({ candidate }) => {
-        if (candidate) {
-          pcIn.addIceCandidate(candidate);
-        }
-      });
-      pcOut.addEventListener("track", (event) => {
-        resolve(event.track);
-      });
-      track.addEventListener("ended", () => {
-        pcIn.close();
-        pcOut.close();
-      });
-      pcIn.addTrack(track);
-      const offer = await pcIn.createOffer();
-      await pcIn.setLocalDescription(offer);
-      await pcOut.setRemoteDescription(offer);
-      const answer = await pcOut.createAnswer();
-      await pcOut.setLocalDescription(answer);
-      await pcIn.setRemoteDescription(answer);
-    } catch (e) {
-      reject(e);
-    }
-  });

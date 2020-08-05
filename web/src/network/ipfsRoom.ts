@@ -2,6 +2,7 @@ import Ipfs, { IpfsType, PubsubHandler } from "ipfs";
 
 import { sleep } from "../utils/sleep";
 import {
+  sha256,
   secureRandomId,
   importCryptoKey,
   encryptBuffer,
@@ -11,13 +12,20 @@ import {
 } from "../utils/crypto";
 import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
-import {
-  Connection,
-  createConnectionMap,
-  getTopicForMediaType,
-  loopbackPeerConnection,
-} from "./ipfsUtils";
-import { setupTrackStopOnLongMute } from "./trackUtils";
+import { Connection, createConnectionMap } from "./ipfsUtils";
+import { setupTrackStopOnLongMute, loopbackPeerConnection } from "./trackUtils";
+
+const topicsForMediaTypes = new Map<string, string>();
+
+const getTopicForMediaType = async (roomId: string, mediaType: string) => {
+  const key = `${roomId} ${mediaType}`;
+  let topic = topicsForMediaTypes.get(key);
+  if (!topic) {
+    topic = (await sha256(key)).slice(0, ROOM_ID_PREFIX_LEN);
+    topicsForMediaTypes.set(key, topic);
+  }
+  return topic;
+};
 
 export const createRoom: CreateRoom = (
   roomId,
