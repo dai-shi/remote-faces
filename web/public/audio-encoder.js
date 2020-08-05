@@ -78,14 +78,10 @@ class AudioEncoder extends AudioWorkletProcessor {
       );
       const resampledLen = libopus.HEAPU32[this.ptrResampleInLen >> 2];
       this.resampleLen -= resampledLen;
-      libopus.HEAPF32.set(
-        libopus.HEAPF32.subarray(
-          this.ptrResample,
-          this.ptrResample + resampledLen
-        ),
-        channel,
-        (this.ptrResample >> 2) + this.resampleLen
-      );
+      for (let i = 0; i < this.resampleLen; i += 1) {
+        libopus.HEAPF32[(this.ptrResample >> 2) + i] =
+          libopus.HEAPF32[(this.ptrResample >> 2) + i + resampledLen];
+      }
 
       const outputLen = libopus._opus_encode_float(
         this.encoder,
