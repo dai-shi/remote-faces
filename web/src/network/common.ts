@@ -28,11 +28,11 @@ export type CreateRoom = (
   notifyNewPeer: NotifyNewPeer,
   receiveData: ReceiveData,
   receiveTrack: ReceiveTrack
-) => {
+) => Promise<{
   broadcastData: (data: unknown) => void;
   sendData: (data: unknown, peerIndex: number) => void;
   acceptMediaTypes: (mediaTypes: string[]) => void;
   addTrack: (mediaType: string, track: MediaStreamTrack) => void;
   removeTrack: (mediaType: string, track: MediaStreamTrack) => void;
   dispose: () => void;
-};
+}>;

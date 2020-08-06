@@ -35,7 +35,7 @@ export const generateCryptoKey = async () => {
 
 export const importCryptoKey = async (
   key: string,
-  usages: ("encrypt" | "decrypt")[]
+  usages: ("encrypt" | "decrypt")[] = ["encrypt", "decrypt"]
 ) => {
   const size = key.length / 2;
   const buf = new Uint8Array(size);
@@ -52,32 +52,47 @@ export const importCryptoKey = async (
   return cryptoKey;
 };
 
-// encrypt with compression
-export const encrypt = async (data: string, key: string) => {
-  const encoder = new TextEncoder();
-  const encoded = encoder.encode(data);
-  const compressed = pako.deflate(encoded);
-  const cryptoKey = await importCryptoKey(key, ["encrypt"]);
+export const encryptBuffer = async (
+  input: ArrayBuffer,
+  key: CryptoKey
+): Promise<ArrayBuffer> => {
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
   const encrypted = await window.crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
-    cryptoKey,
-    compressed
+    key,
+    input
   );
-  const buf = new Uint8Array(iv.length + encrypted.byteLength);
-  buf.set(iv);
-  buf.set(new Uint8Array(encrypted), iv.length);
-  return buf;
+  const output = new Uint8Array(iv.length + encrypted.byteLength);
+  output.set(iv);
+  output.set(new Uint8Array(encrypted), iv.length);
+  return output.buffer;
+};
+
+export const decryptBuffer = async (
+  input: ArrayBuffer,
+  byteOffset: number,
+  byteLength: number,
+  key: CryptoKey
+): Promise<ArrayBuffer> => {
+  const decrypted = await window.crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: input.slice(byteOffset, byteOffset + 12) },
+    key,
+    input.slice(byteOffset + 12, byteOffset + byteLength)
+  );
+  return decrypted;
+};
+
+// encrypt with compression
+export const encrypt = async (data: string, cryptoKey: CryptoKey) => {
+  const encoder = new TextEncoder();
+  const encoded = encoder.encode(data);
+  const compressed = pako.deflate(encoded);
+  return encryptBuffer(compressed, cryptoKey);
 };
 
 // decrypt with decompression
-export const decrypt = async (buf: ArrayBuffer, key: string) => {
-  const cryptoKey = await importCryptoKey(key, ["decrypt"]);
-  const decrypted = await window.crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: buf.slice(0, 12) },
-    cryptoKey,
-    buf.slice(12)
-  );
+export const decrypt = async (buf: ArrayBuffer, cryptoKey: CryptoKey) => {
+  const decrypted = await decryptBuffer(buf, 0, buf.byteLength, cryptoKey);
   const decompressed = pako.inflate(new Uint8Array(decrypted));
   const decoder = new TextDecoder("utf-8");
   const data = decoder.decode(decompressed);

@@ -1,8 +1,8 @@
 declare module "ipfs" {
   export type PubsubHandler = (msg: {
     from: string;
-    seqno: ArrayBuffer;
-    data: ArrayBuffer;
+    seqno: Uint8Array;
+    data: Uint8Array;
     topicIDs: string[];
   }) => void;
 

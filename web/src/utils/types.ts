@@ -12,3 +12,9 @@ export const hasObjectProp = <Prop extends string>(
   prop: Prop
 ): x is object & Record<Prop, object> =>
   isObject((x as Record<Prop, unknown>)[prop]);
+
+export type ReturnPromiseType<F extends (...args: any) => any> = ReturnType<
+  F
+> extends Promise<infer T>
+  ? T
+  : never;

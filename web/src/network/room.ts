@@ -1,14 +1,17 @@
-import { hasPeerJsConfigInUrl } from "../utils/url";
+import { hasPeerJsConfigInUrl, hasPubsubConfigInUrl } from "../utils/url";
 import type { CreateRoom } from "./common";
-import { createRoom as peerjsCreateRoom } from "./peerjsRoom";
-import { createRoom as ipfsCreateRoom } from "./ipfsRoom";
 
 export type { NetworkStatus, PeerInfo } from "./common";
 export { ROOM_ID_PREFIX_LEN } from "./common";
 
-export const createRoom: CreateRoom = (...args) => {
+export const createRoom: CreateRoom = async (...args) => {
+  let createRoomImpl: CreateRoom;
   if (hasPeerJsConfigInUrl()) {
-    return peerjsCreateRoom(...args);
+    createRoomImpl = (await import("./peerjsRoom")).createRoom;
+  } else if (hasPubsubConfigInUrl()) {
+    createRoomImpl = (await import("./pubsubRoom")).createRoom;
+  } else {
+    createRoomImpl = (await import("./ipfsRoom")).createRoom;
   }
-  return ipfsCreateRoom(...args);
+  return createRoomImpl(...args);
 };

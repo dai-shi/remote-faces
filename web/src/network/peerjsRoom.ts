@@ -1,7 +1,7 @@
 import Peer from "peerjs";
 
 import { sleep } from "../utils/sleep";
-import { rand4, encrypt, decrypt } from "../utils/crypto";
+import { rand4, importCryptoKey, encrypt, decrypt } from "../utils/crypto";
 import { getPeerJsConfigFromUrl } from "../utils/url";
 import { isObject } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
@@ -21,7 +21,7 @@ const guessSeed = (id: string) => {
   return MIN_SEED_PEER_INDEX <= peerIndex && peerIndex <= MAX_SEED_PEER_INDEX;
 };
 
-export const createRoom: CreateRoom = (
+export const createRoom: CreateRoom = async (
   roomId,
   userId,
   updateNetworkStatus,
@@ -34,6 +34,8 @@ export const createRoom: CreateRoom = (
   const connMap = createConnectionMap();
   let mediaTypes: string[] = [];
   let localStream: MediaStream | null = null;
+
+  const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
   const showConnectedStatus = () => {
     if (disposed) return;
@@ -155,9 +157,7 @@ export const createRoom: CreateRoom = (
   ) => {
     if (disposed) return;
     try {
-      const payload = JSON.parse(
-        await decrypt(encrypted, roomId.slice(ROOM_ID_PREFIX_LEN))
-      );
+      const payload = JSON.parse(await decrypt(encrypted, cryptoKey));
       console.log("decrypted payload", conn.peer, payload);
       if (!isObject(payload)) return;
 
@@ -176,10 +176,7 @@ export const createRoom: CreateRoom = (
 
   const sendPayload = async (conn: Peer.DataConnection, payload: unknown) => {
     try {
-      const encrypted = await encrypt(
-        JSON.stringify(payload),
-        roomId.slice(ROOM_ID_PREFIX_LEN)
-      );
+      const encrypted = await encrypt(JSON.stringify(payload), cryptoKey);
       conn.send(encrypted);
     } catch (e) {
       console.error("sendPayload", e);
