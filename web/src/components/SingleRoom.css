@@ -9,6 +9,10 @@
   overflow: scroll;
 }
 
+.SingleRoom-1st-column::-webkit-scrollbar {
+  display: none;
+}
+
 .SingleRoom-2nd-column {
   display: grid;
   grid-template-columns: 240px;
@@ -32,5 +36,5 @@
 }
 
 .SingleRoom-toggle-3rd-column:focus {
-  outline:0;
+  outline: 0;
 }
