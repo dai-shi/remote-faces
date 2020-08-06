@@ -1,3 +1,7 @@
 .Welcome-container {
   overflow: scroll;
 }
+
+.Welcome-container::-webkit-scrollbar {
+  display: none;
+}
