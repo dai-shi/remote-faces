@@ -1,7 +1,3 @@
-::-webkit-scrollbar {
-  display: none;
-}
-
 .SingleRoom-container {
   display: grid;
   column-gap: 12px;
@@ -11,6 +7,10 @@
 
 .SingleRoom-1st-column {
   overflow: scroll;
+}
+
+.SingleRoom-1st-column::-webkit-scrollbar {
+  display: none;
 }
 
 .SingleRoom-2nd-column {
