@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 
 import { isObject } from "../utils/types";
+import { NEUTRAL_FACE } from "../media/imagePresets";
 import { takePhoto } from "../media/capture";
 import {
   useRoomData,
@@ -10,6 +11,7 @@ import {
 } from "./useRoom";
 
 type ImageUrl = string;
+
 type FaceInfo = {
   nickname: string;
   message: string;
@@ -17,10 +19,25 @@ type FaceInfo = {
   micOn: boolean;
   speakerOn: boolean;
 };
+
+const isFaceInfo = (x: unknown): x is FaceInfo =>
+  isObject(x) &&
+  typeof (x as { nickname: unknown }).nickname === "string" &&
+  typeof (x as { message: unknown }).message === "string" &&
+  typeof (x as { liveMode: unknown }).liveMode === "boolean" &&
+  typeof (x as { micOn: unknown }).micOn === "boolean" &&
+  typeof (x as { speakerOn: unknown }).speakerOn === "boolean";
+
 type ImageData = {
   image: ImageUrl;
   info: FaceInfo;
 };
+
+const isImageData = (x: unknown): x is ImageData =>
+  isObject(x) &&
+  typeof (x as { image: unknown }).image === "string" &&
+  isFaceInfo((x as { info: unknown }).info);
+
 type RoomImage = ImageData & {
   userId: string;
   received: number; // in milliseconds
@@ -28,22 +45,12 @@ type RoomImage = ImageData & {
   peerIndex: number;
 };
 
-const isFaceInfo = (x: unknown): x is FaceInfo =>
-  isObject(x) &&
-  typeof (x as { nickname: unknown }).nickname === "string" &&
-  typeof (x as { message: unknown }).message === "string" &&
-  typeof (x as { liveMode: unknown }).liveMode === "boolean";
-
-const isImageData = (x: unknown): x is ImageData =>
-  isObject(x) &&
-  typeof (x as { image: unknown }).image === "string" &&
-  isFaceInfo((x as { info: unknown }).info);
-
 export const useFaceImages = (
   roomId: string,
   userId: string,
   nickname: string,
   statusMesg: string,
+  suspended: boolean,
   liveMode: boolean,
   micOn: boolean,
   speakerOn: boolean,
@@ -143,7 +150,7 @@ export const useFaceImages = (
       if (didCleanup) return;
       try {
         checkObsoletedImage();
-        const image = await takePhoto(deviceId);
+        const image = suspended ? NEUTRAL_FACE : await takePhoto(deviceId);
         if (didCleanup) return;
         setMyImage(image);
         const info: FaceInfo = {
@@ -175,6 +182,7 @@ export const useFaceImages = (
     deviceId,
     nickname,
     statusMesg,
+    suspended,
     liveMode,
     micOn,
     speakerOn,
