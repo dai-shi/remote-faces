@@ -3,7 +3,7 @@ import Peer from "peerjs";
 import { sleep } from "../utils/sleep";
 import { rand4, importCryptoKey, encrypt, decrypt } from "../utils/crypto";
 import { getPeerJsConfigFromUrl } from "../utils/url";
-import { isObject } from "../utils/types";
+import { isObject, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import {
   isValidPeerId,
@@ -33,7 +33,6 @@ export const createRoom: CreateRoom = async (
   let myPeer: Peer | null = null;
   const connMap = createConnectionMap();
   let mediaTypes: string[] = [];
-  let localStream: MediaStream | null = null;
 
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
@@ -70,16 +69,20 @@ export const createRoom: CreateRoom = async (
     sendPayload(conn, { userId, data, peers, mediaTypes });
   };
 
-  const sendSDP = (conn: Peer.DataConnection, sdp: unknown) => {
-    sendPayload(conn, { SDP: sdp });
+  const sendSDP = (
+    conn: Peer.DataConnection,
+    sdp: { offer: unknown } | { answer: unknown }
+  ) => {
+    const msid2mediaType = getMsid2MediaType();
+    sendPayload(conn, { SDP: { ...sdp, msid2mediaType } });
   };
 
   const handlePayloadSDP = async (conn: Peer.DataConnection, sdp: unknown) => {
     if (!isObject(sdp)) return;
-    if (isObject((sdp as { offer: unknown }).offer)) {
-      const { offer } = sdp as { offer: object };
+    connMap.registerRemoteMediaType(conn, sdp);
+    if (hasObjectProp(sdp, "offer")) {
       try {
-        await conn.peerConnection.setRemoteDescription(offer as any);
+        await conn.peerConnection.setRemoteDescription(sdp.offer as any);
         syncAllTracks(conn);
         const answer = await conn.peerConnection.createAnswer();
         await conn.peerConnection.setLocalDescription(answer);
@@ -87,10 +90,9 @@ export const createRoom: CreateRoom = async (
       } catch (e) {
         console.info("handleSDP offer failed", e);
       }
-    } else if (isObject((sdp as { answer: unknown }).answer)) {
-      const { answer } = sdp as { answer: object };
+    } else if (hasObjectProp(sdp, "answer")) {
       try {
-        await conn.peerConnection.setRemoteDescription(answer as any);
+        await conn.peerConnection.setRemoteDescription(sdp.answer as any);
       } catch (e) {
         console.info("handleSDP answer failed", e);
         await sleep(Math.random() * 30 * 1000);
@@ -119,7 +121,7 @@ export const createRoom: CreateRoom = async (
       Array.isArray(payloadMediaTypes) &&
       payloadMediaTypes.every((x) => typeof x === "string")
     ) {
-      connMap.setMediaTypes(conn, payloadMediaTypes as string[]);
+      connMap.setAcceptingMediaTypes(conn, payloadMediaTypes as string[]);
       await sleep(5000);
       syncAllTracks(conn);
     }
@@ -141,7 +143,7 @@ export const createRoom: CreateRoom = async (
       const info: PeerInfo = {
         userId: connUserId,
         peerIndex: getPeerIndexFromConn(conn),
-        mediaTypes: connMap.getMediaTypes(conn),
+        mediaTypes: connMap.getAcceptingMediaTypes(conn),
       };
       try {
         receiveData(data, info);
@@ -215,14 +217,21 @@ export const createRoom: CreateRoom = async (
       sendSDP(conn, { offer });
     });
     conn.peerConnection.addEventListener("track", (event: RTCTrackEvent) => {
+      const { mid } = event.transceiver;
+      const mType = mid && connMap.getRemoteMediaType(conn, mid);
+      if (!mType) {
+        console.warn("failed to find media type from mid");
+        return;
+      }
       const connUserId = connMap.getUserId(conn);
       if (connUserId) {
         const info: PeerInfo = {
           userId: connUserId,
           peerIndex: getPeerIndexFromPeerId(conn.peer),
-          mediaTypes: connMap.getMediaTypes(conn),
+          mediaTypes: connMap.getAcceptingMediaTypes(conn),
         };
         receiveTrack(
+          mType,
           setupTrackStopOnLongMute(event.track, conn.peerConnection),
           info
         );
@@ -356,44 +365,65 @@ export const createRoom: CreateRoom = async (
   };
 
   const acceptMediaTypes = (mTypes: string[]) => {
-    mediaTypes = mTypes;
-    if (mediaTypes.length) {
-      if (!localStream) {
-        localStream = new MediaStream();
-        connMap.forEachConnectedConns((conn) => {
-          const connUserId = connMap.getUserId(conn);
-          if (connUserId) {
-            const info: PeerInfo = {
-              userId: connUserId,
-              peerIndex: getPeerIndexFromPeerId(conn.peer),
-              mediaTypes: connMap.getMediaTypes(conn),
-            };
-            conn.peerConnection.getReceivers().forEach((receiver) => {
-              if (receiver.track.readyState !== "live") return;
-              receiveTrack(
-                setupTrackStopOnLongMute(receiver.track, conn.peerConnection),
-                info
-              );
-            });
-          }
-        });
-      }
-    } else {
-      localStream = null;
+    if (mTypes.length !== mediaTypes.length) {
+      connMap.forEachConnectedConns((conn) => {
+        const connUserId = connMap.getUserId(conn);
+        if (connUserId) {
+          const info: PeerInfo = {
+            userId: connUserId,
+            peerIndex: getPeerIndexFromPeerId(conn.peer),
+            mediaTypes: connMap.getAcceptingMediaTypes(conn),
+          };
+          const transceivers = conn.peerConnection.getTransceivers();
+          conn.peerConnection.getReceivers().forEach((receiver) => {
+            const transceiver = transceivers.find(
+              (t) => t.receiver === receiver
+            );
+            const mid = transceiver?.mid;
+            const mType = mid && connMap.getRemoteMediaType(conn, mid);
+            if (!mType) {
+              console.warn("failed to find media type from mid");
+              return;
+            }
+            if (receiver.track.readyState !== "live") return;
+            if (mediaTypes.includes(mType)) return;
+            if (!mTypes.includes(mType)) return;
+            receiveTrack(
+              mType,
+              setupTrackStopOnLongMute(receiver.track, conn.peerConnection),
+              info
+            );
+          });
+        }
+      });
     }
+    mediaTypes = mTypes;
     broadcastData(null);
   };
 
-  const trackMediaTypeMap = new WeakMap<MediaStreamTrack, string>();
+  const mediaTypeMap = new Map<
+    string,
+    {
+      stream: MediaStream;
+      track: MediaStreamTrack;
+    }
+  >();
+
+  const getMsid2MediaType = () => {
+    const msid2mediaType: Record<string, string> = {};
+    mediaTypeMap.forEach(({ stream }, mType) => {
+      msid2mediaType[stream.id] = mType;
+    });
+    return msid2mediaType;
+  };
 
   const addTrack = (mediaType: string, track: MediaStreamTrack) => {
-    if (!localStream) return;
-    trackMediaTypeMap.set(track, mediaType);
-    localStream.addTrack(track);
+    const stream = new MediaStream();
+    stream.addTrack(track);
+    mediaTypeMap.set(mediaType, { stream, track });
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       try {
-        if (!localStream) return;
-        conn.peerConnection.addTrack(track, localStream);
+        conn.peerConnection.addTrack(track, stream);
       } catch (e) {
         if (e.name === "InvalidAccessError") {
           // ignore
@@ -405,9 +435,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const removeTrack = (mediaType: string, track: MediaStreamTrack) => {
-    if (localStream) {
-      localStream.removeTrack(track);
-    }
+    mediaTypeMap.delete(mediaType);
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       const senders = conn.peerConnection.getSenders();
       const sender = senders.find((s) => s.track === track);
@@ -419,27 +447,22 @@ export const createRoom: CreateRoom = async (
 
   const syncAllTracks = (conn: Peer.DataConnection) => {
     const senders = conn.peerConnection.getSenders();
-    const mTypes = connMap.getMediaTypes(conn);
-    if (localStream) {
-      localStream.getTracks().forEach((track) => {
-        const mType = trackMediaTypeMap.get(track);
-        if (
-          localStream &&
-          mType &&
-          mTypes.includes(mType) &&
-          senders.every((sender) => sender.track !== track)
-        ) {
-          conn.peerConnection.addTrack(track, localStream);
-        }
-      });
-    }
-    senders.forEach((sender) => {
-      if (sender.track) {
-        const mType = trackMediaTypeMap.get(sender.track);
-        if (!mType || !mTypes.includes(mType)) {
-          conn.peerConnection.removeTrack(sender);
-        }
+    const acceptingMediaTypes = connMap.getAcceptingMediaTypes(conn);
+    acceptingMediaTypes.forEach((mType) => {
+      const item = mediaTypeMap.get(mType);
+      if (!item) return;
+      const { stream, track } = item;
+      if (senders.every((sender) => sender.track !== track)) {
+        conn.peerConnection.addTrack(track, stream);
       }
+    });
+    senders.forEach((sender) => {
+      if (!sender.track) return;
+      const isEffective = acceptingMediaTypes.some(
+        (mType) => mediaTypeMap.get(mType)?.track === sender.track
+      );
+      if (isEffective) return;
+      conn.peerConnection.removeTrack(sender);
     });
     if (senders.some((sender) => sender.track && !sender.transport)) {
       conn.peerConnection.dispatchEvent(new Event("negotiationneeded"));

@@ -42,7 +42,11 @@ const createRoomEntry = async (
       listener(data, info);
     });
   };
-  const receiveTrack = (track: MediaStreamTrack, info: PeerInfo) => {
+  const receiveTrack = (
+    mediaType: string,
+    track: MediaStreamTrack,
+    info: PeerInfo
+  ) => {
     trackListeners.forEach(({ listener }) => {
       listener(track, info);
     });
