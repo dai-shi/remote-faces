@@ -82,7 +82,7 @@ export const createRoom: CreateRoom = async (
     connMap.registerRemoteMediaType(conn, sdp);
     if (hasObjectProp(sdp, "offer")) {
       try {
-        await conn.peerConnection.setRemoteDescription(sdp.offer as any);
+        await conn.peerConnection.setRemoteDescription(sdp.offer);
         syncAllTracks(conn);
         const answer = await conn.peerConnection.createAnswer();
         await conn.peerConnection.setLocalDescription(answer);
@@ -92,7 +92,7 @@ export const createRoom: CreateRoom = async (
       }
     } else if (hasObjectProp(sdp, "answer")) {
       try {
-        await conn.peerConnection.setRemoteDescription(sdp.answer as any);
+        await conn.peerConnection.setRemoteDescription(sdp.answer);
       } catch (e) {
         console.info("handleSDP answer failed", e);
         await sleep(Math.random() * 30 * 1000);

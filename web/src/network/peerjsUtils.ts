@@ -29,6 +29,22 @@ export const createConnectionMap = () => {
   };
   const map = new Map<string, Value>();
 
+  const setAcceptingMediaTypes = (
+    conn: Peer.DataConnection,
+    mediaTypes: string[]
+  ) => {
+    const value = map.get(conn.peer);
+    if (value) {
+      value.acceptingMediaTypes = mediaTypes;
+    }
+  };
+
+  const getAcceptingMediaTypes = (conn: Peer.DataConnection) => {
+    const value = map.get(conn.peer);
+    if (!value) return [];
+    return value.acceptingMediaTypes;
+  };
+
   const addConn = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
     if (value) {
@@ -63,22 +79,6 @@ export const createConnectionMap = () => {
   const getUserId = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
     return value && value.userId;
-  };
-
-  const setAcceptingMediaTypes = (
-    conn: Peer.DataConnection,
-    mediaTypes: string[]
-  ) => {
-    const value = map.get(conn.peer);
-    if (value) {
-      value.acceptingMediaTypes = mediaTypes;
-    }
-  };
-
-  const getAcceptingMediaTypes = (conn: Peer.DataConnection) => {
-    const value = map.get(conn.peer);
-    if (!value) return [];
-    return value.acceptingMediaTypes;
   };
 
   const hasConn = (peerId: string) => map.has(peerId);
@@ -171,13 +171,13 @@ export const createConnectionMap = () => {
   };
 
   return {
+    setAcceptingMediaTypes,
+    getAcceptingMediaTypes,
     addConn,
     markConnected,
     isConnected,
     setUserId,
     getUserId,
-    setAcceptingMediaTypes,
-    getAcceptingMediaTypes,
     hasConn,
     getConn,
     delConn,

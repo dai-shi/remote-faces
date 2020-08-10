@@ -28,7 +28,6 @@ export const createRoom: CreateRoom = async (
     (window as any).myConnMap = connMap;
   }
   let mediaTypes: string[] = [];
-  let localStream: MediaStream | null = null;
 
   const roomTopic = roomId.slice(0, ROOM_ID_PREFIX_LEN);
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
@@ -98,29 +97,34 @@ export const createRoom: CreateRoom = async (
   }
 
   const acceptMediaTypes = (mTypes: string[]) => {
-    mediaTypes = mTypes;
-    if (mediaTypes.length) {
-      if (!localStream) {
-        localStream = new MediaStream();
-        connMap.forEachConns((conn) => {
-          const info: PeerInfo = {
-            userId: conn.userId,
-            peerIndex: conn.peerIndex,
-            mediaTypes: connMap.getMediaTypes(conn),
-          };
-          conn.recvPc.getReceivers().forEach((receiver) => {
-            if (receiver.track.readyState !== "live") return;
-            receiveTrack(
-              "TODO",
-              setupTrackStopOnLongMute(receiver.track, conn.recvPc),
-              info
-            );
-          });
+    if (mTypes.length !== mediaTypes.length) {
+      connMap.forEachConns((conn) => {
+        const info: PeerInfo = {
+          userId: conn.userId,
+          peerIndex: conn.peerIndex,
+          mediaTypes: connMap.getAcceptingMediaTypes(conn),
+        };
+        const transceivers = conn.recvPc.getTransceivers();
+        conn.recvPc.getReceivers().forEach((receiver) => {
+          const transceiver = transceivers.find((t) => t.receiver === receiver);
+          const mid = transceiver?.mid;
+          const mType = mid && connMap.getRemoteMediaType(conn, mid);
+          if (!mType) {
+            console.warn("failed to find media type from mid");
+            return;
+          }
+          if (receiver.track.readyState !== "live") return;
+          if (mediaTypes.includes(mType)) return;
+          if (!mTypes.includes(mType)) return;
+          receiveTrack(
+            mType,
+            setupTrackStopOnLongMute(receiver.track, conn.recvPc),
+            info
+          );
         });
-      }
-    } else {
-      localStream = null;
+      });
     }
+    mediaTypes = mTypes;
     broadcastData(null);
   };
 
@@ -136,7 +140,8 @@ export const createRoom: CreateRoom = async (
           answer: RTCSessionDescriptionInit;
         }
   ) => {
-    await sendPayloadDirectly(conn, { SDP: sdp });
+    const msid2mediaType = getMsid2MediaType();
+    await sendPayloadDirectly(conn, { SDP: { ...sdp, msid2mediaType } });
   };
 
   const handlePayloadSDP = async (conn: Connection, sdp: unknown) => {
@@ -146,6 +151,7 @@ export const createRoom: CreateRoom = async (
       return;
     }
     const { negotiationId } = sdp;
+    connMap.registerRemoteMediaType(conn, sdp);
     if (hasObjectProp(sdp, "offer")) {
       try {
         await conn.recvPc.setRemoteDescription(sdp.offer);
@@ -225,7 +231,7 @@ export const createRoom: CreateRoom = async (
       Array.isArray(payloadMediaTypes) &&
       payloadMediaTypes.every((x) => typeof x === "string")
     ) {
-      connMap.setMediaTypes(conn, payloadMediaTypes as string[]);
+      connMap.setAcceptingMediaTypes(conn, payloadMediaTypes as string[]);
       await sleep(5000);
       syncAllTracks(conn);
     }
@@ -235,7 +241,7 @@ export const createRoom: CreateRoom = async (
     const info: PeerInfo = {
       userId: conn.userId,
       peerIndex: conn.peerIndex,
-      mediaTypes: connMap.getMediaTypes(conn),
+      mediaTypes: connMap.getAcceptingMediaTypes(conn),
     };
     try {
       receiveData(data, info);
@@ -274,13 +280,19 @@ export const createRoom: CreateRoom = async (
       }
     });
     conn.recvPc.addEventListener("track", (event: RTCTrackEvent) => {
+      const { mid } = event.transceiver;
+      const mType = mid && connMap.getRemoteMediaType(conn, mid);
+      if (!mType) {
+        console.warn("failed to find media type from mid");
+        return;
+      }
       const info: PeerInfo = {
         userId: conn.userId,
         peerIndex: conn.peerIndex,
-        mediaTypes: connMap.getMediaTypes(conn),
+        mediaTypes: connMap.getAcceptingMediaTypes(conn),
       };
       receiveTrack(
-        "TODO",
+        mType,
         setupTrackStopOnLongMute(event.track, conn.recvPc),
         info
       );
@@ -387,16 +399,29 @@ export const createRoom: CreateRoom = async (
     await ipfs.stop();
   };
 
-  const trackMediaTypeMap = new WeakMap<MediaStreamTrack, string>();
+  const mediaTypeMap = new Map<
+    string,
+    {
+      stream: MediaStream;
+      track: MediaStreamTrack;
+    }
+  >();
+
+  const getMsid2MediaType = () => {
+    const msid2mediaType: Record<string, string> = {};
+    mediaTypeMap.forEach(({ stream }, mType) => {
+      msid2mediaType[stream.id] = mType;
+    });
+    return msid2mediaType;
+  };
 
   const addTrack = (mediaType: string, track: MediaStreamTrack) => {
-    if (!localStream) return;
-    trackMediaTypeMap.set(track, mediaType);
-    localStream.addTrack(track);
+    const stream = new MediaStream();
+    stream.addTrack(track);
+    mediaTypeMap.set(mediaType, { stream, track });
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       try {
-        if (!localStream) return;
-        conn.sendPc.addTrack(track, localStream);
+        conn.sendPc.addTrack(track, stream);
         startNegotiation(conn);
       } catch (e) {
         if (e.name === "InvalidAccessError") {
@@ -409,9 +434,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const removeTrack = (mediaType: string, track: MediaStreamTrack) => {
-    if (localStream) {
-      localStream.removeTrack(track);
-    }
+    mediaTypeMap.delete(mediaType);
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       const senders = conn.sendPc.getSenders();
       const sender = senders.find((s) => s.track === track);
@@ -424,30 +447,26 @@ export const createRoom: CreateRoom = async (
 
   const syncAllTracks = (conn: Connection) => {
     const senders = conn.sendPc.getSenders();
-    const mTypes = connMap.getMediaTypes(conn);
-    if (localStream) {
-      localStream.getTracks().forEach((track) => {
-        const mType = trackMediaTypeMap.get(track);
-        if (
-          localStream &&
-          mType &&
-          mTypes.includes(mType) &&
-          senders.every((sender) => sender.track !== track)
-        ) {
-          conn.sendPc.addTrack(track, localStream);
-          startNegotiation(conn);
-        }
-      });
-    }
-    senders.forEach((sender) => {
-      if (sender.track) {
-        const mType = trackMediaTypeMap.get(sender.track);
-        if (!mType || !mTypes.includes(mType)) {
-          conn.sendPc.removeTrack(sender);
-          startNegotiation(conn);
-        }
+    const acceptingMediaTypes = connMap.getAcceptingMediaTypes(conn);
+    acceptingMediaTypes.forEach((mType) => {
+      const item = mediaTypeMap.get(mType);
+      if (!item) return;
+      const { stream, track } = item;
+      if (senders.every((sender) => sender.track !== track)) {
+        conn.sendPc.addTrack(track, stream);
       }
     });
+    senders.forEach((sender) => {
+      if (!sender.track) return;
+      const isEffective = acceptingMediaTypes.some(
+        (mType) => mediaTypeMap.get(mType)?.track === sender.track
+      );
+      if (isEffective) return;
+      conn.sendPc.removeTrack(sender);
+    });
+    if (senders.some((sender) => sender.track && !sender.transport)) {
+      conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
+    }
   };
 
   const dispose = async () => {
