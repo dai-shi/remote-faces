@@ -62,33 +62,3 @@ export const getFaceVideoStream = async (deviceId?: string) => {
     dispose,
   };
 };
-
-const checkVideTrackFaceSize = async (track: MediaStreamTrack) => {
-  try {
-    const video = document.createElement("video");
-    video.srcObject = new MediaStream([track]);
-    for (let i = 0; i < 50; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
-      await sleep(100);
-      const width = video.videoWidth;
-      const height = video.videoHeight;
-      if (width > 0 && height > 0) {
-        return width === 72 && height === 72;
-      }
-    }
-    return true; // fallback to true
-  } catch (e) {
-    return true; // fallback to true
-  }
-};
-
-const videoTrackFaceSizeMap = new WeakMap<MediaStreamTrack, Promise<boolean>>();
-
-export const isVideoTrackFaceSize = (track: MediaStreamTrack) => {
-  if (videoTrackFaceSizeMap.has(track)) {
-    return videoTrackFaceSizeMap.get(track) as Promise<boolean>;
-  }
-  const promise = checkVideTrackFaceSize(track);
-  videoTrackFaceSizeMap.set(track, promise);
-  return promise;
-};

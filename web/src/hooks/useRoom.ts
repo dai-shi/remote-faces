@@ -6,16 +6,13 @@ import { PeerInfo, createRoom, NetworkStatus } from "../network/room";
 type NetworkStatusListener = (status: NetworkStatus) => void;
 type NewPeerListener = (peerIndex: number) => void;
 type DataListener = (data: unknown, info: PeerInfo) => void;
-type TrackListener = {
-  mediaType: string;
-  listener: (track: MediaStreamTrack, info: PeerInfo) => void;
-};
+type TrackListener = (track: MediaStreamTrack, info: PeerInfo) => void;
 type RoomEntry = {
   room: ReturnPromiseType<typeof createRoom>;
   networkStatusListeners: Set<NetworkStatusListener>;
   newPeerListeners: Set<NewPeerListener>;
   dataListeners: Set<DataListener>;
-  trackListeners: Set<TrackListener>;
+  trackListeners: Map<string, TrackListener>; // key = mediaType
   count: number;
 };
 
@@ -26,7 +23,7 @@ const createRoomEntry = async (
   const networkStatusListeners = new Set<NetworkStatusListener>();
   const newPeerListeners = new Set<NewPeerListener>();
   const dataListeners = new Set<DataListener>();
-  const trackListeners = new Set<TrackListener>();
+  const trackListeners = new Map<string, TrackListener>();
   const updateNetworkStatus = (status: NetworkStatus) => {
     networkStatusListeners.forEach((listener) => {
       listener(status);
@@ -47,9 +44,12 @@ const createRoomEntry = async (
     track: MediaStreamTrack,
     info: PeerInfo
   ) => {
-    trackListeners.forEach(({ listener }) => {
+    const listener = trackListeners.get(mediaType);
+    if (listener) {
       listener(track, info);
-    });
+    } else {
+      // TODO cache???
+    }
   };
   const room = await createRoom(
     roomId,
@@ -77,7 +77,10 @@ const register = async (
     networkStatusListener?: NetworkStatusListener;
     newPeerListener?: NewPeerListener;
     dataListener?: DataListener;
-    trackListener?: TrackListener;
+    trackListener?: {
+      mediaType: string;
+      listener: TrackListener;
+    };
   }
 ) => {
   const roomEntryKey = `${roomId}_${userId}`;
@@ -95,46 +98,35 @@ const register = async (
     entry.dataListeners.add(listeners.dataListener);
   }
   if (listeners.trackListener) {
-    const mediaTypeSet = new Set(
-      Array.from(entry.trackListeners).map((x) => x.mediaType)
-    );
+    const mediaTypeSet = new Set(entry.trackListeners.keys());
     const prevSize = mediaTypeSet.size;
-    entry.trackListeners.add(listeners.trackListener);
+    entry.trackListeners.set(
+      listeners.trackListener.mediaType,
+      listeners.trackListener.listener
+    );
     mediaTypeSet.add(listeners.trackListener.mediaType);
     if (prevSize !== mediaTypeSet.size) {
       entry.room.acceptMediaTypes(Array.from(mediaTypeSet));
     }
   }
   entry.count += 1;
-  const definedEntry = entry;
   const unregister = () => {
     if (listeners.networkStatusListener) {
-      definedEntry.networkStatusListeners.delete(
-        listeners.networkStatusListener
-      );
+      entry.networkStatusListeners.delete(listeners.networkStatusListener);
     }
     if (listeners.newPeerListener) {
-      definedEntry.newPeerListeners.delete(listeners.newPeerListener);
+      entry.newPeerListeners.delete(listeners.newPeerListener);
     }
     if (listeners.dataListener) {
-      definedEntry.dataListeners.delete(listeners.dataListener);
+      entry.dataListeners.delete(listeners.dataListener);
     }
     if (listeners.trackListener) {
-      let mediaTypeSet = new Set(
-        Array.from(definedEntry.trackListeners).map((x) => x.mediaType)
-      );
-      const prevSize = mediaTypeSet.size;
-      definedEntry.trackListeners.delete(listeners.trackListener);
-      mediaTypeSet = new Set(
-        Array.from(definedEntry.trackListeners).map((x) => x.mediaType)
-      );
-      if (prevSize !== mediaTypeSet.size) {
-        definedEntry.room.acceptMediaTypes(Array.from(mediaTypeSet));
-      }
+      entry.trackListeners.delete(listeners.trackListener.mediaType);
+      entry.room.acceptMediaTypes(Array.from(entry.trackListeners.keys()));
     }
-    definedEntry.count -= 1;
-    if (definedEntry.count <= 0) {
-      definedEntry.room.dispose();
+    entry.count -= 1;
+    if (entry.count <= 0) {
+      entry.room.dispose();
       roomEntryMap.delete(roomEntryKey);
     }
   };

@@ -1,13 +1,7 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 
-import { getVideoStream, isVideoTrackFaceSize } from "../media/video";
+import { getVideoStream } from "../media/video";
 import { useRoomMedia } from "./useRoom";
-
-const isVideoTrack = async (track: MediaStreamTrack) => {
-  if (track.kind !== "video") return false;
-  const isFaceSize = await isVideoTrackFaceSize(track);
-  return !isFaceSize;
-};
 
 export const useVideoShare = (
   roomId: string,
@@ -31,7 +25,6 @@ export const useVideoShare = (
   }, []);
 
   const onTrack = useCallback(async (track, info) => {
-    if (!(await isVideoTrack(track))) return;
     setVideoStreamMap((prev) => ({
       ...prev,
       [info.userId]: new MediaStream([track]),
