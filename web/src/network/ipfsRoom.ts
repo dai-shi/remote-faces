@@ -454,6 +454,7 @@ export const createRoom: CreateRoom = async (
       const { stream, track } = item;
       if (senders.every((sender) => sender.track !== track)) {
         conn.sendPc.addTrack(track, stream);
+        startNegotiation(conn);
       }
     });
     senders.forEach((sender) => {
@@ -463,10 +464,8 @@ export const createRoom: CreateRoom = async (
       );
       if (isEffective) return;
       conn.sendPc.removeTrack(sender);
+      startNegotiation(conn);
     });
-    if (senders.some((sender) => sender.track && !sender.transport)) {
-      conn.sendPc.dispatchEvent(new Event("negotiationneeded"));
-    }
   };
 
   const dispose = async () => {
