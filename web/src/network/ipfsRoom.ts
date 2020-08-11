@@ -416,8 +416,8 @@ export const createRoom: CreateRoom = async (
   };
 
   const addTrack = (mediaType: string, track: MediaStreamTrack) => {
-    const stream = new MediaStream();
-    stream.addTrack(track);
+    removeTrack(mediaType);
+    const stream = new MediaStream([track]);
     mediaTypeMap.set(mediaType, { stream, track });
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       try {
@@ -433,7 +433,10 @@ export const createRoom: CreateRoom = async (
     });
   };
 
-  const removeTrack = (mediaType: string, track: MediaStreamTrack) => {
+  const removeTrack = (mediaType: string) => {
+    const item = mediaTypeMap.get(mediaType);
+    if (!item) return;
+    const { track } = item;
     mediaTypeMap.delete(mediaType);
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       const senders = conn.sendPc.getSenders();

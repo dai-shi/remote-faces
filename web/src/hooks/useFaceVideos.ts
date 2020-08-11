@@ -106,7 +106,7 @@ export const useFaceVideos = (
           addTrackToStream(videoTrack, prev, disposeStream)
         );
         dispose = () => {
-          removeVideoTrack(videoTrack);
+          removeVideoTrack();
           disposeVideo();
           // XXX we need to manually dispatch ended event, why?
           videoTrack.dispatchEvent(new Event("ended"));
@@ -137,7 +137,7 @@ export const useFaceVideos = (
           addTrackToStream(audioTrack, prev, disposeStream)
         );
         dispose = () => {
-          removeAudioTrack(audioTrack);
+          removeAudioTrack();
           disposeAudio();
           // XXX we need to manually dispatch ended event, why?
           audioTrack.dispatchEvent(new Event("ended"));

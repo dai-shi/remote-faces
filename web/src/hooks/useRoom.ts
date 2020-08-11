@@ -247,7 +247,7 @@ export const useRoomMedia = (
 ) => {
   const [functions, setFunctions] = useState<{
     addTrack?: (track: MediaStreamTrack) => void;
-    removeTrack?: (track: MediaStreamTrack) => void;
+    removeTrack?: () => void;
   }>({});
   useEffect(() => {
     let cleanup = () => {};
@@ -259,8 +259,7 @@ export const useRoomMedia = (
         setFunctions({
           addTrack: (track: MediaStreamTrack) =>
             result.addTrack(mediaType, track),
-          removeTrack: (track: MediaStreamTrack) =>
-            result.removeTrack(mediaType, track),
+          removeTrack: () => result.removeTrack(mediaType),
         });
         cleanup = () => {
           setFunctions({});

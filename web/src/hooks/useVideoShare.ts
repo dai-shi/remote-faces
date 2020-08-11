@@ -64,7 +64,7 @@ export const useVideoShare = (
         addTrack(track);
         setVideoStream(result.stream);
         dispose = () => {
-          removeTrack(track);
+          removeTrack();
           result.dispose();
           setVideoStream(null);
           setEnabled(false);

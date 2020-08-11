@@ -37,6 +37,6 @@ export type CreateRoom = (
   sendData: (data: unknown, peerIndex: number) => void;
   acceptMediaTypes: (mediaTypes: string[]) => void;
   addTrack: (mediaType: string, track: MediaStreamTrack) => void;
-  removeTrack: (mediaType: string, track: MediaStreamTrack) => void;
+  removeTrack: (mediaType: string) => void;
   dispose: () => void;
 }>;

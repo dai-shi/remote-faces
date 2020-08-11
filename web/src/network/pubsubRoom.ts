@@ -515,10 +515,11 @@ export const createRoom: CreateRoom = async (
   };
 
   const addTrack = async (mediaType: string, track: MediaStreamTrack) => {
+    const stream = new MediaStream([track]);
+    mediaTypeMap.set(mediaType, { stream, track });
     if (mediaType === "faceAudio") {
       // XXX experimental
       runDispose(trackDisposeMap.get(track));
-      const stream = new MediaStream([track]);
       const audioCtx = new AudioContext();
       const trackSource = audioCtx.createMediaStreamSource(stream);
       await audioCtx.audioWorklet.addModule("audio-encoder.js");
@@ -536,9 +537,6 @@ export const createRoom: CreateRoom = async (
       });
       return;
     }
-    const stream = new MediaStream();
-    stream.addTrack(track);
-    mediaTypeMap.set(mediaType, { stream, track });
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       try {
         conn.sendPc.addTrack(track, stream);
@@ -553,13 +551,16 @@ export const createRoom: CreateRoom = async (
     });
   };
 
-  const removeTrack = (mediaType: string, track: MediaStreamTrack) => {
+  const removeTrack = (mediaType: string) => {
+    const item = mediaTypeMap.get(mediaType);
+    if (!item) return;
+    const { track } = item;
+    mediaTypeMap.delete(mediaType);
     if (mediaType === "faceAudio") {
       // XXX experimental
       runDispose(trackDisposeMap.get(track));
       return;
     }
-    mediaTypeMap.delete(mediaType);
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       const senders = conn.sendPc.getSenders();
       const sender = senders.find((s) => s.track === track);
