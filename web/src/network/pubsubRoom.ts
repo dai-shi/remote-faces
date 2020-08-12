@@ -588,9 +588,10 @@ export const createRoom: CreateRoom = async (
       const isEffective = acceptingMediaTypes.some(
         (mType) => mediaTypeMap.get(mType)?.track === sender.track
       );
-      if (isEffective) return;
-      conn.sendPc.removeTrack(sender);
-      startNegotiation(conn);
+      if (!isEffective) {
+        conn.sendPc.removeTrack(sender);
+        startNegotiation(conn);
+      }
     });
   };
 

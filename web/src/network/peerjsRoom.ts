@@ -185,7 +185,6 @@ export const createRoom: CreateRoom = async (
     }
   };
 
-  const scheduledNegotiation = new WeakMap<Peer.DataConnection, boolean>();
   const initConnection = (conn: Peer.DataConnection) => {
     if (connMap.isConnected(conn.peer)) {
       conn.close();
@@ -206,11 +205,12 @@ export const createRoom: CreateRoom = async (
         pc.onicecandidate = () => undefined;
       }
     });
+    let negotiationScheduled = false;
     conn.peerConnection.addEventListener("negotiationneeded", async () => {
-      if (scheduledNegotiation.has(conn)) return;
-      scheduledNegotiation.set(conn, true);
-      await sleep(2000);
-      scheduledNegotiation.delete(conn);
+      if (negotiationScheduled) return;
+      negotiationScheduled = true;
+      await sleep(5000);
+      negotiationScheduled = false;
       if (!connMap.isConnected(conn.peer)) return;
       const offer = await conn.peerConnection.createOffer();
       await conn.peerConnection.setLocalDescription(offer);
@@ -464,8 +464,9 @@ export const createRoom: CreateRoom = async (
       const isEffective = acceptingMediaTypes.some(
         (mType) => mediaTypeMap.get(mType)?.track === sender.track
       );
-      if (isEffective) return;
-      conn.peerConnection.removeTrack(sender);
+      if (!isEffective) {
+        conn.peerConnection.removeTrack(sender);
+      }
     });
     if (senders.some((sender) => sender.track && !sender.transport)) {
       conn.peerConnection.dispatchEvent(new Event("negotiationneeded"));
