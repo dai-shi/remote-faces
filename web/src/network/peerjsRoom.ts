@@ -385,14 +385,17 @@ export const createRoom: CreateRoom = async (
               console.warn("failed to find media type from mid");
               return;
             }
-            if (receiver.track.readyState !== "live") return;
-            if (mediaTypes.includes(mType)) return;
-            if (!mTypes.includes(mType)) return;
-            receiveTrack(
-              mType,
-              setupTrackStopOnLongMute(receiver.track, conn.peerConnection),
-              info
-            );
+            if (
+              receiver.track.readyState === "live" &&
+              !mediaTypes.includes(mType) &&
+              mTypes.includes(mType)
+            ) {
+              receiveTrack(
+                mType,
+                setupTrackStopOnLongMute(receiver.track, conn.peerConnection),
+                info
+              );
+            }
           });
         }
       });
@@ -418,7 +421,9 @@ export const createRoom: CreateRoom = async (
   };
 
   const addTrack = (mediaType: string, track: MediaStreamTrack) => {
-    removeTrack(mediaType);
+    if (mediaTypeMap.has(mediaType)) {
+      throw new Error(`track is already added for ${mediaType}`);
+    }
     const stream = new MediaStream([track]);
     mediaTypeMap.set(mediaType, { stream, track });
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
@@ -436,7 +441,10 @@ export const createRoom: CreateRoom = async (
 
   const removeTrack = (mediaType: string) => {
     const item = mediaTypeMap.get(mediaType);
-    if (!item) return;
+    if (!item) {
+      console.log("track is already removed for", mediaType);
+      return;
+    }
     const { track } = item;
     mediaTypeMap.delete(mediaType);
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
