@@ -19,7 +19,11 @@ export type PeerInfo = {
 };
 type NotifyNewPeer = (peerIndex: number) => void;
 type ReceiveData = (data: unknown, info: PeerInfo) => void;
-type ReceiveTrack = (track: MediaStreamTrack, info: PeerInfo) => void;
+type ReceiveTrack = (
+  mediaType: string,
+  track: MediaStreamTrack,
+  info: PeerInfo
+) => void;
 
 export type CreateRoom = (
   roomId: string,
@@ -33,6 +37,6 @@ export type CreateRoom = (
   sendData: (data: unknown, peerIndex: number) => void;
   acceptMediaTypes: (mediaTypes: string[]) => void;
   addTrack: (mediaType: string, track: MediaStreamTrack) => void;
-  removeTrack: (mediaType: string, track: MediaStreamTrack) => void;
+  removeTrack: (mediaType: string) => void;
   dispose: () => void;
 }>;

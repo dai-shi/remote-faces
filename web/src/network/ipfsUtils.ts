@@ -1,3 +1,5 @@
+import { hasObjectProp, hasStringProp } from "../utils/types";
+
 let peerIndexCounter = 0;
 
 const getNextPeerIndex = () => {
@@ -28,20 +30,22 @@ const DEFAULT_CONFIG = {
 export const createConnectionMap = () => {
   type Value = {
     conn: Connection;
-    mediaTypes: string[];
+    acceptingMediaTypes: string[];
+    remoteMediaTypes: Record<string, string>; // key = mid
   };
   const map = new Map<string, Value>();
 
-  const setMediaTypes = (conn: Connection, mediaTypes: string[]) => {
+  const setAcceptingMediaTypes = (conn: Connection, mediaTypes: string[]) => {
     const value = map.get(conn.peer);
     if (value) {
-      value.mediaTypes = mediaTypes;
+      value.acceptingMediaTypes = mediaTypes;
     }
   };
 
-  const getMediaTypes = (conn: Connection) => {
+  const getAcceptingMediaTypes = (conn: Connection) => {
     const value = map.get(conn.peer);
-    return (value && value.mediaTypes) || [];
+    if (!value) return [];
+    return value.acceptingMediaTypes;
   };
 
   const addConn = (peerId: string, userId: string) => {
@@ -56,7 +60,11 @@ export const createConnectionMap = () => {
       sendPc: new RTCPeerConnection(DEFAULT_CONFIG),
       recvPc: new RTCPeerConnection(DEFAULT_CONFIG),
     };
-    map.set(conn.peer, { conn, mediaTypes: [] });
+    map.set(conn.peer, {
+      conn,
+      acceptingMediaTypes: [],
+      remoteMediaTypes: {},
+    });
     return conn;
   };
 
@@ -99,7 +107,7 @@ export const createConnectionMap = () => {
     callback: (conn: Connection) => void
   ) => {
     Array.from(map.values()).forEach((value) => {
-      if (value.mediaTypes && value.mediaTypes.includes(mediaType)) {
+      if (value.acceptingMediaTypes.includes(mediaType)) {
         callback(value.conn);
       }
     });
@@ -107,9 +115,52 @@ export const createConnectionMap = () => {
 
   const size = () => map.size;
 
+  const getRemoteMediaType = (conn: Connection, mid: string) => {
+    const value = map.get(conn.peer);
+    if (!value) return null;
+    return value.remoteMediaTypes[mid] || null;
+  };
+
+  const registerRemoteMediaTypeFromSDP = (
+    conn: Connection,
+    msid2mediaType: Record<string, unknown>,
+    sdpLines: string
+  ) => {
+    const value = map.get(conn.peer);
+    if (!value) return;
+    const lines = sdpLines.split(/[\r\n]+/);
+    let mid: string;
+    lines.forEach((line) => {
+      if (line.startsWith("a=mid:")) {
+        mid = line.slice("a=mid:".length);
+      } else if (line.startsWith("a=msid:")) {
+        const arr = line.slice("a=msid:".length).split(" ");
+        arr.forEach((msid) => {
+          const mediaType = msid2mediaType[msid];
+          if (typeof mediaType === "string") {
+            value.remoteMediaTypes[mid] = mediaType;
+          }
+        });
+      }
+    });
+  };
+
+  const registerRemoteMediaType = (
+    conn: Connection,
+    sdp: Record<string, unknown>
+  ) => {
+    if (!hasObjectProp(sdp, "msid2mediaType")) return;
+    if (hasObjectProp(sdp, "offer") && hasStringProp(sdp.offer, "sdp")) {
+      registerRemoteMediaTypeFromSDP(conn, sdp.msid2mediaType, sdp.offer.sdp);
+    }
+    if (hasObjectProp(sdp, "answer") && hasStringProp(sdp.answer, "sdp")) {
+      registerRemoteMediaTypeFromSDP(conn, sdp.msid2mediaType, sdp.answer.sdp);
+    }
+  };
+
   return {
-    setMediaTypes,
-    getMediaTypes,
+    setAcceptingMediaTypes,
+    getAcceptingMediaTypes,
     addConn,
     getConn,
     findConn,
@@ -118,5 +169,7 @@ export const createConnectionMap = () => {
     forEachConns,
     forEachConnsAcceptingMedia,
     size,
+    getRemoteMediaType,
+    registerRemoteMediaType,
   };
 };
