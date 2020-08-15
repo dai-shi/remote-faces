@@ -41,20 +41,15 @@ export const useVideoShare = (
     });
   }, []);
 
-  const { addTrack, removeTrack } = useRoomMedia(
-    roomId,
-    userId,
-    onTrack,
-    "cameraVideo"
-  );
+  const addTrack = useRoomMedia(roomId, userId, onTrack, "cameraVideo");
 
   useEffect(() => {
     let dispose: (() => void) | null = null;
-    if (enabled && addTrack && removeTrack) {
+    if (enabled && addTrack) {
       (async () => {
         const result = await getVideoStream(videoDeviceId);
         const [track] = result.stream.getVideoTracks();
-        addTrack(track);
+        const removeTrack = addTrack(track);
         setVideoStream(result.stream);
         dispose = () => {
           removeTrack();
@@ -71,7 +66,7 @@ export const useVideoShare = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, videoDeviceId, enabled, setEnabled, addTrack, removeTrack]);
+  }, [roomId, videoDeviceId, enabled, setEnabled, addTrack]);
 
   return { videoStream, videoStreamMap };
 };

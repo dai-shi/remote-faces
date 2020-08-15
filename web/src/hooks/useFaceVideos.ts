@@ -64,20 +64,14 @@ export const useFaceVideos = (
     });
   }, []);
 
-  const {
-    addTrack: addVideoTrack,
-    removeTrack: removeVideoTrack,
-  } = useRoomMedia(
+  const addVideoTrack = useRoomMedia(
     roomId,
     userId,
     onTrack,
     videoEnabled ? "faceVideo" : undefined
   );
 
-  const {
-    addTrack: addAudioTrack,
-    removeTrack: removeAudioTrack,
-  } = useRoomMedia(
+  const addAudioTrack = useRoomMedia(
     roomId,
     userId,
     onTrack,
@@ -86,14 +80,14 @@ export const useFaceVideos = (
 
   useEffect(() => {
     let dispose: (() => void) | null = null;
-    if (videoEnabled && addVideoTrack && removeVideoTrack) {
+    if (videoEnabled && addVideoTrack) {
       (async () => {
         const {
           stream: videoStream,
           dispose: disposeVideo,
         } = await getFaceVideoStream(videoDeviceId);
         const [videoTrack] = videoStream.getVideoTracks();
-        addVideoTrack(videoTrack);
+        const removeVideoTrack = addVideoTrack(videoTrack);
         const disposeStream = (s: MediaStream) => {
           if (isMounted.current) {
             setFaceStream((prev) => (prev === s ? null : prev));
@@ -113,18 +107,18 @@ export const useFaceVideos = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, videoEnabled, videoDeviceId, addVideoTrack, removeVideoTrack]);
+  }, [roomId, videoEnabled, videoDeviceId, addVideoTrack]);
 
   useEffect(() => {
     let dispose: (() => void) | null = null;
-    if (audioEnabled && addAudioTrack && removeAudioTrack) {
+    if (audioEnabled && addAudioTrack) {
       (async () => {
         const {
           stream: audioStream,
           dispose: disposeAudio,
         } = await getAudioStream(audioDeviceId);
         const [audioTrack] = audioStream.getAudioTracks();
-        addAudioTrack(audioTrack);
+        const removeAudioTrack = addAudioTrack(audioTrack);
         const disposeStream = (s: MediaStream) => {
           if (isMounted.current) {
             setFaceStream((prev) => (prev === s ? null : prev));
@@ -144,7 +138,7 @@ export const useFaceVideos = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, audioEnabled, audioDeviceId, addAudioTrack, removeAudioTrack]);
+  }, [roomId, audioEnabled, audioDeviceId, addAudioTrack]);
   useEffect(() => {
     if (faceStream) {
       faceStream.getAudioTracks().forEach((track) => {
