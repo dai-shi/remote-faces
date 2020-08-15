@@ -40,16 +40,11 @@ export const useScreenShare = (
     });
   }, []);
 
-  const { addTrack, removeTrack } = useRoomMedia(
-    roomId,
-    userId,
-    onTrack,
-    "screenVideo"
-  );
+  const addTrack = useRoomMedia(roomId, userId, onTrack, "screenVideo");
 
   useEffect(() => {
     let dispose: (() => void) | null = null;
-    if (enabled && addTrack && removeTrack) {
+    if (enabled && addTrack) {
       (async () => {
         const result = await getScreenStream();
         if (!result) {
@@ -57,7 +52,7 @@ export const useScreenShare = (
           return;
         }
         const [track] = result.stream.getVideoTracks();
-        addTrack(track);
+        const removeTrack = addTrack(track);
         setScreenStream(result.stream);
         dispose = () => {
           removeTrack();
@@ -74,7 +69,7 @@ export const useScreenShare = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, enabled, setEnabled, addTrack, removeTrack]);
+  }, [roomId, enabled, setEnabled, addTrack]);
 
   return { screenStream, screenStreamMap };
 };
