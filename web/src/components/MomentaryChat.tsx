@@ -5,6 +5,7 @@ import "./MomentaryChat.css";
 import { useMomentaryChat, ChatItem } from "../hooks/useMomentaryChat";
 import { EmojiPicker } from "../utils/emoji";
 import { WysiwygEditor } from "./WysiwygEditor";
+import { useNotification } from "../hooks/useNotification";
 
 type ChatList = ReturnType<typeof useMomentaryChat>["chatList"];
 type ReplyChat = ReturnType<typeof useMomentaryChat>["replyChat"];
@@ -121,6 +122,18 @@ export const MomentaryChat = React.memo<{
       }
     }
   };
+
+  const sendNotification = useNotification();
+  const latestChatItem = chatList[0];
+  useEffect(() => {
+    if (
+      latestChatItem &&
+      latestChatItem.createdAt > Date.now() - 10 * 1000 &&
+      new RegExp(`@${nickname}\\b`).test(latestChatItem.text)
+    ) {
+      sendNotification("You got a new message!");
+    }
+  }, [nickname, latestChatItem, sendNotification]);
 
   return (
     <div className="MomentaryChat-container" ref={containerRef}>
