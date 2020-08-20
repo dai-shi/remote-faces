@@ -1,0 +1,1 @@
+{"version":3,"sources":["Welcome.css"],"names":[],"mappings":"AAAA,mBACE,eACF,CAEA,sCACE,YACF","file":"15.bcd12a02.chunk.css","sourcesContent":[".Welcome-container {\n  overflow: scroll;\n}\n\n.Welcome-container::-webkit-scrollbar {\n  display: none;\n}\n"]}
