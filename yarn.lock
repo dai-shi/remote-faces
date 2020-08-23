@@ -5436,7 +5436,7 @@ debug@^3.0.0, debug@^3.1.0, debug@^3.1.1, debug@^3.2.5, debug@^3.2.6:
   dependencies:
     ms "^2.1.1"
 
-debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@~4.1.0:
+debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@~4.1.0, debug@~4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.1.1.tgz#3b72260255109c6b589cee050f1d516139664791"
   integrity sha512-pYAIzeRo8J6KPEaJ0VWOh5Pzkbw/RetuzehGM7QRRX5he4fPHx2rdKMB256ehJCkX+XRQm16eZLqLNS8RSZXZw==
@@ -8303,6 +8303,14 @@ husky@^1.3.1:
     run-node "^1.0.0"
     slash "^2.0.0"
 
+hyperdiff@^2.0.5:
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/hyperdiff/-/hyperdiff-2.0.6.tgz#d061027de5e572818a3e66020ebac70ce6aabf43"
+  integrity sha512-zxfFTY03pVsd00V1T1Argq7iBevT3qBPW/2cVvrDxPLtI5rNqJM0ZaoNQbPALccVJYelONrM0y5x/2BNoNyV/g==
+  dependencies:
+    debug "~4.1.1"
+    lodash "~4.17.19"
+
 iconv-lite@0.4.24, iconv-lite@^0.4.24, iconv-lite@^0.4.4:
   version "0.4.24"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.24.tgz#2022b4b25fbddc21d2f524974a474aafe733908b"
@@ -8712,6 +8720,15 @@ ipfs-http-response@^0.5.0:
     mime-types "^2.1.27"
     multihashes "~0.4.19"
     p-try-each "^1.0.1"
+
+"ipfs-pubsub-room@npm:@daishi/ipfs-pubsub-room@^2.0.1-custom.1":
+  version "2.0.1-custom.1"
+  resolved "https://registry.yarnpkg.com/@daishi/ipfs-pubsub-room/-/ipfs-pubsub-room-2.0.1-custom.1.tgz#21b687a0190d721ad831130afa49f1a3abfc561e"
+  integrity sha512-2ha1cTb7C6Am0ExWQCWxjNTqW+T3yKIYfSEGSVMR4fY8k8IM6jXhUypUmzDM8Sf2gRWHUAWh6rWVUnT4Da+Hqw==
+  dependencies:
+    hyperdiff "^2.0.5"
+    it-pipe "^1.1.0"
+    lodash.clonedeep "^4.5.0"
 
 ipfs-repo-migrations@^1.0.0:
   version "1.0.0"
@@ -11466,6 +11483,11 @@ lodash._reinterpolate@^3.0.0:
   resolved "https://registry.yarnpkg.com/lodash._reinterpolate/-/lodash._reinterpolate-3.0.0.tgz#0ccf2d89166af03b3663c796538b75ac6e114d9d"
   integrity sha1-DM8tiRZq8Ds2Y8eWU4t1rG4RTZ0=
 
+lodash.clonedeep@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz#e23f3f9c4f8fbdde872529c1071857a086e5ccef"
+  integrity sha1-4j8/nE+Pvd6HJSnBBxhXoIblzO8=
+
 lodash.find@4.6.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/lodash.find/-/lodash.find-4.6.0.tgz#cb0704d47ab71789ffa0de8b97dd926fb88b13b1"
@@ -11540,6 +11562,11 @@ lodash.uniq@^4.5.0:
   version "4.17.15"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
   integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
+
+lodash@~4.17.19:
+  version "4.17.20"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz#b44a9b6297bcb698f1c51a3545a2b3b368d59c52"
+  integrity sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==
 
 log-symbols@^1.0.2:
   version "1.0.2"
