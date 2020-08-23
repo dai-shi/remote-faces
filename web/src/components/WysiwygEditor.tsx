@@ -53,7 +53,7 @@ export const WysiwygEditor = React.memo<{
   const elementRef = useRef<HTMLDivElement>();
   useEffect(() => {
     const onKeydown = (event: KeyboardEvent) => {
-      if (event.metaKey && event.keyCode === 13) {
+      if (event.metaKey && event.code === "Enter") {
         onMetaEnter();
       }
     };
