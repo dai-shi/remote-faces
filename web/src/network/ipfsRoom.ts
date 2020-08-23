@@ -1,4 +1,5 @@
 import Ipfs, { IpfsType, PubsubHandler } from "ipfs";
+import IpfsPubSubRoom from "ipfs-pubsub-room";
 
 import { sleep } from "../utils/sleep";
 import {
@@ -23,6 +24,7 @@ export const createRoom: CreateRoom = async (
   let disposed = false;
   let myIpfs: IpfsType | null = null;
   let myPeerId: string | null = null;
+  let myIpfsPubSubRoom: IpfsPubSubRoom | null = null;
   const connMap = createConnectionMap();
   if (process.env.NODE_ENV !== "production") {
     (window as any).myConnMap = connMap;
@@ -62,21 +64,23 @@ export const createRoom: CreateRoom = async (
         console.warn("no myIpfs initialized");
         return;
       }
-      await myIpfs.pubsub.publish(topic, encrypted);
+      if (myIpfsPubSubRoom) {
+        myIpfsPubSubRoom.broadcast(encrypted);
+      }
     } catch (e) {
       console.error("sendPayload", e);
     }
   };
 
   const sendPayloadDirectly = async (conn: Connection, payload: unknown) => {
-    const topic = `${roomTopic} ${conn.peer}`;
-    // HACK somehow, publish doesn't work without this
-    if (myIpfs) {
-      const noop = () => null;
-      await myIpfs.pubsub.subscribe(topic, noop);
-      await myIpfs.pubsub.unsubscribe(topic, noop);
+    try {
+      const encrypted = await encrypt(JSON.stringify(payload), cryptoKey);
+      if (myIpfsPubSubRoom) {
+        myIpfsPubSubRoom.sendTo(conn.peer, encrypted);
+      }
+    } catch (e) {
+      console.error("sendPayloadDirectly", e);
     }
-    await sendPayload(topic, payload);
   };
 
   const broadcastData = async (data: unknown) => {
@@ -333,47 +337,7 @@ export const createRoom: CreateRoom = async (
     showConnectedStatus();
   };
 
-  const checkPeers = async () => {
-    if (disposed) return;
-    const peers = myIpfs ? myIpfs.pubsub.peers(roomTopic) : [];
-    connMap.forEachConns((conn) => {
-      if (!peers.includes(conn.peer)) {
-        connMap.delConn(conn);
-        updateNetworkStatus({
-          type: "CONNECTION_CLOSED",
-          peerIndex: conn.peerIndex,
-        });
-      }
-    });
-    if (
-      myIpfs &&
-      connMap.size() === 0 &&
-      lastInitIpfsTime + 3 * 60 * 1000 < Date.now()
-    ) {
-      const prevIpfs = myIpfs;
-      myIpfs = null;
-      myPeerId = null;
-      await closeIpfs(prevIpfs);
-      await sleep(20 * 1000);
-      await initIpfs();
-      return;
-    }
-    if (!peers.length) {
-      updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
-      await sleep(1000);
-      checkPeers();
-      return;
-    }
-    if (!connMap.size()) {
-      await broadcastData(null);
-    }
-    await sleep(5000);
-    checkPeers();
-  };
-
-  let lastInitIpfsTime = 0;
   const initIpfs = async () => {
-    lastInitIpfsTime = Date.now();
     updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
     const ipfs: IpfsType = await Ipfs.create({
       repo: secureRandomId(),
@@ -386,19 +350,33 @@ export const createRoom: CreateRoom = async (
       },
     });
     myPeerId = (await ipfs.id()).id;
-    await ipfs.pubsub.subscribe(roomTopic, pubsubHandler);
-    await ipfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
+    myIpfsPubSubRoom = new IpfsPubSubRoom(ipfs, roomTopic);
+    myIpfsPubSubRoom.on("message", pubsubHandler);
+    myIpfsPubSubRoom.on("peer joined", () => {
+      broadcastData(null);
+    });
+    myIpfsPubSubRoom.on("peer left", (peerId: string) => {
+      const conn = connMap.getConn(peerId);
+      if (conn) {
+        connMap.delConn(conn);
+        updateNetworkStatus({
+          type: "CONNECTION_CLOSED",
+          peerIndex: conn.peerIndex,
+        });
+      }
+    });
+    myIpfsPubSubRoom.on("subscribed", () => {
+      broadcastData(null);
+    });
     myIpfs = ipfs;
     if (process.env.NODE_ENV !== "production") {
       (window as any).myIpfs = myIpfs;
     }
-    checkPeers();
   };
   initIpfs();
 
-  const closeIpfs = async (ipfs: IpfsType) => {
-    await ipfs.pubsub.unsubscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
-    await ipfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
+  const closeIpfs = async (ipfs: IpfsType, ipfsPubSubRoom: IpfsPubSubRoom) => {
+    await ipfsPubSubRoom.leave();
     await ipfs.stop();
   };
 
@@ -483,7 +461,7 @@ export const createRoom: CreateRoom = async (
   const dispose = async () => {
     disposed = true;
     if (myIpfs) {
-      closeIpfs(myIpfs);
+      closeIpfs(myIpfs, myIpfsPubSubRoom as IpfsPubSubRoom);
     }
   };
 
