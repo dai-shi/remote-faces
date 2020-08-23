@@ -1,6 +1,6 @@
 // @ts-nocheck XXX ckeditor5 doesn't come with types
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import CKEditor from "@ckeditor/ckeditor5-react";
 import CustomEditor from "@daishi/ckeditor5-build-inline-custom";
 
@@ -48,19 +48,35 @@ const initEditor = (editor) => {
 export const WysiwygEditor = React.memo<{
   registerClear: (clear: () => void) => void;
   onChange: (data: string) => void;
-}>(({ registerClear, onChange }) => (
-  <CKEditor
-    editor={CustomEditor}
-    config={config}
-    onInit={(editor) => {
-      registerClear(() => {
-        editor.setData("");
-      });
-      initEditor(editor);
-    }}
-    onChange={(_event, editor) => {
-      const data = editor.getData();
-      onChange(data);
-    }}
-  />
-));
+  onMetaEnter: () => void;
+}>(({ registerClear, onChange, onMetaEnter }) => {
+  const elementRef = useRef<HTMLDivElement>();
+  useEffect(() => {
+    const onKeydown = (event: KeyboardEvent) => {
+      if (event.metaKey && event.code === "Enter") {
+        onMetaEnter();
+      }
+    };
+    elementRef.current.addEventListener("keydown", onKeydown);
+    return () => {
+      elementRef.current.removeEventListener("keydown", onKeydown);
+    };
+  }, [onMetaEnter]);
+  return (
+    <CKEditor
+      editor={CustomEditor}
+      config={config}
+      onInit={(editor) => {
+        elementRef.current = editor.sourceElement;
+        registerClear(() => {
+          editor.setData("");
+        });
+        initEditor(editor);
+      }}
+      onChange={(_event, editor) => {
+        const data = editor.getData();
+        onChange(data);
+      }}
+    />
+  );
+});

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import DOMPurify from "dompurify";
 
 import "./MomentaryChat.css";
@@ -112,16 +112,21 @@ export const MomentaryChat = React.memo<{
     clearRef.current = clear;
   };
 
-  const [text, setText] = useState("");
-  const onClick = () => {
-    if (text) {
-      sendChat(text);
+  const [text, setTextState] = useState("");
+  const textRef = useRef("");
+  const setText = useCallback((t: string) => {
+    setTextState(t);
+    textRef.current = t;
+  }, []);
+  const sendText = useCallback(() => {
+    if (textRef.current) {
+      sendChat(textRef.current);
       setText("");
       if (clearRef.current) {
         clearRef.current();
       }
     }
-  };
+  }, [sendChat, setText]);
 
   const sendNotification = useNotification();
   const latestChatItem = chatList[0];
@@ -139,10 +144,14 @@ export const MomentaryChat = React.memo<{
     <div className="MomentaryChat-container" ref={containerRef}>
       <MomentaryChatContent chatList={chatList} replyChat={replyChat} />
       <div className="MomentaryChat-editor">
-        <WysiwygEditor registerClear={registerClear} onChange={setText} />
+        <WysiwygEditor
+          registerClear={registerClear}
+          onChange={setText}
+          onMetaEnter={sendText}
+        />
       </div>
       <div className="MomentaryChat-button">
-        <button type="button" onClick={onClick} disabled={!text}>
+        <button type="button" onClick={sendText} disabled={!text}>
           Send
         </button>
       </div>
