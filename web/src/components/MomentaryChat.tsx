@@ -112,11 +112,11 @@ export const MomentaryChat = React.memo<{
     clearRef.current = clear;
   };
 
-  const [text, setTextState] = useState("");
+  const [canSend, setCanSend] = useState(false);
   const textRef = useRef("");
   const setText = useCallback((t: string) => {
-    setTextState(t);
     textRef.current = t;
+    setCanSend(!!t);
   }, []);
   const sendText = useCallback(() => {
     if (textRef.current) {
@@ -151,7 +151,7 @@ export const MomentaryChat = React.memo<{
         />
       </div>
       <div className="MomentaryChat-button">
-        <button type="button" onClick={sendText} disabled={!text}>
+        <button type="button" onClick={sendText} disabled={!canSend}>
           Send
         </button>
       </div>
