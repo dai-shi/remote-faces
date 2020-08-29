@@ -7,6 +7,8 @@ import { EmojiPicker } from "../utils/emoji";
 import { WysiwygEditor } from "./WysiwygEditor";
 import { useNotification } from "../hooks/useNotification";
 
+const MAX_CHAT_TEXT_SIZE = 1 * 1024 * 1024;
+
 type ChatList = ReturnType<typeof useMomentaryChat>["chatList"];
 type ReplyChat = ReturnType<typeof useMomentaryChat>["replyChat"];
 
@@ -116,10 +118,10 @@ export const MomentaryChat = React.memo<{
   const textRef = useRef("");
   const setText = useCallback((t: string) => {
     textRef.current = t;
-    setCanSend(!!t);
+    setCanSend(!!t && t.length <= MAX_CHAT_TEXT_SIZE);
   }, []);
   const sendText = useCallback(() => {
-    if (textRef.current) {
+    if (textRef.current && textRef.current.length <= MAX_CHAT_TEXT_SIZE) {
       sendChat(textRef.current);
       setText("");
       if (clearRef.current) {
