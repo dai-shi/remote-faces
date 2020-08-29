@@ -5,8 +5,8 @@ import { sleep } from "../utils/sleep";
 import {
   secureRandomId,
   importCryptoKey,
-  encrypt,
-  decrypt,
+  encryptStringToChunks,
+  decryptStringFromChunks,
 } from "../utils/crypto";
 import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
@@ -42,7 +42,9 @@ export const createRoom: CreateRoom = async (
 
   const parsePayload = async (encrypted: ArrayBuffer): Promise<unknown> => {
     try {
-      const payload = JSON.parse(await decrypt(encrypted, cryptoKey));
+      const str = await decryptStringFromChunks(encrypted, cryptoKey);
+      if (str === null) return undefined;
+      const payload = JSON.parse(str);
       console.log("decrypted payload", payload);
       return payload;
     } catch (e) {
@@ -54,18 +56,17 @@ export const createRoom: CreateRoom = async (
   const sendPayload = async (topic: string, payload: unknown) => {
     try {
       console.log("payload to encrypt", topic, payload);
-      const encrypted = await encrypt(JSON.stringify(payload), cryptoKey);
-      console.log("sending encrypted", encrypted.byteLength);
-      if (encrypted.byteLength > 262144) {
-        console.warn("encrypted message too large, aborting");
-        return;
-      }
-      if (!myIpfs) {
-        console.warn("no myIpfs initialized");
-        return;
-      }
-      if (myIpfsPubSubRoom) {
-        myIpfsPubSubRoom.broadcast(encrypted);
+      for await (const encrypted of encryptStringToChunks(
+        JSON.stringify(payload),
+        cryptoKey
+      )) {
+        if (!myIpfs) {
+          console.warn("no myIpfs initialized");
+          return;
+        }
+        if (myIpfsPubSubRoom) {
+          myIpfsPubSubRoom.broadcast(encrypted);
+        }
       }
     } catch (e) {
       console.error("sendPayload", e);
@@ -74,9 +75,13 @@ export const createRoom: CreateRoom = async (
 
   const sendPayloadDirectly = async (conn: Connection, payload: unknown) => {
     try {
-      const encrypted = await encrypt(JSON.stringify(payload), cryptoKey);
-      if (myIpfsPubSubRoom) {
-        myIpfsPubSubRoom.sendTo(conn.peer, encrypted);
+      for await (const encrypted of encryptStringToChunks(
+        JSON.stringify(payload),
+        cryptoKey
+      )) {
+        if (myIpfsPubSubRoom) {
+          myIpfsPubSubRoom.sendTo(conn.peer, encrypted);
+        }
       }
     } catch (e) {
       console.error("sendPayloadDirectly", e);
@@ -322,6 +327,7 @@ export const createRoom: CreateRoom = async (
   const pubsubHandler: PubsubHandler = async (msg) => {
     if (msg.from === myPeerId) return;
     const payload = await parsePayload(msg.data);
+    if (payload === undefined) return;
     const payloadUserId = getUserIdFromPayload(payload);
     let conn = connMap.getConn(msg.from);
     if (!conn) {

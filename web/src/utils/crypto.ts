@@ -83,7 +83,7 @@ export const decryptBuffer = async (
 };
 
 // encrypt with compression
-export const encrypt = async (data: string, cryptoKey: CryptoKey) => {
+export const encryptString = async (data: string, cryptoKey: CryptoKey) => {
   const encoder = new TextEncoder();
   const encoded = encoder.encode(data);
   const compressed = pako.deflate(encoded);
@@ -91,10 +91,79 @@ export const encrypt = async (data: string, cryptoKey: CryptoKey) => {
 };
 
 // decrypt with decompression
-export const decrypt = async (buf: ArrayBuffer, cryptoKey: CryptoKey) => {
+export const decryptString = async (buf: ArrayBuffer, cryptoKey: CryptoKey) => {
   const decrypted = await decryptBuffer(buf, 0, buf.byteLength, cryptoKey);
   const decompressed = pako.inflate(new Uint8Array(decrypted));
   const decoder = new TextDecoder("utf-8");
   const data = decoder.decode(decompressed);
+  return data;
+};
+
+// encrypt into chunks
+export async function* encryptStringToChunks(
+  data: string,
+  cryptoKey: CryptoKey,
+  chunkSize = 60000
+) {
+  const encoder = new TextEncoder();
+  const encoded = encoder.encode(data);
+  const chunkData: Uint8Array[] = [];
+  const deflator = new pako.Deflate({ chunkSize });
+  deflator.onData = (d: Uint8Array) => {
+    chunkData.push(d);
+  };
+  deflator.push(encoded, true);
+  const len = chunkData.length;
+  const id = window.crypto.getRandomValues(new Uint8Array(4));
+  for (let i = 0; i < len; i += 1) {
+    const chunk = new Uint8Array(4 + 2 + 2 + chunkData[i].byteLength);
+    chunk.set(id);
+    chunk.set(Uint16Array.of(i), 4);
+    chunk.set(Uint16Array.of(len), 4 + 2);
+    chunk.set(chunkData[i], 4 + 2 + 2);
+    yield encryptBuffer(chunk, cryptoKey);
+  }
+}
+
+const chunkStore: {
+  id: number;
+  len: number;
+  chunks: ArrayBuffer[];
+}[] = [];
+
+const MAX_CHUNK_STORE_SIZE = 100;
+
+// decrypt from chunks
+export const decryptStringFromChunks = async (
+  buf: ArrayBuffer,
+  cryptoKey: CryptoKey
+) => {
+  const chunk = await decryptBuffer(buf, 0, buf.byteLength, cryptoKey);
+  const id = new Uint32Array(chunk, 0, 4)[0];
+  const index = new Uint16Array(chunk, 4, 2)[0];
+  const len = new Uint16Array(chunk, 4 + 2, 2)[0];
+  let store = chunkStore.find((item) => item.id === id);
+  if (!store) {
+    store = { id, len, chunks: [] };
+    chunkStore.push(store);
+    if (chunkStore.length > MAX_CHUNK_STORE_SIZE) {
+      chunkStore.shift();
+    }
+  } else if (store.len !== len) {
+    throw new Error("chunk len mismatch");
+  }
+  store.chunks[index] = chunk;
+  for (let i = 0; i < len; i += 1) {
+    if (!store.chunks[i]) {
+      // not all chunks are ready
+      return null;
+    }
+  }
+  const inflator = new pako.Inflate();
+  for (let i = 0; i < len; i += 1) {
+    inflator.push(new Uint8Array(store.chunks[i], 4 + 2 + 2), i === len - 1);
+  }
+  const decoder = new TextDecoder("utf-8");
+  const data = decoder.decode(inflator.result as Uint8Array);
   return data;
 };

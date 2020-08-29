@@ -1,7 +1,12 @@
 import Peer from "peerjs";
 
 import { sleep } from "../utils/sleep";
-import { rand4, importCryptoKey, encrypt, decrypt } from "../utils/crypto";
+import {
+  rand4,
+  importCryptoKey,
+  encryptString,
+  decryptString,
+} from "../utils/crypto";
 import { getPeerJsConfigFromUrl } from "../utils/url";
 import { isObject, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
@@ -159,7 +164,7 @@ export const createRoom: CreateRoom = async (
   ) => {
     if (disposed) return;
     try {
-      const payload = JSON.parse(await decrypt(encrypted, cryptoKey));
+      const payload = JSON.parse(await decryptString(encrypted, cryptoKey));
       console.log("decrypted payload", conn.peer, payload);
       if (!isObject(payload)) return;
 
@@ -178,7 +183,7 @@ export const createRoom: CreateRoom = async (
 
   const sendPayload = async (conn: Peer.DataConnection, payload: unknown) => {
     try {
-      const encrypted = await encrypt(JSON.stringify(payload), cryptoKey);
+      const encrypted = await encryptString(JSON.stringify(payload), cryptoKey);
       conn.send(encrypted);
     } catch (e) {
       console.error("sendPayload", e);
