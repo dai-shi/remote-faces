@@ -8721,10 +8721,10 @@ ipfs-http-response@^0.5.0:
     multihashes "~0.4.19"
     p-try-each "^1.0.1"
 
-"ipfs-pubsub-room@npm:@daishi/ipfs-pubsub-room@^2.0.1-custom.1":
-  version "2.0.1-custom.1"
-  resolved "https://registry.yarnpkg.com/@daishi/ipfs-pubsub-room/-/ipfs-pubsub-room-2.0.1-custom.1.tgz#21b687a0190d721ad831130afa49f1a3abfc561e"
-  integrity sha512-2ha1cTb7C6Am0ExWQCWxjNTqW+T3yKIYfSEGSVMR4fY8k8IM6jXhUypUmzDM8Sf2gRWHUAWh6rWVUnT4Da+Hqw==
+"ipfs-pubsub-room@npm:@daishi/ipfs-pubsub-room@^2.0.1-custom.2":
+  version "2.0.1-custom.2"
+  resolved "https://registry.yarnpkg.com/@daishi/ipfs-pubsub-room/-/ipfs-pubsub-room-2.0.1-custom.2.tgz#b8df57d7b3338d25a5f42f1ca074f27d6d581578"
+  integrity sha512-00wH3oMpYff1/X05dtlB5q+IHi5XvK4KbWcAd4jlMWCLpDPJ3G0eWEpMiW7gjOiKCbuEpO9+Y2cipI886mwbhQ==
   dependencies:
     hyperdiff "^2.0.5"
     it-pipe "^1.1.0"

@@ -353,7 +353,7 @@ export const createRoom: CreateRoom = async (
     myIpfsPubSubRoom = new IpfsPubSubRoom(ipfs, roomTopic);
     myIpfsPubSubRoom.on("message", pubsubHandler);
     myIpfsPubSubRoom.on("peer joined", () => {
-      broadcastData(null);
+      broadcastData(null); // XXX this is not efficient, we don't need to broadcast
     });
     myIpfsPubSubRoom.on("peer left", (peerId: string) => {
       const conn = connMap.getConn(peerId);
@@ -364,9 +364,6 @@ export const createRoom: CreateRoom = async (
           peerIndex: conn.peerIndex,
         });
       }
-    });
-    myIpfsPubSubRoom.on("subscribed", () => {
-      broadcastData(null);
     });
     myIpfs = ipfs;
     if (process.env.NODE_ENV !== "production") {
