@@ -118,8 +118,8 @@ export async function* encryptStringToChunks(
   for (let i = 0; i < len; i += 1) {
     const chunk = new Uint8Array(4 + 2 + 2 + chunkData[i].byteLength);
     chunk.set(id);
-    chunk.set(Uint16Array.of(i), 4);
-    chunk.set(Uint16Array.of(len), 4 + 2);
+    chunk.set(new Uint8Array(Uint16Array.of(i).buffer), 4);
+    chunk.set(new Uint8Array(Uint16Array.of(len).buffer), 4 + 2);
     chunk.set(chunkData[i], 4 + 2 + 2);
     yield encryptBuffer(chunk, cryptoKey);
   }
@@ -166,4 +166,60 @@ export const decryptStringFromChunks = async (
   const decoder = new TextDecoder("utf-8");
   const data = decoder.decode(inflator.result as Uint8Array);
   return data;
+};
+
+// encrypt from buffer chunks
+export const encryptBufferFromChunks = (
+  bufferList: ArrayBuffer[],
+  cryptoKey: CryptoKey
+) => {
+  const totalLength =
+    (bufferList.length + 1) * 2 +
+    bufferList.reduce((accum, buffer) => accum + buffer.byteLength, 0);
+  const concatenated = new Uint8Array(totalLength);
+  let index = 0;
+  bufferList.forEach((buffer) => {
+    if (buffer.byteLength === 0) throw new Error("buffer is empty");
+    concatenated.set(
+      new Uint8Array(Uint16Array.of(buffer.byteLength).buffer),
+      index
+    );
+    index += 2;
+  });
+  concatenated.set(new Uint8Array(Uint16Array.of(0).buffer), index);
+  index += 2;
+  bufferList.forEach((buffer) => {
+    concatenated.set(new Uint8Array(buffer), index);
+    index += buffer.byteLength;
+  });
+  return encryptBuffer(concatenated, cryptoKey);
+};
+
+// decrypt to buffer chunks
+export const decryptBufferToChunks = async (
+  input: ArrayBuffer,
+  byteOffset: number,
+  byteLength: number,
+  cryptoKey: CryptoKey
+) => {
+  const decrypted = await decryptBuffer(
+    input,
+    byteOffset,
+    byteLength,
+    cryptoKey
+  );
+  const lengthList: number[] = [];
+  let index = 0;
+  while (index < decrypted.byteLength) {
+    const len = new Uint16Array(decrypted, index, 2)[0];
+    index += 2;
+    if (len === 0) break;
+    lengthList.push(len);
+  }
+  const bufferList: ArrayBuffer[] = [];
+  lengthList.forEach((len) => {
+    bufferList.push(decrypted.slice(index, index + len));
+    index += len;
+  });
+  return bufferList;
 };

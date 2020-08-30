@@ -5,10 +5,10 @@ import {
   sha256,
   secureRandomId,
   importCryptoKey,
-  encryptBuffer,
-  decryptBuffer,
   encryptStringToChunks,
   decryptStringFromChunks,
+  encryptBufferFromChunks,
+  decryptBufferToChunks,
 } from "../utils/crypto";
 import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
@@ -174,14 +174,16 @@ export const createRoom: CreateRoom = async (
               }
             });
           }
-          const buf = await decryptBuffer(
+          const bufList = await decryptBufferToChunks(
             msg.data.buffer,
             msg.data.byteOffset,
             msg.data.byteLength,
             cryptoKey
           );
           if (c.worker) {
-            c.worker.postMessage([buf], [buf]);
+            bufList.forEach((buf) => {
+              c.worker.postMessage([buf], [buf]);
+            });
           }
         };
         myIpfs.pubsub.subscribe(topic, faceAudioHandler);
@@ -533,8 +535,12 @@ export const createRoom: CreateRoom = async (
       await audioCtx.audioWorklet.addModule("audio-encoder.js");
       const audioEncoder = new AudioWorkletNode(audioCtx, "audio-encoder");
       const topic = await getTopicForMediaType(roomId, "faceAudio");
+      const bufList: ArrayBuffer[] = [];
       audioEncoder.port.onmessage = async (event) => {
-        const encrypted = await encryptBuffer(event.data, cryptoKey);
+        bufList.push(event.data);
+        if (bufList.length < 40) return;
+        const encrypted = await encryptBufferFromChunks(bufList, cryptoKey);
+        bufList.splice(0, bufList.length);
         if (myIpfs) {
           myIpfs.pubsub.publish(topic, encrypted);
         }
