@@ -5,6 +5,8 @@ import {
   sha256,
   secureRandomId,
   importCryptoKey,
+  encryptString,
+  decryptString,
   encryptStringToChunks,
   decryptStringFromChunks,
   encryptBufferFromChunks,
@@ -13,7 +15,12 @@ import {
 import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./ipfsUtils";
-import { setupTrackStopOnLongMute, loopbackPeerConnection } from "./trackUtils";
+import {
+  setupTrackStopOnLongMute,
+  loopbackPeerConnection,
+  videoTrackToImageConverter,
+  imageToVideoTrackConverter,
+} from "./trackUtils";
 
 const topicsForMediaTypes = new Map<string, string>();
 
@@ -114,6 +121,7 @@ export const createRoom: CreateRoom = async (
 
   // TODO very limited use case for now
   const faceAudioDisposeList: (() => void)[] = [];
+  const faceVideoDisposeList: (() => void)[] = [];
 
   const acceptMediaTypes = async (mTypes: string[]) => {
     if (mTypes.includes("faceAudio") && !faceAudioDisposeList.length) {
@@ -193,12 +201,60 @@ export const createRoom: CreateRoom = async (
           }
         });
       }
-    } else {
+    } else if (!mTypes.includes("faceAudio") && faceAudioDisposeList.length) {
       faceAudioDisposeList.forEach((dispose) => dispose());
       faceAudioDisposeList.splice(0, faceAudioDisposeList.length);
     }
+    if (mTypes.includes("faceVideo") && !faceVideoDisposeList.length) {
+      // XXX experimental
+      if (myIpfs) {
+        const topic = await getTopicForMediaType(roomId, "faceVideo");
+        const faceVideoHandler: PubsubHandler = async (msg) => {
+          if (msg.from === myPeerId) return;
+          const conn = connMap.getConn(msg.from);
+          if (!conn) {
+            console.warn("conn not ready");
+            return;
+          }
+          const info: PeerInfo = {
+            userId: conn.userId,
+            peerIndex: conn.peerIndex,
+            mediaTypes: connMap.getAcceptingMediaTypes(conn),
+          };
+          const c: {
+            setImage: (s: string) => void;
+          } = conn as any; // TODO do it more cleanly
+          if (!c.setImage) {
+            const { videoTrack, setImage } = imageToVideoTrackConverter();
+            c.setImage = setImage;
+            receiveTrack("faceVideo", videoTrack, info);
+            faceVideoDisposeList.push(() => {
+              videoTrack.dispatchEvent(new Event("ended"));
+            });
+          }
+          try {
+            const str = await decryptString(msg.data, cryptoKey);
+            const payload = JSON.parse(str);
+            if (hasStringProp(payload, "dataURL")) {
+              c.setImage(payload.dataURL);
+            }
+          } catch (e) {
+            console.info("Error in parse for face video", e);
+          }
+        };
+        myIpfs.pubsub.subscribe(topic, faceVideoHandler);
+        faceVideoDisposeList.push(() => {
+          if (myIpfs) {
+            myIpfs.pubsub.unsubscribe(topic, faceVideoHandler);
+          }
+        });
+      }
+    } else if (!mTypes.includes("faceVideo") && faceVideoDisposeList.length) {
+      faceVideoDisposeList.forEach((dispose) => dispose());
+      faceVideoDisposeList.splice(0, faceVideoDisposeList.length);
+    }
     // eslint-disable-next-line no-param-reassign
-    mTypes = mTypes.filter((t) => t !== "faceAudio");
+    mTypes = mTypes.filter((t) => t !== "faceAudio" && t !== "faceVideo");
     if (mTypes.length !== mediaTypes.length) {
       connMap.forEachConns((conn) => {
         const info: PeerInfo = {
@@ -539,8 +595,10 @@ export const createRoom: CreateRoom = async (
       audioEncoder.port.onmessage = async (event) => {
         bufList.push(event.data);
         if (bufList.length < 40) return;
-        const encrypted = await encryptBufferFromChunks(bufList, cryptoKey);
-        bufList.splice(0, bufList.length);
+        const encrypted = await encryptBufferFromChunks(
+          bufList.splice(0, bufList.length),
+          cryptoKey
+        );
         if (myIpfs) {
           myIpfs.pubsub.publish(topic, encrypted);
         }
@@ -548,6 +606,28 @@ export const createRoom: CreateRoom = async (
       trackSource.connect(audioEncoder);
       trackDisposeMap.set(track, () => {
         audioCtx.close();
+      });
+      return;
+    }
+    if (mediaType === "faceVideo") {
+      // XXX experimental
+      runDispose(trackDisposeMap.get(track));
+      const topic = await getTopicForMediaType(roomId, "faceVideo");
+      const { getImage } = await videoTrackToImageConverter(track);
+      const timer = setInterval(async () => {
+        const dataURL = await getImage();
+        if (dataURL) {
+          const encrypted = await encryptString(
+            JSON.stringify({ dataURL }),
+            cryptoKey
+          );
+          if (myIpfs) {
+            myIpfs.pubsub.publish(topic, encrypted);
+          }
+        }
+      }, 1000);
+      trackDisposeMap.set(track, () => {
+        clearInterval(timer);
       });
       return;
     }
@@ -573,7 +653,7 @@ export const createRoom: CreateRoom = async (
     }
     const { track } = item;
     mediaTypeMap.delete(mediaType);
-    if (mediaType === "faceAudio") {
+    if (mediaType === "faceAudio" || mediaType === "faceVideo") {
       // XXX experimental
       runDispose(trackDisposeMap.get(track));
       return;

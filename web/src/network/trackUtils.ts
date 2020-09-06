@@ -67,3 +67,47 @@ export const loopbackPeerConnection = (
       reject(e);
     }
   });
+
+export const videoTrackToImageConverter = async (track: MediaStreamTrack) => {
+  if (track.kind !== "video") {
+    throw new Error("track kind is not video");
+  }
+  const imageCapture = new ImageCapture(track);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+  const getImage = async () => {
+    try {
+      const bitmap = await imageCapture.grabFrame();
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      ctx.drawImage(bitmap, 0, 0);
+      return canvas.toDataURL("image/jpeg");
+    } catch (e) {
+      console.log("failed to grab frame from viedeo track", e);
+      return null;
+    }
+  };
+  return { getImage };
+};
+
+const createImage = (src: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+
+export const imageToVideoTrackConverter = () => {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+  const canvasStream = (canvas as any).captureStream() as MediaStream;
+  const [videoTrack] = canvasStream.getVideoTracks();
+  const setImage = async (dataURL: string) => {
+    const img = await createImage(dataURL);
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+  };
+  return { videoTrack, setImage };
+};
