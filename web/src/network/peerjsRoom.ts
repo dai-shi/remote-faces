@@ -36,6 +36,9 @@ export const createRoom: CreateRoom = async (
 ) => {
   let disposed = false;
   const connMap = createConnectionMap();
+  if (process.env.NODE_ENV !== "production") {
+    (window as any).myConnMap = connMap;
+  }
   let mediaTypes: string[] = [];
 
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
