@@ -272,6 +272,11 @@ export const createRoom: CreateRoom = async (
       return;
     }
     connMap.addConn(conn);
+    setTimeout(() => {
+      if (!connMap.isConnected(conn.peer)) {
+        conn.close();
+      }
+    }, 30 * 1000);
     conn.on("open", () => {
       connMap.markConnected(conn);
       console.log("dataConnection open", conn);
