@@ -1,4 +1,4 @@
-import Ipfs, { IpfsType, PubsubHandler } from "ipfs";
+import Ipfs, { PubsubHandler } from "ipfs";
 
 import { sleep } from "../utils/sleep";
 import {
@@ -43,8 +43,6 @@ export const createRoom: CreateRoom = async (
   receiveTrack
 ) => {
   let disposed = false;
-  let myIpfs: IpfsType | null = null;
-  let myPeerId: string | null = null;
   const connMap = createConnectionMap();
   if (process.env.NODE_ENV !== "production") {
     (window as any).myConnMap = connMap;
@@ -54,11 +52,25 @@ export const createRoom: CreateRoom = async (
   const roomTopic = roomId.slice(0, ROOM_ID_PREFIX_LEN);
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
-  const showConnectedStatus = () => {
-    if (disposed) return;
-    const peerIndexList = connMap.getPeerIndexList();
-    updateNetworkStatus({ type: "CONNECTED_PEERS", peerIndexList });
-  };
+  updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
+  const myIpfs = await Ipfs.create({
+    repo: secureRandomId(),
+    config: {
+      Addresses: {
+        Swarm: [
+          "/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
+        ],
+      },
+    },
+  });
+  const myPeerId = (await myIpfs.id()).id;
+  await myIpfs.pubsub.subscribe(roomTopic, (msg) => pubsubHandler(msg));
+  await myIpfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, (msg) =>
+    pubsubHandler(msg)
+  );
+  if (process.env.NODE_ENV !== "production") {
+    (window as any).myIpfs = myIpfs;
+  }
 
   const parsePayload = async (encrypted: ArrayBuffer): Promise<unknown> => {
     try {
@@ -80,10 +92,6 @@ export const createRoom: CreateRoom = async (
         JSON.stringify(payload),
         cryptoKey
       )) {
-        if (!myIpfs) {
-          console.warn("no myIpfs initialized");
-          return;
-        }
         await myIpfs.pubsub.publish(topic, encrypted);
       }
     } catch (e) {
@@ -94,11 +102,9 @@ export const createRoom: CreateRoom = async (
   const sendPayloadDirectly = async (conn: Connection, payload: unknown) => {
     const topic = `${roomTopic} ${conn.peer}`;
     // HACK somehow, publish doesn't work without this
-    if (myIpfs) {
-      const noop = () => null;
-      await myIpfs.pubsub.subscribe(topic, noop);
-      await myIpfs.pubsub.unsubscribe(topic, noop);
-    }
+    const noop = () => null;
+    await myIpfs.pubsub.subscribe(topic, noop);
+    await myIpfs.pubsub.unsubscribe(topic, noop);
     await sendPayload(topic, payload);
   };
 
@@ -124,131 +130,124 @@ export const createRoom: CreateRoom = async (
   const faceVideoDisposeList: (() => void)[] = [];
 
   const acceptMediaTypes = async (mTypes: string[]) => {
+    if (disposed) return;
     if (mTypes.includes("faceAudio") && !faceAudioDisposeList.length) {
       // XXX experimental
-      if (myIpfs) {
-        const topic = await getTopicForMediaType(roomId, "faceAudio");
-        const faceAudioHandler: PubsubHandler = async (msg) => {
-          if (msg.from === myPeerId) return;
-          const conn = connMap.getConn(msg.from);
-          if (!conn) {
-            console.warn("conn not ready");
-            return;
-          }
-          const info: PeerInfo = {
-            userId: conn.userId,
-            peerIndex: conn.peerIndex,
-            mediaTypes: connMap.getAcceptingMediaTypes(conn),
-          };
-          const c: {
-            worker: Worker;
-          } = conn as any; // TODO do it more cleanly
-          if (!c.worker) {
-            const audioCtx = new AudioContext();
-            const destination = audioCtx.createMediaStreamDestination();
-            let currTime = 0;
-            let pending = 0;
-            const worker = new Worker("audio-decoder.js", { type: "module" });
-            worker.onmessage = (e) => {
-              const buffer = new Float32Array(e.data);
-              if (!pending) {
-                currTime = audioCtx.currentTime;
-              }
-              currTime += 0.06; // 60ms
-              pending += 1;
-              const audioBuffer = audioCtx.createBuffer(1, 2880, 48000);
-              audioBuffer.copyToChannel(buffer, 0);
-              const audioBufferSource = audioCtx.createBufferSource();
-              audioBufferSource.buffer = audioBuffer;
-              audioBufferSource.connect(destination);
-              audioBufferSource.onended = () => {
-                pending -= 1;
-              };
-              audioBufferSource.start(currTime);
-            };
-            c.worker = worker;
-            const audioTrack = destination.stream.getAudioTracks()[0];
-            receiveTrack(
-              "faceAudio",
-              await loopbackPeerConnection(audioTrack),
-              info
-            );
-            faceAudioDisposeList.push(() => {
-              audioCtx.close();
-              audioTrack.dispatchEvent(new Event("ended"));
-              worker.terminate();
-              if (c.worker === worker) {
-                delete c.worker;
-              }
-            });
-          }
-          const bufList = await decryptBufferToChunks(
-            msg.data.buffer,
-            msg.data.byteOffset,
-            msg.data.byteLength,
-            cryptoKey
-          );
-          if (c.worker) {
-            bufList.forEach((buf) => {
-              c.worker.postMessage([buf], [buf]);
-            });
-          }
+      const topic = await getTopicForMediaType(roomId, "faceAudio");
+      const faceAudioHandler: PubsubHandler = async (msg) => {
+        if (msg.from === myPeerId) return;
+        const conn = connMap.getConn(msg.from);
+        if (!conn) {
+          console.warn("conn not ready");
+          return;
+        }
+        const info: PeerInfo = {
+          userId: conn.userId,
+          peerIndex: conn.peerIndex,
+          mediaTypes: connMap.getAcceptingMediaTypes(conn),
         };
-        myIpfs.pubsub.subscribe(topic, faceAudioHandler);
-        faceAudioDisposeList.push(() => {
-          if (myIpfs) {
-            myIpfs.pubsub.unsubscribe(topic, faceAudioHandler);
-          }
-        });
-      }
+        const c: {
+          worker: Worker;
+        } = conn as any; // TODO do it more cleanly
+        if (!c.worker) {
+          const audioCtx = new AudioContext();
+          const destination = audioCtx.createMediaStreamDestination();
+          let currTime = 0;
+          let pending = 0;
+          const worker = new Worker("audio-decoder.js", { type: "module" });
+          worker.onmessage = (e) => {
+            const buffer = new Float32Array(e.data);
+            if (!pending) {
+              currTime = audioCtx.currentTime;
+            }
+            currTime += 0.06; // 60ms
+            pending += 1;
+            const audioBuffer = audioCtx.createBuffer(1, 2880, 48000);
+            audioBuffer.copyToChannel(buffer, 0);
+            const audioBufferSource = audioCtx.createBufferSource();
+            audioBufferSource.buffer = audioBuffer;
+            audioBufferSource.connect(destination);
+            audioBufferSource.onended = () => {
+              pending -= 1;
+            };
+            audioBufferSource.start(currTime);
+          };
+          c.worker = worker;
+          const audioTrack = destination.stream.getAudioTracks()[0];
+          receiveTrack(
+            "faceAudio",
+            await loopbackPeerConnection(audioTrack),
+            info
+          );
+          faceAudioDisposeList.push(() => {
+            audioCtx.close();
+            audioTrack.dispatchEvent(new Event("ended"));
+            worker.terminate();
+            if (c.worker === worker) {
+              delete c.worker;
+            }
+          });
+        }
+        const bufList = await decryptBufferToChunks(
+          msg.data.buffer,
+          msg.data.byteOffset,
+          msg.data.byteLength,
+          cryptoKey
+        );
+        if (c.worker) {
+          bufList.forEach((buf) => {
+            c.worker.postMessage([buf], [buf]);
+          });
+        }
+      };
+      myIpfs.pubsub.subscribe(topic, faceAudioHandler);
+      faceAudioDisposeList.push(() => {
+        myIpfs.pubsub.unsubscribe(topic, faceAudioHandler);
+      });
     } else if (!mTypes.includes("faceAudio") && faceAudioDisposeList.length) {
       faceAudioDisposeList.forEach((dispose) => dispose());
       faceAudioDisposeList.splice(0, faceAudioDisposeList.length);
     }
     if (mTypes.includes("faceVideo") && !faceVideoDisposeList.length) {
       // XXX experimental
-      if (myIpfs) {
-        const topic = await getTopicForMediaType(roomId, "faceVideo");
-        const faceVideoHandler: PubsubHandler = async (msg) => {
-          if (msg.from === myPeerId) return;
-          const conn = connMap.getConn(msg.from);
-          if (!conn) {
-            console.warn("conn not ready");
-            return;
-          }
-          const info: PeerInfo = {
-            userId: conn.userId,
-            peerIndex: conn.peerIndex,
-            mediaTypes: connMap.getAcceptingMediaTypes(conn),
-          };
-          const c: {
-            setImage: (s: string) => void;
-          } = conn as any; // TODO do it more cleanly
-          if (!c.setImage) {
-            const { videoTrack, setImage } = imageToVideoTrackConverter();
-            c.setImage = setImage;
-            receiveTrack("faceVideo", videoTrack, info);
-            faceVideoDisposeList.push(() => {
-              videoTrack.dispatchEvent(new Event("ended"));
-            });
-          }
-          try {
-            const str = await decryptString(msg.data, cryptoKey);
-            const payload = JSON.parse(str);
-            if (hasStringProp(payload, "dataURL")) {
-              c.setImage(payload.dataURL);
-            }
-          } catch (e) {
-            console.info("Error in parse for face video", e);
-          }
+      const topic = await getTopicForMediaType(roomId, "faceVideo");
+      const faceVideoHandler: PubsubHandler = async (msg) => {
+        if (msg.from === myPeerId) return;
+        const conn = connMap.getConn(msg.from);
+        if (!conn) {
+          console.warn("conn not ready");
+          return;
+        }
+        const info: PeerInfo = {
+          userId: conn.userId,
+          peerIndex: conn.peerIndex,
+          mediaTypes: connMap.getAcceptingMediaTypes(conn),
         };
-        myIpfs.pubsub.subscribe(topic, faceVideoHandler);
-        faceVideoDisposeList.push(() => {
-          if (myIpfs) {
-            myIpfs.pubsub.unsubscribe(topic, faceVideoHandler);
+        const c: {
+          setImage: (s: string) => void;
+        } = conn as any; // TODO do it more cleanly
+        if (!c.setImage) {
+          const { videoTrack, setImage } = imageToVideoTrackConverter();
+          c.setImage = setImage;
+          receiveTrack("faceVideo", videoTrack, info);
+          faceVideoDisposeList.push(() => {
+            videoTrack.dispatchEvent(new Event("ended"));
+          });
+        }
+        try {
+          const str = await decryptString(msg.data, cryptoKey);
+          const payload = JSON.parse(str);
+          if (hasStringProp(payload, "dataURL")) {
+            c.setImage(payload.dataURL);
           }
-        });
-      }
+        } catch (e) {
+          console.info("Error in parse for face video", e);
+        }
+      };
+      myIpfs.pubsub.subscribe(topic, faceVideoHandler);
+      faceVideoDisposeList.push(() => {
+        myIpfs.pubsub.unsubscribe(topic, faceVideoHandler);
+      });
     } else if (!mTypes.includes("faceVideo") && faceVideoDisposeList.length) {
       faceVideoDisposeList.forEach((dispose) => dispose());
       faceVideoDisposeList.splice(0, faceVideoDisposeList.length);
@@ -411,7 +410,6 @@ export const createRoom: CreateRoom = async (
   };
 
   const handlePayload = async (conn: Connection, payload: unknown) => {
-    if (disposed) return;
     try {
       if (!isObject(payload)) return;
 
@@ -467,6 +465,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const pubsubHandler: PubsubHandler = async (msg) => {
+    if (disposed) return;
     if (msg.from === myPeerId) return;
     const payload = await parsePayload(msg.data);
     if (payload === undefined) return;
@@ -482,12 +481,13 @@ export const createRoom: CreateRoom = async (
     if (conn) {
       await handlePayload(conn, payload);
     }
-    showConnectedStatus();
+    const peerIndexList = connMap.getPeerIndexList();
+    updateNetworkStatus({ type: "CONNECTED_PEERS", peerIndexList });
   };
 
   const checkPeers = async () => {
     if (disposed) return;
-    const peers = myIpfs ? myIpfs.pubsub.peers(roomTopic) : [];
+    const peers = myIpfs.pubsub.peers(roomTopic);
     connMap.forEachConns((conn) => {
       if (!peers.includes(conn.peer)) {
         connMap.delConn(conn);
@@ -497,19 +497,6 @@ export const createRoom: CreateRoom = async (
         });
       }
     });
-    if (
-      myIpfs &&
-      connMap.size() === 0 &&
-      lastInitIpfsTime + 3 * 60 * 1000 < Date.now()
-    ) {
-      const prevIpfs = myIpfs;
-      myIpfs = null;
-      myPeerId = null;
-      await closeIpfs(prevIpfs);
-      await sleep(20 * 1000);
-      await initIpfs();
-      return;
-    }
     if (!peers.length) {
       updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
       await sleep(1000);
@@ -522,37 +509,7 @@ export const createRoom: CreateRoom = async (
     await sleep(5000);
     checkPeers();
   };
-
-  let lastInitIpfsTime = 0;
-  const initIpfs = async () => {
-    lastInitIpfsTime = Date.now();
-    updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
-    const ipfs: IpfsType = await Ipfs.create({
-      repo: secureRandomId(),
-      config: {
-        Addresses: {
-          Swarm: [
-            "/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
-          ],
-        },
-      },
-    });
-    myPeerId = (await ipfs.id()).id;
-    await ipfs.pubsub.subscribe(roomTopic, pubsubHandler);
-    await ipfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
-    myIpfs = ipfs;
-    if (process.env.NODE_ENV !== "production") {
-      (window as any).myIpfs = myIpfs;
-    }
-    checkPeers();
-  };
-  initIpfs();
-
-  const closeIpfs = async (ipfs: IpfsType) => {
-    await ipfs.pubsub.unsubscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
-    await ipfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
-    await ipfs.stop();
-  };
+  checkPeers();
 
   const trackDisposeMap = new WeakMap<MediaStreamTrack, () => void>();
   const runDispose = (dispose?: () => void) => {
@@ -578,6 +535,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const addTrack = async (mediaType: string, track: MediaStreamTrack) => {
+    if (disposed) return;
     if (mediaTypeMap.has(mediaType)) {
       throw new Error(`track is already added for ${mediaType}`);
     }
@@ -599,9 +557,7 @@ export const createRoom: CreateRoom = async (
           bufList.splice(0, bufList.length),
           cryptoKey
         );
-        if (myIpfs) {
-          myIpfs.pubsub.publish(topic, encrypted);
-        }
+        myIpfs.pubsub.publish(topic, encrypted);
       };
       trackSource.connect(audioEncoder);
       trackDisposeMap.set(track, () => {
@@ -621,9 +577,7 @@ export const createRoom: CreateRoom = async (
             JSON.stringify({ dataURL }),
             cryptoKey
           );
-          if (myIpfs) {
-            myIpfs.pubsub.publish(topic, encrypted);
-          }
+          myIpfs.pubsub.publish(topic, encrypted);
         }
       }, 1000);
       trackDisposeMap.set(track, () => {
@@ -646,6 +600,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const removeTrack = (mediaType: string) => {
+    if (disposed) return;
     const item = mediaTypeMap.get(mediaType);
     if (!item) {
       console.log("track is already removed for", mediaType);
@@ -694,9 +649,9 @@ export const createRoom: CreateRoom = async (
 
   const dispose = async () => {
     disposed = true;
-    if (myIpfs) {
-      closeIpfs(myIpfs);
-    }
+    await myIpfs.pubsub.unsubscribe(`${roomTopic} ${myPeerId}`, pubsubHandler);
+    await myIpfs.pubsub.unsubscribe(roomTopic, pubsubHandler);
+    await myIpfs.stop();
   };
 
   return {

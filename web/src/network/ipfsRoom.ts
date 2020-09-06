@@ -82,13 +82,7 @@ export const createRoom: CreateRoom = async (
         JSON.stringify(payload),
         cryptoKey
       )) {
-        if (!myIpfs) {
-          console.warn("no myIpfs initialized");
-          return;
-        }
-        if (myIpfsPubSubRoom) {
-          myIpfsPubSubRoom.broadcast(encrypted);
-        }
+        myIpfsPubSubRoom.broadcast(encrypted);
       }
     } catch (e) {
       console.error("sendPayload", e);
@@ -101,9 +95,7 @@ export const createRoom: CreateRoom = async (
         JSON.stringify(payload),
         cryptoKey
       )) {
-        if (myIpfsPubSubRoom) {
-          myIpfsPubSubRoom.sendTo(conn.peer, encrypted);
-        }
+        myIpfsPubSubRoom.sendTo(conn.peer, encrypted);
       }
     } catch (e) {
       console.error("sendPayloadDirectly", e);
