@@ -35,11 +35,84 @@ export const createRoom: CreateRoom = async (
   receiveTrack
 ) => {
   let disposed = false;
-  let myPeer: Peer | null = null;
   const connMap = createConnectionMap();
   let mediaTypes: string[] = [];
 
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
+
+  const initMyPeer = (index = MIN_SEED_PEER_INDEX): Promise<Peer> =>
+    new Promise((resolve, reject) => {
+      if (disposed) {
+        reject(new Error("already disposed"));
+        return;
+      }
+      connMap.clearAll();
+      const isSeed =
+        MIN_SEED_PEER_INDEX <= index && index <= MAX_SEED_PEER_INDEX;
+      const peerIndex = isSeed ? index : rand4();
+      updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex });
+      const id = generatePeerId(roomId, peerIndex);
+      console.log("initMyPeer start", index, id);
+      const peer = new Peer(id, getPeerJsConfigFromUrl());
+      peer.on("open", () => {
+        resolve(peer);
+        if (process.env.NODE_ENV !== "production") {
+          (window as any).myPeer = peer;
+        }
+        updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
+        setTimeout(() => {
+          for (let i = MIN_SEED_PEER_INDEX; i <= MAX_SEED_PEER_INDEX; i += 1) {
+            const seedId = generatePeerId(roomId, i);
+            connectPeer(seedId);
+          }
+        }, 10);
+      });
+      peer.on("error", (err) => {
+        if (err.type === "unavailable-id") {
+          peer.destroy();
+          initMyPeer(index + 1).then(resolve, reject);
+        } else if (err.type === "peer-unavailable") {
+          // ignore
+        } else if (err.type === "disconnected") {
+          console.log("initMyPeer disconnected error", index, err);
+        } else if (err.type === "network") {
+          console.log("initMyPeer network error", index, err);
+        } else if (err.type === "server-error") {
+          console.log("initMyPeer server error", index, err);
+          updateNetworkStatus({ type: "SERVER_ERROR" });
+        } else {
+          console.error("initMyPeer unknown error", index, err.type, err);
+          updateNetworkStatus({ type: "UNKNOWN_ERROR", err });
+        }
+      });
+      peer.on("connection", (conn) => {
+        console.log("new connection received", conn);
+        updateNetworkStatus({
+          type: "NEW_CONNECTION",
+          peerIndex: getPeerIndexFromConn(conn),
+        });
+        initConnection(conn);
+      });
+      peer.on("disconnected", () => {
+        console.log("initMyPeer disconnected", index);
+        setTimeout(() => {
+          if (!peer.destroyed) {
+            console.log("initMyPeer reconnecting", index);
+            updateNetworkStatus({ type: "RECONNECTING" });
+            peer.reconnect();
+          }
+        }, 5 * 1000);
+      });
+      peer.on("close", () => {
+        if (!peer.destroyed) {
+          console.log("initMyPeer closed, re-initializing", index);
+          setTimeout(async () => {
+            myPeer = await initMyPeer();
+          }, 20 * 1000);
+        }
+      });
+    });
+  let myPeer = await initMyPeer();
 
   const showConnectedStatus = () => {
     if (disposed) return;
@@ -51,7 +124,7 @@ export const createRoom: CreateRoom = async (
 
   const connectPeer = (id: string) => {
     if (disposed) return;
-    if (!myPeer || myPeer.id === id || myPeer.disconnected) return;
+    if (myPeer.id === id || myPeer.disconnected) return;
     if (connMap.hasConn(id)) return;
     console.log("connectPeer", id);
     const conn = myPeer.connect(id);
@@ -254,7 +327,6 @@ export const createRoom: CreateRoom = async (
         reInitMyPeer(true);
       } else if (
         guessSeed(conn.peer) &&
-        myPeer &&
         !myPeer.disconnected &&
         !guessSeed(myPeer.id)
       ) {
@@ -269,84 +341,7 @@ export const createRoom: CreateRoom = async (
     });
   };
 
-  const initMyPeer = (index = MIN_SEED_PEER_INDEX) => {
-    if (disposed) return;
-    if (myPeer) return;
-    connMap.clearAll();
-    const isSeed = MIN_SEED_PEER_INDEX <= index && index <= MAX_SEED_PEER_INDEX;
-    const peerIndex = isSeed ? index : rand4();
-    updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex });
-    const id = generatePeerId(roomId, peerIndex);
-    console.log("initMyPeer start", index, id);
-    const peer = new Peer(id, getPeerJsConfigFromUrl());
-    myPeer = peer;
-    peer.on("open", () => {
-      myPeer = peer;
-      if (process.env.NODE_ENV !== "production") {
-        (window as any).myPeer = myPeer;
-      }
-      updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
-      for (let i = MIN_SEED_PEER_INDEX; i <= MAX_SEED_PEER_INDEX; i += 1) {
-        const seedId = generatePeerId(roomId, i);
-        connectPeer(seedId);
-      }
-    });
-    peer.on("error", (err) => {
-      if (err.type === "unavailable-id") {
-        myPeer = null;
-        peer.destroy();
-        initMyPeer(index + 1);
-      } else if (err.type === "peer-unavailable") {
-        // ignore
-      } else if (err.type === "disconnected") {
-        console.log("initMyPeer disconnected error", index, err);
-        peer.destroy();
-      } else if (err.type === "network") {
-        console.log("initMyPeer network error", index, err);
-      } else if (err.type === "server-error") {
-        console.log("initMyPeer server error", index, err);
-        updateNetworkStatus({ type: "SERVER_ERROR" });
-      } else {
-        console.error("initMyPeer unknown error", index, err.type, err);
-        updateNetworkStatus({ type: "UNKNOWN_ERROR", err });
-      }
-    });
-    peer.on("connection", (conn) => {
-      if (myPeer !== peer) {
-        conn.close();
-        return;
-      }
-      console.log("new connection received", conn);
-      updateNetworkStatus({
-        type: "NEW_CONNECTION",
-        peerIndex: getPeerIndexFromConn(conn),
-      });
-      initConnection(conn);
-    });
-    peer.on("disconnected", () => {
-      console.log("initMyPeer disconnected", index);
-      setTimeout(() => {
-        if (myPeer === peer && !peer.destroyed) {
-          console.log("initMyPeer reconnecting", index);
-          updateNetworkStatus({ type: "RECONNECTING" });
-          peer.reconnect();
-        }
-      }, 5 * 1000);
-    });
-    peer.on("close", () => {
-      if (myPeer === peer) {
-        console.log("initMyPeer closed, re-initializing", index);
-        myPeer = null;
-        setTimeout(initMyPeer, 20 * 1000);
-      } else {
-        console.log("initMyPeer closed, ignoring", index);
-      }
-    });
-  };
-  initMyPeer();
-
-  const reInitMyPeer = (force?: boolean) => {
-    if (!myPeer) return;
+  const reInitMyPeer = async (force?: boolean) => {
     if (myPeer.disconnected) return; // should already be handled
     if (!force) {
       if (guessSeed(myPeer.id)) return;
@@ -363,13 +358,12 @@ export const createRoom: CreateRoom = async (
         return;
       }
     }
-    const oldPeer = myPeer;
-    myPeer = null;
-    oldPeer.destroy();
-    initMyPeer();
+    myPeer.destroy();
+    myPeer = await initMyPeer();
   };
 
   const acceptMediaTypes = (mTypes: string[]) => {
+    if (disposed) return;
     if (mTypes.length !== mediaTypes.length) {
       connMap.forEachConnectedConns((conn) => {
         const connUserId = connMap.getUserId(conn);
@@ -426,6 +420,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const addTrack = (mediaType: string, track: MediaStreamTrack) => {
+    if (disposed) return;
     if (mediaTypeMap.has(mediaType)) {
       throw new Error(`track is already added for ${mediaType}`);
     }
@@ -445,6 +440,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const removeTrack = (mediaType: string) => {
+    if (disposed) return;
     const item = mediaTypeMap.get(mediaType);
     if (!item) {
       console.log("track is already removed for", mediaType);
@@ -497,9 +493,7 @@ export const createRoom: CreateRoom = async (
 
   const dispose = () => {
     disposed = true;
-    if (myPeer) {
-      myPeer.destroy();
-    }
+    myPeer.destroy();
   };
 
   return {
