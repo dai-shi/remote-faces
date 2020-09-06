@@ -1,4 +1,4 @@
-import Ipfs, { IpfsType, PubsubHandler } from "ipfs";
+import Ipfs, { PubsubHandler } from "ipfs";
 import IpfsPubSubRoom from "ipfs-pubsub-room";
 
 import { sleep } from "../utils/sleep";
@@ -22,9 +22,6 @@ export const createRoom: CreateRoom = async (
   receiveTrack
 ) => {
   let disposed = false;
-  let myIpfs: IpfsType | null = null;
-  let myPeerId: string | null = null;
-  let myIpfsPubSubRoom: IpfsPubSubRoom | null = null;
   const connMap = createConnectionMap();
   if (process.env.NODE_ENV !== "production") {
     (window as any).myConnMap = connMap;
@@ -34,11 +31,36 @@ export const createRoom: CreateRoom = async (
   const roomTopic = roomId.slice(0, ROOM_ID_PREFIX_LEN);
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
-  const showConnectedStatus = () => {
-    if (disposed) return;
-    const peerIndexList = connMap.getPeerIndexList();
-    updateNetworkStatus({ type: "CONNECTED_PEERS", peerIndexList });
-  };
+  updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
+  const myIpfs = await Ipfs.create({
+    repo: secureRandomId(),
+    config: {
+      Addresses: {
+        Swarm: [
+          "/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
+        ],
+      },
+    },
+  });
+  const myPeerId = (await myIpfs.id()).id;
+  const myIpfsPubSubRoom = new IpfsPubSubRoom(myIpfs, roomTopic);
+  myIpfsPubSubRoom.on("message", (msg) => pubsubHandler(msg));
+  myIpfsPubSubRoom.on("peer joined", () => {
+    broadcastData(null); // XXX this is not efficient, we don't need to broadcast
+  });
+  myIpfsPubSubRoom.on("peer left", (peerId: string) => {
+    const conn = connMap.getConn(peerId);
+    if (conn) {
+      connMap.delConn(conn);
+      updateNetworkStatus({
+        type: "CONNECTION_CLOSED",
+        peerIndex: conn.peerIndex,
+      });
+    }
+  });
+  if (process.env.NODE_ENV !== "production") {
+    (window as any).myIpfs = myIpfs;
+  }
 
   const parsePayload = async (encrypted: ArrayBuffer): Promise<unknown> => {
     try {
@@ -106,6 +128,7 @@ export const createRoom: CreateRoom = async (
   }
 
   const acceptMediaTypes = (mTypes: string[]) => {
+    if (disposed) return;
     if (mTypes.length !== mediaTypes.length) {
       connMap.forEachConns((conn) => {
         const info: PeerInfo = {
@@ -263,7 +286,6 @@ export const createRoom: CreateRoom = async (
   };
 
   const handlePayload = async (conn: Connection, payload: unknown) => {
-    if (disposed) return;
     try {
       if (!isObject(payload)) return;
 
@@ -325,6 +347,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const pubsubHandler: PubsubHandler = async (msg) => {
+    if (disposed) return;
     if (msg.from === myPeerId) return;
     const payload = await parsePayload(msg.data);
     if (payload === undefined) return;
@@ -340,47 +363,8 @@ export const createRoom: CreateRoom = async (
     if (conn) {
       await handlePayload(conn, payload);
     }
-    showConnectedStatus();
-  };
-
-  const initIpfs = async () => {
-    updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
-    const ipfs: IpfsType = await Ipfs.create({
-      repo: secureRandomId(),
-      config: {
-        Addresses: {
-          Swarm: [
-            "/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
-          ],
-        },
-      },
-    });
-    myPeerId = (await ipfs.id()).id;
-    myIpfsPubSubRoom = new IpfsPubSubRoom(ipfs, roomTopic);
-    myIpfsPubSubRoom.on("message", pubsubHandler);
-    myIpfsPubSubRoom.on("peer joined", () => {
-      broadcastData(null); // XXX this is not efficient, we don't need to broadcast
-    });
-    myIpfsPubSubRoom.on("peer left", (peerId: string) => {
-      const conn = connMap.getConn(peerId);
-      if (conn) {
-        connMap.delConn(conn);
-        updateNetworkStatus({
-          type: "CONNECTION_CLOSED",
-          peerIndex: conn.peerIndex,
-        });
-      }
-    });
-    myIpfs = ipfs;
-    if (process.env.NODE_ENV !== "production") {
-      (window as any).myIpfs = myIpfs;
-    }
-  };
-  initIpfs();
-
-  const closeIpfs = async (ipfs: IpfsType, ipfsPubSubRoom: IpfsPubSubRoom) => {
-    await ipfsPubSubRoom.leave();
-    await ipfs.stop();
+    const peerIndexList = connMap.getPeerIndexList();
+    updateNetworkStatus({ type: "CONNECTED_PEERS", peerIndexList });
   };
 
   const mediaTypeMap = new Map<
@@ -400,6 +384,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const addTrack = (mediaType: string, track: MediaStreamTrack) => {
+    if (disposed) return;
     if (mediaTypeMap.has(mediaType)) {
       throw new Error(`track is already added for ${mediaType}`);
     }
@@ -420,6 +405,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const removeTrack = (mediaType: string) => {
+    if (disposed) return;
     const item = mediaTypeMap.get(mediaType);
     if (!item) {
       console.log("track is already removed for", mediaType);
@@ -463,9 +449,8 @@ export const createRoom: CreateRoom = async (
 
   const dispose = async () => {
     disposed = true;
-    if (myIpfs) {
-      closeIpfs(myIpfs, myIpfsPubSubRoom as IpfsPubSubRoom);
-    }
+    await myIpfsPubSubRoom.leave();
+    await myIpfs.stop();
   };
 
   return {
