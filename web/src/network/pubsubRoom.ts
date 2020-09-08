@@ -5,8 +5,6 @@ import {
   sha256,
   secureRandomId,
   importCryptoKey,
-  encryptString,
-  decryptString,
   encryptStringToChunks,
   decryptStringFromChunks,
   encryptBufferFromChunks,
@@ -235,10 +233,9 @@ export const createRoom: CreateRoom = async (
           });
         }
         try {
-          const str = await decryptString(msg.data, cryptoKey);
-          const payload = JSON.parse(str);
-          if (hasStringProp(payload, "dataURL")) {
-            c.setImage(payload.dataURL);
+          const dataURL = await decryptStringFromChunks(msg.data, cryptoKey);
+          if (dataURL) {
+            c.setImage(dataURL);
           }
         } catch (e) {
           console.info("Error in parse for face video", e);
@@ -570,18 +567,25 @@ export const createRoom: CreateRoom = async (
       runDispose(trackDisposeMap.get(track));
       const topic = await getTopicForMediaType(roomId, "faceVideo");
       const { getImage } = await videoTrackToImageConverter(track);
-      const timer = setInterval(async () => {
+      let faceVideoDisposed = false;
+      const loop = async () => {
+        if (faceVideoDisposed) return;
         const dataURL = await getImage();
         if (dataURL) {
-          const encrypted = await encryptString(
-            JSON.stringify({ dataURL }),
+          for await (const encrypted of encryptStringToChunks(
+            dataURL,
             cryptoKey
-          );
-          myIpfs.pubsub.publish(topic, encrypted);
+          )) {
+            if (faceVideoDisposed) return;
+            await myIpfs.pubsub.publish(topic, encrypted);
+            await sleep(1000);
+          }
         }
-      }, 1000);
+        loop();
+      };
+      loop();
       trackDisposeMap.set(track, () => {
-        clearInterval(timer);
+        faceVideoDisposed = true;
       });
       return;
     }
