@@ -60,12 +60,12 @@ const createGoBoard = (
               c === (obj.type === "B" ? Color.B : Color.W)
           )
         ) {
-          const obj = new FieldObject(c === Color.B ? "B" : "W");
-          board.addObjectAt(x, y, obj);
+          const obj = new FieldObject(c === Color.B ? "B" : "W", x, y);
+          board.addObject(obj);
           fieldObjects.push(obj);
           if (markerObject === null) {
-            markerObject = new BoardMarkupObject("SQ", c);
-            board.addObjectAt(x, y, markerObject);
+            markerObject = new BoardMarkupObject("SQ", x, y, c);
+            board.addObject(markerObject);
           } else if (markerObject) {
             // we don't know what is the last move
             board.removeObject(markerObject);
@@ -95,7 +95,8 @@ const createGoBoard = (
     } else {
       board.removeObject(hoverObject);
     }
-    board.addObjectAt(pos.x, pos.y, hoverObject);
+    hoverObject.setPosition(pos.x, pos.y);
+    board.addObject(hoverObject);
   });
   board.on("mouseout", clearHoverObject);
   board.on("click", (_event, { x, y }) => {
