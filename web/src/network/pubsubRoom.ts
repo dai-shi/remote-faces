@@ -163,6 +163,7 @@ export const createRoom: CreateRoom = async (
         conn.audioWorkers.set(mediaType, worker);
         const audioTrack = destination.stream.getAudioTracks()[0];
         receiveTrack(mediaType, await loopbackPeerConnection(audioTrack), info);
+        // XXX currently no way to detect track stop
         disposeList.push(() => {
           audioCtx.close();
           audioTrack.dispatchEvent(new Event("ended"));
@@ -209,6 +210,7 @@ export const createRoom: CreateRoom = async (
         const { videoTrack, setImage } = imageToVideoTrackConverter();
         conn.vidoeSetImages.set(mediaType, setImage);
         receiveTrack(mediaType, videoTrack, info);
+        // XXX currently no way to detect track stop
         disposeList.push(() => {
           videoTrack.dispatchEvent(new Event("ended"));
           conn.vidoeSetImages.delete(mediaType);
