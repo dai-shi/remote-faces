@@ -189,7 +189,7 @@ export const createRoom: CreateRoom = async (
       }
     };
     myIpfs.pubsub.subscribe(topic, audioHandler);
-    disposeList.push(() => {
+    disposeList.unshift(() => {
       myIpfs.pubsub.unsubscribe(topic, audioHandler);
     });
   };
@@ -227,11 +227,11 @@ export const createRoom: CreateRoom = async (
           c.setImage(dataURL);
         }
       } catch (e) {
-        console.info("Error in parse for face video", e);
+        console.info("Error in parse for video media", e);
       }
     };
     myIpfs.pubsub.subscribe(topic, videoHandler);
-    disposeList.push(() => {
+    disposeList.unshift(() => {
       myIpfs.pubsub.unsubscribe(topic, videoHandler);
     });
   };
@@ -245,9 +245,7 @@ export const createRoom: CreateRoom = async (
       }
     });
     mTypes.forEach((mediaType) => {
-      if (mediaTypeDisposeMap.has(mediaType)) {
-        return;
-      }
+      if (mediaTypeDisposeMap.has(mediaType)) return;
       if (mediaType.endsWith("Audio")) {
         acceptAudioMedia(mediaType);
       } else if (mediaType.endsWith("Video")) {
