@@ -5,10 +5,13 @@ const getNextPeerIndex = () => {
   return peerIndexCounter;
 };
 
+// XXX It would be nice to reuse audio worker for all connections
 export type Connection = {
   peerIndex: number;
   peer: string; // ipfsId
   userId: string;
+  audioWorkers: Map<string, Worker>; // <mediaType, audioDecoder>
+  vidoeSetImages: Map<string, (s: string) => void>; // <mediaType, setImage>
 };
 
 export const createConnectionMap = () => {
@@ -40,6 +43,8 @@ export const createConnectionMap = () => {
       peerIndex: getNextPeerIndex(),
       peer: peerId,
       userId,
+      audioWorkers: new Map(),
+      vidoeSetImages: new Map(),
     };
     map.set(conn.peer, {
       conn,

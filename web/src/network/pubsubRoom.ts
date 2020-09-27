@@ -137,10 +137,7 @@ export const createRoom: CreateRoom = async (
         peerIndex: conn.peerIndex,
         mediaTypes: connMap.getAcceptingMediaTypes(conn),
       };
-      const c: {
-        worker: Worker;
-      } = conn as any; // TODO do it more cleanly
-      if (!c.worker) {
+      if (!conn.audioWorkers.has(mediaType)) {
         const audioCtx = new AudioContext();
         const destination = audioCtx.createMediaStreamDestination();
         let currTime = 0;
@@ -163,16 +160,14 @@ export const createRoom: CreateRoom = async (
           };
           audioBufferSource.start(currTime);
         };
-        c.worker = worker;
+        conn.audioWorkers.set(mediaType, worker);
         const audioTrack = destination.stream.getAudioTracks()[0];
         receiveTrack(mediaType, await loopbackPeerConnection(audioTrack), info);
         disposeList.push(() => {
           audioCtx.close();
           audioTrack.dispatchEvent(new Event("ended"));
           worker.terminate();
-          if (c.worker === worker) {
-            delete c.worker;
-          }
+          conn.audioWorkers.delete(mediaType);
         });
       }
       const bufList = await decryptBufferToChunks(
@@ -181,9 +176,10 @@ export const createRoom: CreateRoom = async (
         msg.data.byteLength,
         cryptoKey
       );
-      if (c.worker) {
+      const worker = conn.audioWorkers.get(mediaType);
+      if (worker) {
         bufList.forEach((buf) => {
-          c.worker.postMessage([buf], [buf]);
+          worker.postMessage([buf], [buf]);
         });
       }
     };
@@ -209,21 +205,20 @@ export const createRoom: CreateRoom = async (
         peerIndex: conn.peerIndex,
         mediaTypes: connMap.getAcceptingMediaTypes(conn),
       };
-      const c: {
-        setImage: (s: string) => void;
-      } = conn as any; // TODO do it more cleanly
-      if (!c.setImage) {
+      if (!conn.vidoeSetImages.has(mediaType)) {
         const { videoTrack, setImage } = imageToVideoTrackConverter();
-        c.setImage = setImage;
+        conn.vidoeSetImages.set(mediaType, setImage);
         receiveTrack(mediaType, videoTrack, info);
         disposeList.push(() => {
           videoTrack.dispatchEvent(new Event("ended"));
+          conn.vidoeSetImages.delete(mediaType);
         });
       }
+      const setImage = conn.vidoeSetImages.get(mediaType);
       try {
         const dataURL = await decryptStringFromChunks(msg.data, cryptoKey);
-        if (dataURL) {
-          c.setImage(dataURL);
+        if (setImage && dataURL) {
+          setImage(dataURL);
         }
       } catch (e) {
         console.info("Error in parse for video media", e);
