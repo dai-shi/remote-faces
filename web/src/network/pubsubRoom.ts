@@ -12,7 +12,7 @@ import {
 } from "../utils/crypto";
 import { isObject } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
-import { Connection, createConnectionMap } from "./ipfsUtils";
+import { Connection, createConnectionMap } from "./pubsubUtils";
 import {
   loopbackPeerConnection,
   videoTrackToImageConverter,
@@ -257,6 +257,18 @@ export const createRoom: CreateRoom = async (
     broadcastData(null);
   };
 
+  const handlePayloadMediaTypes = async (
+    conn: Connection,
+    payloadMediaTypes: unknown
+  ) => {
+    if (
+      Array.isArray(payloadMediaTypes) &&
+      payloadMediaTypes.every((x) => typeof x === "string")
+    ) {
+      connMap.setAcceptingMediaTypes(conn, payloadMediaTypes as string[]);
+    }
+  };
+
   const handlePayloadData = (conn: Connection, data: unknown) => {
     const info: PeerInfo = {
       userId: conn.userId,
@@ -273,6 +285,11 @@ export const createRoom: CreateRoom = async (
   const handlePayload = async (conn: Connection, payload: unknown) => {
     try {
       if (!isObject(payload)) return;
+
+      handlePayloadMediaTypes(
+        conn,
+        (payload as { mediaTypes?: unknown }).mediaTypes
+      );
       handlePayloadData(conn, (payload as { data?: unknown }).data);
     } catch (e) {
       console.info("Error in handlePayload", e, payload);
