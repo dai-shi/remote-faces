@@ -408,6 +408,8 @@ export const createRoom: CreateRoom = async (
           await myIpfs.pubsub.publish(topic, encrypted);
           await sleep(1000);
         }
+      } else {
+        await sleep(5000);
       }
       loop();
     };
