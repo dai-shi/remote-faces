@@ -17,7 +17,7 @@
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^2.1.0",
     "@daishi/ckeditor5-build-inline-custom": "^19.0.0-custom.4",
-    "dompurify": "^2.0.12",
+    "dompurify": "^2.1.1",
     "emoji-mart": "^3.0.0",
     "ipfs": "^0.50.2",
     "ipfs-pubsub-room": "npm:@daishi/ipfs-pubsub-room@^2.0.1-custom.2",
