@@ -99,10 +99,7 @@ export const createRoom: CreateRoom = async (
 
   const sendPayloadDirectly = async (conn: Connection, payload: unknown) => {
     const topic = `${roomTopic} ${conn.peer}`;
-    // HACK somehow, publish doesn't work without this
-    const noop = () => null;
-    await myIpfs.pubsub.subscribe(topic, noop);
-    await myIpfs.pubsub.unsubscribe(topic, noop);
+    // XXX this doesn't seem to work in ipfs v0.48.0
     await sendPayload(topic, payload);
   };
 
@@ -123,164 +120,142 @@ export const createRoom: CreateRoom = async (
     (window as any).sendData = sendData;
   }
 
-  // TODO very limited use case for now
-  const faceAudioDisposeList: (() => void)[] = [];
-  const faceVideoDisposeList: (() => void)[] = [];
+  const mediaTypeDisposeMap = new Map<string, (() => void)[]>();
+
+  const acceptAudioMedia = async (mediaType: string) => {
+    const disposeList: (() => void)[] = [];
+    mediaTypeDisposeMap.set(mediaType, disposeList);
+    const topic = await getTopicForMediaType(roomId, mediaType);
+    const audioHandler: PubsubHandler = async (msg) => {
+      if (msg.from === myPeerId) return;
+      const conn = connMap.getConn(msg.from);
+      if (!conn) {
+        console.warn("conn not ready");
+        return;
+      }
+      const info: PeerInfo = {
+        userId: conn.userId,
+        peerIndex: conn.peerIndex,
+        mediaTypes: connMap.getAcceptingMediaTypes(conn),
+      };
+      const c: {
+        worker: Worker;
+      } = conn as any; // TODO do it more cleanly
+      if (!c.worker) {
+        const audioCtx = new AudioContext();
+        const destination = audioCtx.createMediaStreamDestination();
+        let currTime = 0;
+        let pending = 0;
+        const worker = new Worker("audio-decoder.js", { type: "module" });
+        worker.onmessage = (e) => {
+          const buffer = new Float32Array(e.data);
+          if (!pending) {
+            currTime = audioCtx.currentTime;
+          }
+          currTime += 0.06; // 60ms
+          pending += 1;
+          const audioBuffer = audioCtx.createBuffer(1, 2880, 48000);
+          audioBuffer.copyToChannel(buffer, 0);
+          const audioBufferSource = audioCtx.createBufferSource();
+          audioBufferSource.buffer = audioBuffer;
+          audioBufferSource.connect(destination);
+          audioBufferSource.onended = () => {
+            pending -= 1;
+          };
+          audioBufferSource.start(currTime);
+        };
+        c.worker = worker;
+        const audioTrack = destination.stream.getAudioTracks()[0];
+        receiveTrack(mediaType, await loopbackPeerConnection(audioTrack), info);
+        disposeList.push(() => {
+          audioCtx.close();
+          audioTrack.dispatchEvent(new Event("ended"));
+          worker.terminate();
+          if (c.worker === worker) {
+            delete c.worker;
+          }
+        });
+      }
+      const bufList = await decryptBufferToChunks(
+        msg.data.buffer,
+        msg.data.byteOffset,
+        msg.data.byteLength,
+        cryptoKey
+      );
+      if (c.worker) {
+        bufList.forEach((buf) => {
+          c.worker.postMessage([buf], [buf]);
+        });
+      }
+    };
+    myIpfs.pubsub.subscribe(topic, audioHandler);
+    disposeList.push(() => {
+      myIpfs.pubsub.unsubscribe(topic, audioHandler);
+    });
+  };
+
+  const acceptVideoMedia = async (mediaType: string) => {
+    const disposeList: (() => void)[] = [];
+    mediaTypeDisposeMap.set(mediaType, disposeList);
+    const topic = await getTopicForMediaType(roomId, mediaType);
+    const videoHandler: PubsubHandler = async (msg) => {
+      if (msg.from === myPeerId) return;
+      const conn = connMap.getConn(msg.from);
+      if (!conn) {
+        console.warn("conn not ready");
+        return;
+      }
+      const info: PeerInfo = {
+        userId: conn.userId,
+        peerIndex: conn.peerIndex,
+        mediaTypes: connMap.getAcceptingMediaTypes(conn),
+      };
+      const c: {
+        setImage: (s: string) => void;
+      } = conn as any; // TODO do it more cleanly
+      if (!c.setImage) {
+        const { videoTrack, setImage } = imageToVideoTrackConverter();
+        c.setImage = setImage;
+        receiveTrack(mediaType, videoTrack, info);
+        disposeList.push(() => {
+          videoTrack.dispatchEvent(new Event("ended"));
+        });
+      }
+      try {
+        const dataURL = await decryptStringFromChunks(msg.data, cryptoKey);
+        if (dataURL) {
+          c.setImage(dataURL);
+        }
+      } catch (e) {
+        console.info("Error in parse for face video", e);
+      }
+    };
+    myIpfs.pubsub.subscribe(topic, videoHandler);
+    disposeList.push(() => {
+      myIpfs.pubsub.unsubscribe(topic, videoHandler);
+    });
+  };
 
   const acceptMediaTypes = async (mTypes: string[]) => {
     if (disposed) return;
-    if (mTypes.includes("faceAudio") && !faceAudioDisposeList.length) {
-      // XXX experimental
-      const topic = await getTopicForMediaType(roomId, "faceAudio");
-      const faceAudioHandler: PubsubHandler = async (msg) => {
-        if (msg.from === myPeerId) return;
-        const conn = connMap.getConn(msg.from);
-        if (!conn) {
-          console.warn("conn not ready");
-          return;
-        }
-        const info: PeerInfo = {
-          userId: conn.userId,
-          peerIndex: conn.peerIndex,
-          mediaTypes: connMap.getAcceptingMediaTypes(conn),
-        };
-        const c: {
-          worker: Worker;
-        } = conn as any; // TODO do it more cleanly
-        if (!c.worker) {
-          const audioCtx = new AudioContext();
-          const destination = audioCtx.createMediaStreamDestination();
-          let currTime = 0;
-          let pending = 0;
-          const worker = new Worker("audio-decoder.js", { type: "module" });
-          worker.onmessage = (e) => {
-            const buffer = new Float32Array(e.data);
-            if (!pending) {
-              currTime = audioCtx.currentTime;
-            }
-            currTime += 0.06; // 60ms
-            pending += 1;
-            const audioBuffer = audioCtx.createBuffer(1, 2880, 48000);
-            audioBuffer.copyToChannel(buffer, 0);
-            const audioBufferSource = audioCtx.createBufferSource();
-            audioBufferSource.buffer = audioBuffer;
-            audioBufferSource.connect(destination);
-            audioBufferSource.onended = () => {
-              pending -= 1;
-            };
-            audioBufferSource.start(currTime);
-          };
-          c.worker = worker;
-          const audioTrack = destination.stream.getAudioTracks()[0];
-          receiveTrack(
-            "faceAudio",
-            await loopbackPeerConnection(audioTrack),
-            info
-          );
-          faceAudioDisposeList.push(() => {
-            audioCtx.close();
-            audioTrack.dispatchEvent(new Event("ended"));
-            worker.terminate();
-            if (c.worker === worker) {
-              delete c.worker;
-            }
-          });
-        }
-        const bufList = await decryptBufferToChunks(
-          msg.data.buffer,
-          msg.data.byteOffset,
-          msg.data.byteLength,
-          cryptoKey
-        );
-        if (c.worker) {
-          bufList.forEach((buf) => {
-            c.worker.postMessage([buf], [buf]);
-          });
-        }
-      };
-      myIpfs.pubsub.subscribe(topic, faceAudioHandler);
-      faceAudioDisposeList.push(() => {
-        myIpfs.pubsub.unsubscribe(topic, faceAudioHandler);
-      });
-    } else if (!mTypes.includes("faceAudio") && faceAudioDisposeList.length) {
-      faceAudioDisposeList.forEach((dispose) => dispose());
-      faceAudioDisposeList.splice(0, faceAudioDisposeList.length);
-    }
-    if (mTypes.includes("faceVideo") && !faceVideoDisposeList.length) {
-      // XXX experimental
-      const topic = await getTopicForMediaType(roomId, "faceVideo");
-      const faceVideoHandler: PubsubHandler = async (msg) => {
-        if (msg.from === myPeerId) return;
-        const conn = connMap.getConn(msg.from);
-        if (!conn) {
-          console.warn("conn not ready");
-          return;
-        }
-        const info: PeerInfo = {
-          userId: conn.userId,
-          peerIndex: conn.peerIndex,
-          mediaTypes: connMap.getAcceptingMediaTypes(conn),
-        };
-        const c: {
-          setImage: (s: string) => void;
-        } = conn as any; // TODO do it more cleanly
-        if (!c.setImage) {
-          const { videoTrack, setImage } = imageToVideoTrackConverter();
-          c.setImage = setImage;
-          receiveTrack("faceVideo", videoTrack, info);
-          faceVideoDisposeList.push(() => {
-            videoTrack.dispatchEvent(new Event("ended"));
-          });
-        }
-        try {
-          const dataURL = await decryptStringFromChunks(msg.data, cryptoKey);
-          if (dataURL) {
-            c.setImage(dataURL);
-          }
-        } catch (e) {
-          console.info("Error in parse for face video", e);
-        }
-      };
-      myIpfs.pubsub.subscribe(topic, faceVideoHandler);
-      faceVideoDisposeList.push(() => {
-        myIpfs.pubsub.unsubscribe(topic, faceVideoHandler);
-      });
-    } else if (!mTypes.includes("faceVideo") && faceVideoDisposeList.length) {
-      faceVideoDisposeList.forEach((dispose) => dispose());
-      faceVideoDisposeList.splice(0, faceVideoDisposeList.length);
-    }
-    // eslint-disable-next-line no-param-reassign
-    mTypes = mTypes.filter((t) => t !== "faceAudio" && t !== "faceVideo");
-    if (mTypes.length !== mediaTypes.length) {
-      connMap.forEachConns((conn) => {
-        const info: PeerInfo = {
-          userId: conn.userId,
-          peerIndex: conn.peerIndex,
-          mediaTypes: connMap.getAcceptingMediaTypes(conn),
-        };
-        const transceivers = conn.recvPc.getTransceivers();
-        conn.recvPc.getReceivers().forEach((receiver) => {
-          const transceiver = transceivers.find((t) => t.receiver === receiver);
-          const mid = transceiver?.mid;
-          const mType = mid && connMap.getRemoteMediaType(conn, mid);
-          if (!mType) {
-            console.warn("failed to find media type from mid");
-            return;
-          }
-          if (
-            receiver.track.readyState === "live" &&
-            !mediaTypes.includes(mType) &&
-            mTypes.includes(mType)
-          ) {
-            receiveTrack(
-              mType,
-              setupTrackStopOnLongMute(receiver.track, conn.recvPc),
-              info
-            );
-          }
-        });
-      });
-    }
+    mediaTypeDisposeMap.forEach((disposeList, existingMediaType) => {
+      if (!mTypes.includes(existingMediaType)) {
+        disposeList.forEach((dispose) => dispose());
+        mediaTypeDisposeMap.delete(existingMediaType);
+      }
+    });
+    mTypes.forEach((mediaType) => {
+      if (mediaTypeDisposeMap.has(mediaType)) {
+        return;
+      }
+      if (mediaType.endsWith("Audio")) {
+        acceptAudioMedia(mediaType);
+      } else if (mediaType.endsWith("Video")) {
+        acceptVideoMedia(mediaType);
+      } else {
+        throw new Error("pubsubRoom: cannot guess mediaType (Audio/Video)");
+      }
+    });
     mediaTypes = mTypes;
     broadcastData(null);
   };
