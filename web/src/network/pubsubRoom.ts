@@ -236,7 +236,7 @@ export const createRoom: CreateRoom = async (
     });
   };
 
-  const acceptMediaTypes = async (mTypes: string[]) => {
+  const acceptMediaTypes = (mTypes: string[]) => {
     if (disposed) return;
     mediaTypeDisposeMap.forEach((disposeList, existingMediaType) => {
       if (!mTypes.includes(existingMediaType)) {
@@ -504,6 +504,59 @@ export const createRoom: CreateRoom = async (
     return msid2mediaType;
   };
 
+  const addAudioTrack = async (
+    mediaType: string,
+    track: MediaStreamTrack,
+    stream: MediaStream
+  ) => {
+    runDispose(trackDisposeMap.get(track));
+    const audioCtx = new AudioContext();
+    const trackSource = audioCtx.createMediaStreamSource(stream);
+    await audioCtx.audioWorklet.addModule("audio-encoder.js");
+    const audioEncoder = new AudioWorkletNode(audioCtx, "audio-encoder");
+    const topic = await getTopicForMediaType(roomId, mediaType);
+    const bufList: ArrayBuffer[] = [];
+    audioEncoder.port.onmessage = async (event) => {
+      bufList.push(event.data);
+      if (bufList.length < 40) return;
+      const encrypted = await encryptBufferFromChunks(
+        bufList.splice(0, bufList.length),
+        cryptoKey
+      );
+      myIpfs.pubsub.publish(topic, encrypted);
+    };
+    trackSource.connect(audioEncoder);
+    trackDisposeMap.set(track, () => {
+      audioCtx.close();
+    });
+  };
+
+  const addVideoTrack = async (mediaType: string, track: MediaStreamTrack) => {
+    runDispose(trackDisposeMap.get(track));
+    const topic = await getTopicForMediaType(roomId, mediaType);
+    const { getImage } = await videoTrackToImageConverter(track);
+    let videoDisposed = false;
+    const loop = async () => {
+      if (videoDisposed) return;
+      const dataURL = await getImage();
+      if (dataURL) {
+        for await (const encrypted of encryptStringToChunks(
+          dataURL,
+          cryptoKey
+        )) {
+          if (videoDisposed) return;
+          await myIpfs.pubsub.publish(topic, encrypted);
+          await sleep(1000);
+        }
+      }
+      loop();
+    };
+    loop();
+    trackDisposeMap.set(track, () => {
+      videoDisposed = true;
+    });
+  };
+
   const addTrack = async (mediaType: string, track: MediaStreamTrack) => {
     if (disposed) return;
     if (mediaTypeMap.has(mediaType)) {
@@ -511,69 +564,13 @@ export const createRoom: CreateRoom = async (
     }
     const stream = new MediaStream([track]);
     mediaTypeMap.set(mediaType, { stream, track });
-    if (mediaType === "faceAudio") {
-      // XXX experimental
-      runDispose(trackDisposeMap.get(track));
-      const audioCtx = new AudioContext();
-      const trackSource = audioCtx.createMediaStreamSource(stream);
-      await audioCtx.audioWorklet.addModule("audio-encoder.js");
-      const audioEncoder = new AudioWorkletNode(audioCtx, "audio-encoder");
-      const topic = await getTopicForMediaType(roomId, "faceAudio");
-      const bufList: ArrayBuffer[] = [];
-      audioEncoder.port.onmessage = async (event) => {
-        bufList.push(event.data);
-        if (bufList.length < 40) return;
-        const encrypted = await encryptBufferFromChunks(
-          bufList.splice(0, bufList.length),
-          cryptoKey
-        );
-        myIpfs.pubsub.publish(topic, encrypted);
-      };
-      trackSource.connect(audioEncoder);
-      trackDisposeMap.set(track, () => {
-        audioCtx.close();
-      });
-      return;
+    if (mediaType.endsWith("Audio")) {
+      addAudioTrack(mediaType, track, stream);
+    } else if (mediaType.endsWith("Video")) {
+      addVideoTrack(mediaType, track);
+    } else {
+      throw new Error("pubsubRoom: cannot guess mediaType (Audio/Video)");
     }
-    if (mediaType === "faceVideo") {
-      // XXX experimental
-      runDispose(trackDisposeMap.get(track));
-      const topic = await getTopicForMediaType(roomId, "faceVideo");
-      const { getImage } = await videoTrackToImageConverter(track);
-      let faceVideoDisposed = false;
-      const loop = async () => {
-        if (faceVideoDisposed) return;
-        const dataURL = await getImage();
-        if (dataURL) {
-          for await (const encrypted of encryptStringToChunks(
-            dataURL,
-            cryptoKey
-          )) {
-            if (faceVideoDisposed) return;
-            await myIpfs.pubsub.publish(topic, encrypted);
-            await sleep(1000);
-          }
-        }
-        loop();
-      };
-      loop();
-      trackDisposeMap.set(track, () => {
-        faceVideoDisposed = true;
-      });
-      return;
-    }
-    connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
-      try {
-        conn.sendPc.addTrack(track, stream);
-        startNegotiation(conn);
-      } catch (e) {
-        if (e.name === "InvalidAccessError") {
-          // ignore
-        } else {
-          throw e;
-        }
-      }
-    });
   };
 
   const removeTrack = (mediaType: string) => {
@@ -585,19 +582,7 @@ export const createRoom: CreateRoom = async (
     }
     const { track } = item;
     mediaTypeMap.delete(mediaType);
-    if (mediaType === "faceAudio" || mediaType === "faceVideo") {
-      // XXX experimental
-      runDispose(trackDisposeMap.get(track));
-      return;
-    }
-    connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
-      const senders = conn.sendPc.getSenders();
-      const sender = senders.find((s) => s.track === track);
-      if (sender) {
-        conn.sendPc.removeTrack(sender);
-        startNegotiation(conn);
-      }
-    });
+    runDispose(trackDisposeMap.get(track));
   };
 
   const syncAllTracks = (conn: Connection) => {
