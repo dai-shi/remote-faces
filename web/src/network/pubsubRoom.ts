@@ -89,7 +89,7 @@ export const createRoom: CreateRoom = async (
         JSON.stringify(payload),
         cryptoKey
       )) {
-        await myIpfs.pubsub.publish(topic, encrypted);
+        await myIpfs.pubsub.publish(topic, Buffer.from(encrypted));
       }
     } catch (e) {
       console.error("sendPayload", e);
@@ -380,7 +380,7 @@ export const createRoom: CreateRoom = async (
         bufList.splice(0, bufList.length),
         cryptoKey
       );
-      myIpfs.pubsub.publish(topic, encrypted);
+      myIpfs.pubsub.publish(topic, Buffer.from(encrypted));
     };
     trackSource.connect(audioEncoder);
     trackDisposeMap.set(track, () => {
@@ -402,7 +402,7 @@ export const createRoom: CreateRoom = async (
           cryptoKey
         )) {
           if (videoDisposed) return;
-          await myIpfs.pubsub.publish(topic, encrypted);
+          await myIpfs.pubsub.publish(topic, Buffer.from(encrypted));
           await sleep(1000);
         }
       } else {
