@@ -72,9 +72,9 @@ export const videoTrackToImageConverter = async (track: MediaStreamTrack) => {
   if (track.kind !== "video") {
     throw new Error("track kind is not video");
   }
-  const imageCapture = new ImageCapture(track);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+  const imageCapture = new ImageCapture(track);
   const getImage = async () => {
     try {
       const bitmap = await imageCapture.grabFrame();
