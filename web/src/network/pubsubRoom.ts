@@ -375,7 +375,7 @@ export const createRoom: CreateRoom = async (
     const bufList: ArrayBuffer[] = [];
     audioEncoder.port.onmessage = async (event) => {
       bufList.push(event.data);
-      if (bufList.length < 40) return;
+      if (bufList.length < 17) return;
       const encrypted = await encryptBufferFromChunks(
         bufList.splice(0, bufList.length),
         cryptoKey
