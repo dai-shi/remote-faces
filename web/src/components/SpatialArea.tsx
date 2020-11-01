@@ -76,11 +76,6 @@ const SpatialCanvas = React.memo<{
     <Canvas>
       <Suspense fallback={null}>
         <ambientLight />
-        <Avatar
-          nickname={nickname}
-          faceStream={faceStream}
-          position={[Math.random(), Math.random(), 0]}
-        />
         {Object.keys(faceStreamMap).map((userId) => (
           <Avatar
             key={userId}
@@ -89,6 +84,11 @@ const SpatialCanvas = React.memo<{
             position={[Math.random(), Math.random(), 0]}
           />
         ))}
+        <Avatar
+          nickname={nickname}
+          faceStream={faceStream}
+          position={[Math.random(), Math.random(), 0]}
+        />
       </Suspense>
     </Canvas>
   );
