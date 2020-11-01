@@ -1,11 +1,18 @@
 /* eslint react/jsx-props-no-spreading: off */
 
-import React, { Suspense, useState, useEffect } from "react";
+import React, {
+  Suspense,
+  Dispatch,
+  SetStateAction,
+  useState,
+  useEffect,
+} from "react";
 import * as THREE from "three";
 import { Canvas, useThree } from "react-three-fiber";
 import { useDrag } from "react-use-gesture";
 
 import "./SpatialArea.css";
+import { useSpatialArea, AvatarMap } from "../hooks/useSpatialArea";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { useNicknameMap } from "../hooks/useNicknameMap";
@@ -14,20 +21,13 @@ const Avatar = React.memo<{
   nickname: string;
   faceStream: MediaStream | null;
   position: [number, number, number];
-}>(({ nickname, faceStream, position }) => {
+  setPosition: Dispatch<SetStateAction<[number, number, number]>>;
+}>(({ nickname, faceStream, position, setPosition }) => {
   const { size, viewport } = useThree();
   const aspect = size.width / viewport.width;
-  const [pos, setPos] = useState({ position });
   const bind = useDrag(
     ({ delta: [x, y] }) =>
-      setPos((prev) => ({
-        ...prev,
-        position: [
-          prev.position[0] + x / aspect,
-          prev.position[1] - y / aspect,
-          0,
-        ],
-      })),
+      setPosition((prev) => [prev[0] + x / aspect, prev[1] - y / aspect, 0]),
     { eventOptions: { pointer: true } }
   );
   const [texture, setTexture] = useState<THREE.CanvasTexture>();
@@ -60,39 +60,78 @@ const Avatar = React.memo<{
   }, [nickname, faceStream]);
   if (!texture) return null;
   return (
-    <sprite {...bind()} position={pos.position}>
+    <sprite {...bind()} position={position}>
       <spriteMaterial map={texture} />
     </sprite>
   );
 });
 
+const getInitialPosition = (uid: string) => [
+  parseInt(uid.slice(0, 2), 16) / 128 - 1,
+  parseInt(uid.slice(2, 4), 16) / 128 - 1,
+  0,
+];
+
 const SpatialCanvas = React.memo<{
+  userId: string;
   nickname: string;
   faceStream: MediaStream | null;
   nicknameMap: { [userId: string]: string };
   faceStreamMap: { [userId: string]: MediaStream };
-}>(({ nickname, faceStream, nicknameMap, faceStreamMap }) => {
-  return (
-    <Canvas>
-      <Suspense fallback={null}>
-        <ambientLight />
-        {Object.keys(faceStreamMap).map((userId) => (
+  avatarMap: AvatarMap;
+  setAvatarMap: Dispatch<SetStateAction<AvatarMap>>;
+}>(
+  ({
+    userId,
+    nickname,
+    faceStream,
+    nicknameMap,
+    faceStreamMap,
+    avatarMap,
+    setAvatarMap,
+  }) => {
+    const getPosition = (uid: string) =>
+      avatarMap[uid]?.position || getInitialPosition(uid);
+
+    const setPosition = (uid: string) => (
+      update: SetStateAction<[number, number, number]>
+    ) => {
+      setAvatarMap((prev) => ({
+        ...prev,
+        [uid]: {
+          ...prev[uid],
+          position:
+            typeof update === "function"
+              ? update(prev[uid]?.position || getInitialPosition(uid))
+              : update,
+        },
+      }));
+    };
+
+    return (
+      <Canvas>
+        <Suspense fallback={null}>
+          <ambientLight />
+          {Object.keys(faceStreamMap).map((uid) => (
+            <Avatar
+              key={uid}
+              nickname={nicknameMap[uid] || ""}
+              faceStream={faceStreamMap[uid] || null}
+              position={getPosition(uid)}
+              setPosition={setPosition(uid)}
+            />
+          ))}
           <Avatar
-            key={userId}
-            nickname={nicknameMap[userId] || ""}
-            faceStream={faceStreamMap[userId] || null}
-            position={[Math.random(), Math.random(), 0]}
+            nickname={nickname}
+            faceStream={faceStream}
+            position={getPosition(userId)}
+            setPosition={setPosition(userId)}
           />
-        ))}
-        <Avatar
-          nickname={nickname}
-          faceStream={faceStream}
-          position={[Math.random(), Math.random(), 0]}
-        />
-      </Suspense>
-    </Canvas>
-  );
-});
+        </Suspense>
+      </Canvas>
+    );
+  }
+);
 
 export const SpatialArea = React.memo<{
   roomId: string;
@@ -114,6 +153,7 @@ export const SpatialArea = React.memo<{
     "spatialArea"
   );
   const nicknameMap = useNicknameMap(roomId, userId);
+  const { avatarMap, setAvatarMap } = useSpatialArea(roomId, userId);
 
   return (
     <div className="SpatialArea-container">
@@ -149,10 +189,13 @@ export const SpatialArea = React.memo<{
       </div>
       <div className="SpatialArea-body">
         <SpatialCanvas
+          userId={userId}
           nickname={nickname}
           faceStream={faceStream}
           nicknameMap={nicknameMap}
           faceStreamMap={faceStreamMap}
+          avatarMap={avatarMap}
+          setAvatarMap={setAvatarMap}
         />
       </div>
     </div>
