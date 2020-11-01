@@ -4,7 +4,7 @@ const captureImage = async (stream: MediaStream, track: MediaStreamTrack) => {
   if (typeof ImageCapture !== "undefined") {
     const imageCapture = new ImageCapture(track);
     await sleep(2000);
-    let srcImg;
+    let srcImg: ImageBitmap;
     try {
       const blob = await imageCapture.takePhoto();
       srcImg = await createImageBitmap(blob);

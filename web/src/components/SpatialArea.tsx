@@ -40,15 +40,19 @@ const Avatar = React.memo<{
     const imageCapture = new ImageCapture(videoTrack);
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     const timer = setInterval(async () => {
-      const bitmap = await imageCapture.grabFrame();
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      ctx.drawImage(bitmap, 0, 0);
-      ctx.font = "18px selif";
-      ctx.textBaseline = "top";
-      ctx.fillStyle = "blue";
-      ctx.fillText(nickname, 2, 2);
-      canvasTexture.needsUpdate = true;
+      try {
+        const bitmap = await imageCapture.grabFrame();
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        ctx.drawImage(bitmap, 0, 0);
+        ctx.font = "18px selif";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = "blue";
+        ctx.fillText(nickname, 2, 2);
+        canvasTexture.needsUpdate = true;
+      } catch (e) {
+        // ignore
+      }
     }, 1000 / 7.5);
     return () => {
       clearInterval(timer);
@@ -65,7 +69,9 @@ const Avatar = React.memo<{
 const SpatialCanvas = React.memo<{
   nickname: string;
   faceStream: MediaStream | null;
-}>(({ nickname, faceStream }) => {
+  nicknameMap: { [userId: string]: string };
+  faceStreamMap: { [userId: string]: MediaStream };
+}>(({ nickname, faceStream, nicknameMap, faceStreamMap }) => {
   return (
     <Canvas>
       <Suspense fallback={null}>
@@ -75,6 +81,14 @@ const SpatialCanvas = React.memo<{
           faceStream={faceStream}
           position={[Math.random(), Math.random(), 0]}
         />
+        {Object.keys(faceStreamMap).map((userId) => (
+          <Avatar
+            key={userId}
+            nickname={nicknameMap[userId] || ""}
+            faceStream={faceStreamMap[userId] || null}
+            position={[Math.random(), Math.random(), 0]}
+          />
+        ))}
       </Suspense>
     </Canvas>
   );
@@ -134,7 +148,12 @@ export const SpatialArea = React.memo<{
         </select>
       </div>
       <div className="SpatialArea-body">
-        <SpatialCanvas nickname={nickname} faceStream={faceStream} />
+        <SpatialCanvas
+          nickname={nickname}
+          faceStream={faceStream}
+          nicknameMap={nicknameMap}
+          faceStreamMap={faceStreamMap}
+        />
       </div>
     </div>
   );
