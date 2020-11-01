@@ -1,5 +1,6 @@
-import React, { createElement, useState } from "react";
+import React, { Suspense, createElement, useState } from "react";
 
+import { SuspenseFallback } from "./SuspenseFallback";
 import "./SelectivePane.css";
 
 type Name =
@@ -7,6 +8,7 @@ type Name =
   | "Screen Share"
   | "Video Share"
   | "White Board"
+  | "Spatial Area"
   | "Go Board";
 
 const components = {
@@ -14,6 +16,7 @@ const components = {
   "Screen Share": React.lazy(() => import("./ScreenShare")),
   "Video Share": React.lazy(() => import("./VideoShare")),
   "White Board": React.lazy(() => import("./CollabWhiteBoard")),
+  "Spatial Area": React.lazy(() => import("./SpatialArea")),
   "Go Board": React.lazy(() => import("./GoBoard")),
 };
 
@@ -38,11 +41,13 @@ export const SelectivePane = React.memo<{
           ))}
         </select>
       </div>
-      {createElement(components[activePane], {
-        roomId,
-        userId,
-        nickname,
-      })}
+      <Suspense fallback={<SuspenseFallback />}>
+        {createElement(components[activePane], {
+          roomId,
+          userId,
+          nickname,
+        })}
+      </Suspense>
     </div>
   );
 });

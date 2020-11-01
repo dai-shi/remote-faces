@@ -25,15 +25,20 @@ export const getFaceVideoStream = async (deviceId?: string) => {
     : { video: true };
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
   const [track] = stream.getVideoTracks();
-  const video = document.getElementById("internal-video") as HTMLVideoElement;
+  const video = document.createElement("video");
+  video.autoplay = true;
+  video.setAttribute("playsinline", "");
   video.style.display = "block";
+  video.style.width = "1px";
+  video.style.height = "1px";
+  video.style.position = "absolute";
+  video.style.bottom = "0";
+  document.body.appendChild(video);
   video.srcObject = stream;
   await sleep(1000);
   const srcW = video.videoWidth;
   const srcH = video.videoHeight;
-  const canvas = document.getElementById(
-    "internal-canvas"
-  ) as HTMLCanvasElement;
+  const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
   const dstW = 72;
   const dstH = 72;
@@ -52,7 +57,7 @@ export const getFaceVideoStream = async (deviceId?: string) => {
   loop();
   const canvasStream = (canvas as any).captureStream() as MediaStream;
   const dispose = () => {
-    video.style.display = "none";
+    document.body.removeChild(video);
     clearTimeout(timer);
     track.stop();
     canvasStream.getVideoTracks()[0].stop();

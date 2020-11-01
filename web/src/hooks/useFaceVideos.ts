@@ -28,7 +28,8 @@ export const useFaceVideos = (
   audioEnabled: boolean,
   micOn: boolean,
   videoDeviceId?: string,
-  audioDeviceId?: string
+  audioDeviceId?: string,
+  uniqueMediaId?: string
 ) => {
   const [faceStream, setFaceStream] = useState<MediaStream | null>(null);
   const [faceStreamMap, setFaceStreamMap] = useState<{
@@ -68,14 +69,14 @@ export const useFaceVideos = (
     roomId,
     userId,
     onTrack,
-    videoEnabled ? "faceVideo" : undefined
+    videoEnabled ? `${uniqueMediaId || "face"}Video` : undefined
   );
 
   const addAudioTrack = useRoomMedia(
     roomId,
     userId,
     onTrack,
-    audioEnabled ? "faceAudio" : undefined
+    audioEnabled ? `${uniqueMediaId || "face"}Audio` : undefined
   );
 
   useEffect(() => {
