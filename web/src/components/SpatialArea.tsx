@@ -1,6 +1,9 @@
+/* eslint react/jsx-props-no-spreading: off */
+
 import React, { Suspense, useState, useEffect } from "react";
-import { Canvas } from "react-three-fiber";
 import * as THREE from "three";
+import { Canvas, useThree } from "react-three-fiber";
+import { useDrag } from "react-use-gesture";
 
 import "./SpatialArea.css";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
@@ -12,6 +15,21 @@ const Avatar = React.memo<{
   faceStream: MediaStream | null;
   position: [number, number, number];
 }>(({ nickname, faceStream, position }) => {
+  const { size, viewport } = useThree();
+  const aspect = size.width / viewport.width;
+  const [pos, setPos] = useState({ position });
+  const bind = useDrag(
+    ({ delta: [x, y] }) =>
+      setPos((prev) => ({
+        ...prev,
+        position: [
+          prev.position[0] + x / aspect,
+          prev.position[1] - y / aspect,
+          0,
+        ],
+      })),
+    { eventOptions: { pointer: true } }
+  );
   const [texture, setTexture] = useState<THREE.CanvasTexture>();
   useEffect(() => {
     const videoTrack = faceStream?.getVideoTracks()[0];
@@ -38,7 +56,7 @@ const Avatar = React.memo<{
   }, [nickname, faceStream]);
   if (!texture) return null;
   return (
-    <sprite position={position}>
+    <sprite {...bind()} position={pos.position}>
       <spriteMaterial map={texture} />
     </sprite>
   );

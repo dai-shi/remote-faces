@@ -26,6 +26,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-three-fiber": "^5.1.4",
+    "react-use-gesture": "^8.0.0",
     "three": "^0.122.0",
     "wgo": "^3.0.0-alpha.7"
   },
