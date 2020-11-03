@@ -20,17 +20,13 @@ const Avatar = React.memo<{
   const { size, viewport } = useThree();
   const aspect = size.width / viewport.width;
   const firstPosition = useRef<[number, number, number]>();
-  const bind = useDrag(
-    ({ first, initial: [ix, iy], xy: [x, y] }) => {
-      if (first) {
-        firstPosition.current = position;
-      }
-      const [fx, fy] = firstPosition.current as [number, number, number];
-      setPosition([fx + (x - ix) / aspect, fy - (y - iy) / aspect, 0]);
-      console.log("set pos");
-    },
-    { eventOptions: { pointer: true } }
-  );
+  const bind = useDrag(({ first, initial: [ix, iy], xy: [x, y] }) => {
+    if (first) {
+      firstPosition.current = position;
+    }
+    const [fx, fy] = firstPosition.current as [number, number, number];
+    setPosition([fx + (x - ix) / aspect, fy - (y - iy) / aspect, 0]);
+  });
   const [texture, setTexture] = useState<THREE.CanvasTexture>();
   useEffect(() => {
     const videoTrack = faceStream?.getVideoTracks()[0];
