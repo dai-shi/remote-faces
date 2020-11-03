@@ -3,7 +3,7 @@ import { useCallback, useState, useRef, useEffect } from "react";
 import { isObject } from "../utils/types";
 import { useRoomData, useBroadcastData } from "./useRoom";
 
-type AvatarData = {
+export type AvatarData = {
   position: [number, number, number];
 };
 
@@ -63,25 +63,36 @@ const isSpatialAreaData = (x: unknown): x is SpatialAreaData =>
 export const useSpatialArea = (roomId: string, userId: string) => {
   const [avatarMap, setAvatarMap] = useState<AvatarMap>({});
   const lastAreaDataRef = useRef<AreaData>();
-  const timerRef = useRef<NodeJS.Timeout>();
 
   const broadcastData = useBroadcastData(roomId, userId);
-  useEffect(() => {
-    lastAreaDataRef.current = {
-      avatarMap,
-      updatedAt: Date.now(),
-    };
-    const data: SpatialAreaData = {
-      spatialArea: "sync",
-      areaData: lastAreaDataRef.current,
-    };
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-    timerRef.current = setTimeout(() => {
-      broadcastData(data);
-    }, 100);
-  }, [broadcastData, avatarMap]);
+  const dataToBroadcast = useRef<SpatialAreaData>();
+  const setAvatar = useCallback(
+    (uid: string, avatarData: AvatarData) => {
+      const nextAvatarMap = {
+        ...lastAreaDataRef.current?.avatarMap,
+        [uid]: avatarData,
+      };
+      setAvatarMap(nextAvatarMap);
+      lastAreaDataRef.current = {
+        avatarMap: nextAvatarMap,
+        updatedAt: Date.now(),
+      };
+      const data: SpatialAreaData = {
+        spatialArea: "sync",
+        areaData: lastAreaDataRef.current,
+      };
+      if (dataToBroadcast.current) {
+        dataToBroadcast.current = data;
+      } else {
+        dataToBroadcast.current = data;
+        setTimeout(() => {
+          broadcastData(data);
+          dataToBroadcast.current = undefined;
+        }, 200);
+      }
+    },
+    [broadcastData]
+  );
 
   useRoomData(
     roomId,
@@ -137,6 +148,6 @@ export const useSpatialArea = (roomId: string, userId: string) => {
 
   return {
     avatarMap,
-    setAvatarMap,
+    setAvatar,
   };
 };
