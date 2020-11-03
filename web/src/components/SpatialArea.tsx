@@ -1,18 +1,12 @@
 /* eslint react/jsx-props-no-spreading: off */
 
-import React, {
-  Suspense,
-  Dispatch,
-  SetStateAction,
-  useState,
-  useEffect,
-} from "react";
+import React, { Suspense, useRef, useState, useEffect } from "react";
 import * as THREE from "three";
 import { Canvas, useThree } from "react-three-fiber";
 import { useDrag } from "react-use-gesture";
 
 import "./SpatialArea.css";
-import { useSpatialArea, AvatarMap } from "../hooks/useSpatialArea";
+import { useSpatialArea, AvatarData, AvatarMap } from "../hooks/useSpatialArea";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { useNicknameMap } from "../hooks/useNicknameMap";
@@ -21,13 +15,20 @@ const Avatar = React.memo<{
   nickname: string;
   faceStream: MediaStream | null;
   position: [number, number, number];
-  setPosition: Dispatch<SetStateAction<[number, number, number]>>;
+  setPosition: (nextPosition: [number, number, number]) => void;
 }>(({ nickname, faceStream, position, setPosition }) => {
   const { size, viewport } = useThree();
   const aspect = size.width / viewport.width;
+  const firstPosition = useRef<[number, number, number]>();
   const bind = useDrag(
-    ({ delta: [x, y] }) =>
-      setPosition((prev) => [prev[0] + x / aspect, prev[1] - y / aspect, 0]),
+    ({ first, initial: [ix, iy], xy: [x, y] }) => {
+      if (first) {
+        firstPosition.current = position;
+      }
+      const [fx, fy] = firstPosition.current as [number, number, number];
+      setPosition([fx + (x - ix) / aspect, fy - (y - iy) / aspect, 0]);
+      console.log("set pos");
+    },
     { eventOptions: { pointer: true } }
   );
   const [texture, setTexture] = useState<THREE.CanvasTexture>();
@@ -79,7 +80,7 @@ const SpatialCanvas = React.memo<{
   nicknameMap: { [userId: string]: string };
   faceStreamMap: { [userId: string]: MediaStream };
   avatarMap: AvatarMap;
-  setAvatarMap: Dispatch<SetStateAction<AvatarMap>>;
+  setAvatar: (uid: string, avatarData: AvatarData) => void;
 }>(
   ({
     userId,
@@ -88,39 +89,33 @@ const SpatialCanvas = React.memo<{
     nicknameMap,
     faceStreamMap,
     avatarMap,
-    setAvatarMap,
+    setAvatar,
   }) => {
     const getPosition = (uid: string) =>
       avatarMap[uid]?.position || getInitialPosition(uid);
 
     const setPosition = (uid: string) => (
-      update: SetStateAction<[number, number, number]>
+      nextPosition: [number, number, number]
     ) => {
-      setAvatarMap((prev) => ({
-        ...prev,
-        [uid]: {
-          ...prev[uid],
-          position:
-            typeof update === "function"
-              ? update(prev[uid]?.position || getInitialPosition(uid))
-              : update,
-        },
-      }));
+      setAvatar(uid, { position: nextPosition });
     };
 
     return (
       <Canvas>
         <Suspense fallback={null}>
           <ambientLight />
-          {Object.keys(faceStreamMap).map((uid) => (
-            <Avatar
-              key={uid}
-              nickname={nicknameMap[uid] || ""}
-              faceStream={faceStreamMap[uid] || null}
-              position={getPosition(uid)}
-              setPosition={setPosition(uid)}
-            />
-          ))}
+          {Object.keys(faceStreamMap).map(
+            (uid) =>
+              uid !== userId && (
+                <Avatar
+                  key={uid}
+                  nickname={nicknameMap[uid] || ""}
+                  faceStream={faceStreamMap[uid] || null}
+                  position={getPosition(uid)}
+                  setPosition={setPosition(uid)}
+                />
+              )
+          )}
           <Avatar
             nickname={nickname}
             faceStream={faceStream}
@@ -153,7 +148,7 @@ export const SpatialArea = React.memo<{
     "spatialArea"
   );
   const nicknameMap = useNicknameMap(roomId, userId);
-  const { avatarMap, setAvatarMap } = useSpatialArea(roomId, userId);
+  const { avatarMap, setAvatar } = useSpatialArea(roomId, userId);
 
   return (
     <div className="SpatialArea-container">
@@ -195,7 +190,7 @@ export const SpatialArea = React.memo<{
           nicknameMap={nicknameMap}
           faceStreamMap={faceStreamMap}
           avatarMap={avatarMap}
-          setAvatarMap={setAvatarMap}
+          setAvatar={setAvatar}
         />
       </div>
     </div>
