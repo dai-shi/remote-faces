@@ -23,7 +23,8 @@ const isAvatarData = (x: unknown): x is AvatarData => {
   }
 };
 
-const isEqualAvatarData = (a: AvatarData, b: AvatarData) =>
+const isEqualAvatarData = (a: AvatarData, b?: AvatarData) =>
+  b &&
   a.position[0] === b.position[0] &&
   a.position[1] === b.position[1] &&
   a.position[2] === b.position[2];
