@@ -63,37 +63,36 @@ const isSpatialAreaData = (x: unknown): x is SpatialAreaData =>
 
 export const useSpatialArea = (roomId: string, userId: string) => {
   const [avatarMap, setAvatarMap] = useState<AvatarMap>({});
+  const [myAvatar, setMyAvatar] = useState<AvatarData>();
   const lastAreaDataRef = useRef<AreaData>();
+  useEffect(() => {
+    lastAreaDataRef.current = {
+      avatarMap: {
+        ...avatarMap,
+        ...(myAvatar && { [userId]: myAvatar }),
+      },
+      updatedAt: Date.now(),
+    };
+  }, [userId, avatarMap, myAvatar]);
 
   const broadcastData = useBroadcastData(roomId, userId);
   const dataToBroadcast = useRef<SpatialAreaData>();
-  const setAvatar = useCallback(
-    (uid: string, avatarData: AvatarData) => {
-      const nextAvatarMap = {
-        ...lastAreaDataRef.current?.avatarMap,
-        [uid]: avatarData,
-      };
-      setAvatarMap(nextAvatarMap);
-      lastAreaDataRef.current = {
-        avatarMap: nextAvatarMap,
-        updatedAt: Date.now(),
-      };
-      const data: SpatialAreaData = {
-        spatialArea: "sync",
-        areaData: lastAreaDataRef.current,
-      };
-      if (dataToBroadcast.current) {
-        dataToBroadcast.current = data;
-      } else {
-        dataToBroadcast.current = data;
-        setTimeout(() => {
-          broadcastData(data);
-          dataToBroadcast.current = undefined;
-        }, 200);
-      }
-    },
-    [broadcastData]
-  );
+  useEffect(() => {
+    if (!lastAreaDataRef.current) return;
+    const data: SpatialAreaData = {
+      spatialArea: "sync",
+      areaData: lastAreaDataRef.current,
+    };
+    if (dataToBroadcast.current) {
+      dataToBroadcast.current = data;
+    } else {
+      dataToBroadcast.current = data;
+      setTimeout(() => {
+        broadcastData(data);
+        dataToBroadcast.current = undefined;
+      }, 200);
+    }
+  }, [broadcastData, userId, myAvatar]);
 
   useRoomData(
     roomId,
@@ -113,19 +112,17 @@ export const useSpatialArea = (roomId: string, userId: string) => {
         }
         // FIXME why do we need this type assertion?
         const { areaData } = data as { areaData: AreaData };
-        if (
-          lastAreaDataRef.current &&
-          lastAreaDataRef.current.updatedAt > areaData.updatedAt
-        ) {
+        if (areaData.updatedAt < Date.now() - 1000) {
           return;
         }
+        const { [userId]: removed, ...nextAvatarMap } = areaData.avatarMap;
         setAvatarMap((prev) => {
           const prevKeys = Object.keys(prev);
-          const nextKeys = Object.keys(areaData.avatarMap);
+          const nextKeys = Object.keys(nextAvatarMap);
           if (
             prevKeys.length === nextKeys.length &&
             prevKeys.every((key) =>
-              isEqualAvatarData(prev[key], areaData.avatarMap[key])
+              isEqualAvatarData(prev[key], nextAvatarMap[key])
             )
           ) {
             // bail out
@@ -133,11 +130,11 @@ export const useSpatialArea = (roomId: string, userId: string) => {
           }
           return {
             ...prev,
-            ...areaData.avatarMap,
+            ...nextAvatarMap,
           };
         });
       },
-      [broadcastData]
+      [userId, broadcastData]
     )
   );
 
@@ -149,6 +146,7 @@ export const useSpatialArea = (roomId: string, userId: string) => {
 
   return {
     avatarMap,
-    setAvatar,
+    myAvatar,
+    setMyAvatar,
   };
 };
