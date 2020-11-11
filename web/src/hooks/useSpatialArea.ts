@@ -23,72 +23,49 @@ const isAvatarData = (x: unknown): x is AvatarData => {
   }
 };
 
-const isEqualAvatarData = (a: AvatarData, b?: AvatarData) =>
-  b &&
-  a.position[0] === b.position[0] &&
-  a.position[1] === b.position[1] &&
-  a.position[2] === b.position[2];
-
 export type AvatarMap = {
   [userId: string]: AvatarData;
 };
-
-const isAvatarMap = (x: unknown): x is AvatarMap =>
-  isObject(x) && Object.values(x).every(isAvatarData);
-
-type AreaData = {
-  avatarMap: AvatarMap;
-  updatedAt: number; // in millisecond
-};
-
-const isAreaData = (x: unknown): x is AreaData =>
-  isObject(x) &&
-  isAvatarMap(x.avatarMap) &&
-  typeof (x as { updatedAt: unknown }).updatedAt === "number";
 
 type SpatialAreaData =
   | {
       spatialArea: "init";
     }
   | {
-      spatialArea: "sync";
-      areaData: AreaData;
+      spatialArea: "avatar";
+      userId: string;
+      avatarData: AvatarData;
     };
 
 const isSpatialAreaData = (x: unknown): x is SpatialAreaData =>
   isObject(x) &&
   ((x as { spatialArea: unknown }).spatialArea === "init" ||
-    ((x as { spatialArea: unknown }).spatialArea === "sync" &&
-      isAreaData((x as { areaData: unknown }).areaData)));
+    ((x as { spatialArea: unknown }).spatialArea === "avatar" &&
+      isAvatarData((x as { avatarData: unknown }).avatarData)));
 
 export const useSpatialArea = (roomId: string, userId: string) => {
   const [avatarMap, setAvatarMap] = useState<AvatarMap>({});
   const [myAvatar, setMyAvatar] = useState<AvatarData>();
-  const lastAreaDataRef = useRef<AreaData>();
+  const lastMyAvatarRef = useRef<AvatarData>();
   useEffect(() => {
-    lastAreaDataRef.current = {
-      avatarMap: {
-        ...avatarMap,
-        ...(myAvatar && { [userId]: myAvatar }),
-      },
-      updatedAt: Date.now(),
-    };
-  }, [userId, avatarMap, myAvatar]);
+    lastMyAvatarRef.current = myAvatar;
+  }, [myAvatar]);
 
   const broadcastData = useBroadcastData(roomId, userId);
   const dataToBroadcast = useRef<SpatialAreaData>();
   useEffect(() => {
-    if (!lastAreaDataRef.current) return;
+    if (!myAvatar) return;
     const data: SpatialAreaData = {
-      spatialArea: "sync",
-      areaData: lastAreaDataRef.current,
+      spatialArea: "avatar",
+      userId,
+      avatarData: myAvatar,
     };
     if (dataToBroadcast.current) {
       dataToBroadcast.current = data;
     } else {
       dataToBroadcast.current = data;
       setTimeout(() => {
-        broadcastData(data);
+        broadcastData(dataToBroadcast.current);
         dataToBroadcast.current = undefined;
       }, 200);
     }
@@ -101,40 +78,23 @@ export const useSpatialArea = (roomId: string, userId: string) => {
       (data) => {
         if (!isSpatialAreaData(data)) return;
         if (data.spatialArea === "init") {
-          if (lastAreaDataRef.current) {
+          if (lastMyAvatarRef.current) {
             // TODO we don't need to broadcastData but sendData is enough
             broadcastData({
-              spatialArea: "sync",
-              areaData: lastAreaDataRef.current,
+              spatialArea: "avatar",
+              avatarData: lastMyAvatarRef.current,
             });
           }
-          return;
-        }
-        // FIXME why do we need this type assertion?
-        const { areaData } = data as { areaData: AreaData };
-        if (areaData.updatedAt < Date.now() - 1000) {
-          return;
-        }
-        const { [userId]: removed, ...nextAvatarMap } = areaData.avatarMap;
-        setAvatarMap((prev) => {
-          const prevKeys = Object.keys(prev);
-          const nextKeys = Object.keys(nextAvatarMap);
-          if (
-            prevKeys.length === nextKeys.length &&
-            prevKeys.every((key) =>
-              isEqualAvatarData(prev[key], nextAvatarMap[key])
-            )
-          ) {
-            // bail out
-            return prev;
-          }
-          return {
+        } else if (data.spatialArea === "avatar") {
+          const uid = (data as { userId: string }).userId;
+          const { avatarData } = data as { avatarData: AvatarData };
+          setAvatarMap((prev) => ({
             ...prev,
-            ...nextAvatarMap,
-          };
-        });
+            [uid]: avatarData,
+          }));
+        }
       },
-      [userId, broadcastData]
+      [broadcastData]
     )
   );
 
