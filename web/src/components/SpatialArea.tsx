@@ -16,7 +16,9 @@ const Avatar = React.memo<{
   faceStream: MediaStream | null;
   position: [number, number, number];
   setPosition?: (nextPosition: [number, number, number]) => void;
-}>(({ nickname, faceStream, position, setPosition }) => {
+  distance?: number;
+  muted?: boolean;
+}>(({ nickname, faceStream, position, setPosition, distance, muted }) => {
   const { size, viewport } = useThree();
   const aspect = size.width / viewport.width;
   const firstPosition = useRef<[number, number, number]>();
@@ -30,8 +32,8 @@ const Avatar = React.memo<{
     }
   });
   const [texture, setTexture] = useState<THREE.CanvasTexture>();
+  const videoTrack = faceStream?.getVideoTracks()[0];
   useEffect(() => {
-    const videoTrack = faceStream?.getVideoTracks()[0];
     if (!videoTrack) return undefined;
     const canvas = document.createElement("canvas");
     const canvasTexture = new THREE.CanvasTexture(canvas);
@@ -56,7 +58,37 @@ const Avatar = React.memo<{
     return () => {
       clearInterval(timer);
     };
-  }, [nickname, faceStream]);
+  }, [nickname, videoTrack]);
+  const isMyself = !!setPosition;
+  const audioTrack = !isMyself && faceStream?.getAudioTracks()[0];
+  const setGainRef = useRef<(value: number) => void>();
+  useEffect(() => {
+    if (!faceStream || !audioTrack) return undefined;
+    const audioCtx = new AudioContext();
+    const source = audioCtx.createMediaStreamSource(faceStream);
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0.0;
+    setGainRef.current = (value: number) => {
+      gainNode.gain.setValueAtTime(value, audioCtx.currentTime + 1);
+    };
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    const audio = document.createElement("audio");
+    audio.srcObject = faceStream;
+    document.body.appendChild(audio);
+    return () => {
+      audioCtx.close();
+      document.body.removeChild(audio);
+    };
+  }, [faceStream, audioTrack]);
+  useEffect(() => {
+    if (!setGainRef.current) return;
+    if (distance === undefined || muted) {
+      setGainRef.current(0.0);
+      return;
+    }
+    setGainRef.current(Math.min(1.0, Math.max(0.0, (5 - distance) / 5)));
+  }, [muted, distance]);
   if (!texture) return null;
   return (
     <sprite {...(setPosition && bind())} position={position}>
@@ -97,27 +129,36 @@ const SpatialCanvas = React.memo<{
     const setMyPosition = (nextPosition: [number, number, number]) => {
       setMyAvatar({ position: nextPosition });
     };
+    const myPosition = myAvatar?.position || getInitialPosition(userId);
 
     return (
       <Canvas>
         <Suspense fallback={null}>
           <ambientLight />
-          {Object.keys(faceStreamMap).map(
-            (uid) =>
-              uid !== userId && (
-                <Avatar
-                  key={uid}
-                  nickname={nicknameMap[uid] || ""}
-                  faceStream={faceStreamMap[uid] || null}
-                  position={getPosition(uid)}
-                />
-              )
-          )}
+          {Object.keys(faceStreamMap).map((uid) => {
+            if (uid === userId) return null;
+            const position = getPosition(uid);
+            const distance = Math.hypot(
+              position[0] - myPosition[0],
+              position[1] - myPosition[1],
+              position[2] - myPosition[2]
+            );
+            return (
+              <Avatar
+                key={uid}
+                nickname={nicknameMap[uid] || ""}
+                faceStream={faceStreamMap[uid] || null}
+                position={getPosition(uid)}
+                distance={distance}
+              />
+            );
+          })}
           <Avatar
             nickname={nickname}
             faceStream={faceStream}
-            position={myAvatar?.position || getInitialPosition(userId)}
+            position={myPosition}
             setPosition={setMyPosition}
+            muted
           />
         </Suspense>
       </Canvas>
