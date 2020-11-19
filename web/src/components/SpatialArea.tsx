@@ -73,12 +73,8 @@ const Avatar = React.memo<{
     };
     source.connect(gainNode);
     gainNode.connect(audioCtx.destination);
-    const audio = document.createElement("audio");
-    audio.srcObject = faceStream;
-    document.body.appendChild(audio);
     return () => {
       audioCtx.close();
-      document.body.removeChild(audio);
     };
   }, [faceStream, audioTrack]);
   useEffect(() => {
