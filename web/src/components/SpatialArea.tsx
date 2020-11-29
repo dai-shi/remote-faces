@@ -63,11 +63,15 @@ const Avatar = React.memo<{
   const audioTrack = !isMyself && faceStream?.getAudioTracks()[0];
   const setGainRef = useRef<(value: number) => void>();
   useEffect(() => {
-    if (!faceStream || !audioTrack) return undefined;
+    if (!audioTrack) return undefined;
+    const audio = new Audio();
+    audio.srcObject = new MediaStream();
+    const capture = (audio as any).captureStream();
+    capture.addTrack(audioTrack);
     const audioCtx = new AudioContext();
-    const source = audioCtx.createMediaStreamSource(faceStream);
+    const source = audioCtx.createMediaStreamSource(capture);
     const gainNode = audioCtx.createGain();
-    gainNode.gain.value = 0.0;
+    gainNode.gain.value = 0.5;
     setGainRef.current = (value: number) => {
       gainNode.gain.setValueAtTime(value, audioCtx.currentTime + 1);
     };
@@ -76,7 +80,7 @@ const Avatar = React.memo<{
     return () => {
       audioCtx.close();
     };
-  }, [faceStream, audioTrack]);
+  }, [audioTrack]);
   useEffect(() => {
     if (!setGainRef.current) return;
     if (distance === undefined || muted) {
