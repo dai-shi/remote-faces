@@ -1,0 +1,1 @@
+{"version":3,"sources":["SpatialArea.css"],"names":[],"mappings":"AAAA,uBACE,0BAA2B,CAC3B,eACF,CAEA,kBACE,UAAW,CACX,WACF","file":"11.f4fc5242.chunk.css","sourcesContent":[".SpatialArea-container {\n  -webkit-app-region: no-drag;\n  overflow: scroll;\n}\n\n.SpatialArea-body {\n  width: 100%;\n  height: 90vh;\n}\n"]}

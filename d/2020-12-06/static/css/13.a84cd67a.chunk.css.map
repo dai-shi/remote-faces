@@ -1,0 +1,1 @@
+{"version":3,"sources":["CollabWhiteBoard.css"],"names":[],"mappings":"AAAA,4BACE,0BAA2B,CAC3B,eACF,CAEA,mCACE,UAAW,CACX,WAAY,CACZ,WACF","file":"13.a84cd67a.chunk.css","sourcesContent":[".CollabWhiteBoard-container {\n  -webkit-app-region: no-drag;\n  overflow: hidden;\n}\n\n.CollabWhiteBoard-container iframe {\n  width: 100%;\n  height: 100%;\n  border: none;\n}\n"]}
