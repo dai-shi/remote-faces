@@ -10,6 +10,7 @@ import { useSpatialArea, AvatarData, AvatarMap } from "../hooks/useSpatialArea";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { useNicknameMap } from "../hooks/useNicknameMap";
+import { loopbackPeerConnection } from "../network/trackUtils";
 
 const Avatar = React.memo<{
   nickname: string;
@@ -64,21 +65,31 @@ const Avatar = React.memo<{
   const setGainRef = useRef<(value: number) => void>();
   useEffect(() => {
     if (!audioTrack) return undefined;
-    const audio = new Audio();
-    audio.srcObject = new MediaStream();
-    const capture = (audio as any).captureStream();
-    capture.addTrack(audioTrack);
     const audioCtx = new AudioContext();
-    const source = audioCtx.createMediaStreamSource(capture);
+    const destination = audioCtx.createMediaStreamDestination();
+    const source = audioCtx.createMediaStreamSource(
+      new MediaStream([audioTrack])
+    );
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 0.5;
     setGainRef.current = (value: number) => {
       gainNode.gain.setValueAtTime(value, audioCtx.currentTime + 1);
     };
     source.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
+    gainNode.connect(destination);
+    const gainedAudioTrack = destination.stream.getAudioTracks()[0];
+    const videoEle = document.createElement("video");
+    videoEle.autoplay = true;
+    document.body.appendChild(videoEle);
+    (async () => {
+      videoEle.srcObject = new MediaStream([
+        await loopbackPeerConnection(gainedAudioTrack),
+      ]);
+    })();
     return () => {
       audioCtx.close();
+      gainedAudioTrack.dispatchEvent(new Event("ended"));
+      document.body.removeChild(videoEle);
     };
   }, [audioTrack]);
   useEffect(() => {
