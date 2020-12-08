@@ -34,6 +34,8 @@ const Avatar = React.memo<{
   });
   const [texture, setTexture] = useState<THREE.CanvasTexture>();
   const videoTrack = faceStream?.getVideoTracks()[0];
+  const isMyself = !!setPosition;
+  const gainValueRef = useRef(0.5);
   useEffect(() => {
     if (!videoTrack) return undefined;
     const canvas = document.createElement("canvas");
@@ -51,6 +53,10 @@ const Avatar = React.memo<{
         ctx.textBaseline = "top";
         ctx.fillStyle = "blue";
         ctx.fillText(nickname, 2, 2);
+        if (!isMyself) {
+          ctx.fillStyle = "red";
+          ctx.fillText(gainValueRef.current.toFixed(2), 2, 54);
+        }
         canvasTexture.needsUpdate = true;
       } catch (e) {
         // ignore
@@ -59,8 +65,7 @@ const Avatar = React.memo<{
     return () => {
       clearInterval(timer);
     };
-  }, [nickname, videoTrack]);
-  const isMyself = !!setPosition;
+  }, [nickname, isMyself, videoTrack]);
   const audioTrack = !isMyself && faceStream?.getAudioTracks()[0];
   const setGainRef = useRef<(value: number) => void>();
   useEffect(() => {
@@ -73,7 +78,8 @@ const Avatar = React.memo<{
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 0.5;
     setGainRef.current = (value: number) => {
-      gainNode.gain.setValueAtTime(value, audioCtx.currentTime + 1);
+      gainNode.gain.setValueAtTime(value, audioCtx.currentTime);
+      gainValueRef.current = value;
     };
     source.connect(gainNode);
     gainNode.connect(destination);
