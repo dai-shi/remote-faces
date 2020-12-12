@@ -18,3 +18,7 @@
 .SelectivePane-select:hover select {
   display: block;
 }
+
+.SelectivePane-body {
+  overflow: scroll;
+}

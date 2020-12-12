@@ -29,7 +29,7 @@ const createGoBoard = (
   const game = new Game(6);
   const board = new CanvasBoard(element, {
     theme: themes.modernTheme,
-    width: element.clientWidth,
+    width: element.clientWidth / 2,
     size: 6,
   });
   let fieldObjects: FieldObject[] = [];
@@ -132,7 +132,7 @@ const createGoBoard = (
     sendActionData("undo", game.position);
   };
   const resize = () => {
-    board.setWidth(element.clientWidth);
+    board.setWidth(element.clientWidth / 2);
   };
   return { receiveData, pass, undo, resize };
 };
