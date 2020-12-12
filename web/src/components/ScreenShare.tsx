@@ -41,18 +41,20 @@ export const ScreenShare = React.memo<{
       <button type="button" onClick={() => setEnabled(!enabled)}>
         {enabled ? "Stop screen share" : "Start screen share"}
       </button>
-      {screenStream && <Screen nickname={nickname} stream={screenStream} />}
-      {Object.keys(screenStreamMap).map((screenUserId) => {
-        const stream = screenStreamMap[screenUserId];
-        if (!stream) return null;
-        return (
-          <Screen
-            key={screenUserId}
-            nickname={nicknameMap[screenUserId] || "No Name"}
-            stream={stream}
-          />
-        );
-      })}
+      <div className="ScreenShare-body">
+        {screenStream && <Screen nickname={nickname} stream={screenStream} />}
+        {Object.keys(screenStreamMap).map((screenUserId) => {
+          const stream = screenStreamMap[screenUserId];
+          if (!stream) return null;
+          return (
+            <Screen
+              key={screenUserId}
+              nickname={nicknameMap[screenUserId] || "No Name"}
+              stream={stream}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 });
