@@ -12,6 +12,39 @@ import { useFaceVideos } from "../hooks/useFaceVideos";
 import { useNicknameMap } from "../hooks/useNicknameMap";
 import { loopbackPeerConnection } from "../network/trackUtils";
 
+const useStreamTracks = (stream: MediaStream | null) => {
+  const [videoTrack, setVideoTrack] = useState<MediaStreamTrack>();
+  const [audioTrack, setAudioTrack] = useState<MediaStreamTrack>();
+  useEffect(() => {
+    if (stream) {
+      const s = stream;
+      const callback = () => {
+        setVideoTrack(s.getVideoTracks()[0]);
+        setAudioTrack(s.getAudioTracks()[0]);
+      };
+      stream.addEventListener("addtrack", callback);
+      callback();
+      return () => stream.removeEventListener("addtrack", callback);
+    }
+    return undefined;
+  }, [stream]);
+  useEffect(() => {
+    if (videoTrack) {
+      videoTrack.addEventListener("ended", () => {
+        setVideoTrack(undefined);
+      });
+    }
+  }, [videoTrack]);
+  useEffect(() => {
+    if (audioTrack) {
+      audioTrack.addEventListener("ended", () => {
+        setAudioTrack(undefined);
+      });
+    }
+  }, [audioTrack]);
+  return { videoTrack, audioTrack };
+};
+
 const Avatar = React.memo<{
   nickname: string;
   faceStream: MediaStream | null;
@@ -33,9 +66,9 @@ const Avatar = React.memo<{
     }
   });
   const [texture, setTexture] = useState<THREE.CanvasTexture>();
-  const videoTrack = faceStream?.getVideoTracks()[0];
+  const { videoTrack, audioTrack } = useStreamTracks(faceStream);
   const isMyself = !!setPosition;
-  const gainValueRef = useRef(0.5);
+  const gainValueRef = useRef<number | null>(null);
   useEffect(() => {
     if (!videoTrack) return undefined;
     const canvas = document.createElement("canvas");
@@ -53,7 +86,7 @@ const Avatar = React.memo<{
         ctx.textBaseline = "top";
         ctx.fillStyle = "blue";
         ctx.fillText(nickname, 2, 2);
-        if (!isMyself) {
+        if (!isMyself && gainValueRef.current !== null) {
           ctx.fillStyle = "red";
           ctx.fillText(gainValueRef.current.toFixed(2), 2, 54);
         }
@@ -66,10 +99,9 @@ const Avatar = React.memo<{
       clearInterval(timer);
     };
   }, [nickname, isMyself, videoTrack]);
-  const audioTrack = !isMyself && faceStream?.getAudioTracks()[0];
-  const setGainRef = useRef<(value: number) => void>();
+  const setGainRef = useRef<((value: number) => void) | null>(null);
   useEffect(() => {
-    if (!audioTrack) return undefined;
+    if (isMyself || !audioTrack) return undefined;
     const audioCtx = new AudioContext();
     const destination = audioCtx.createMediaStreamDestination();
     const source = audioCtx.createMediaStreamSource(
@@ -77,6 +109,7 @@ const Avatar = React.memo<{
     );
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 0.5;
+    gainValueRef.current = 0.5;
     setGainRef.current = (value: number) => {
       gainNode.gain.setValueAtTime(value, audioCtx.currentTime);
       gainValueRef.current = value;
@@ -86,6 +119,11 @@ const Avatar = React.memo<{
     const gainedAudioTrack = destination.stream.getAudioTracks()[0];
     const videoEle = document.createElement("video");
     videoEle.autoplay = true;
+    videoEle.style.display = "block";
+    videoEle.style.width = "1px";
+    videoEle.style.height = "1px";
+    videoEle.style.position = "absolute";
+    videoEle.style.bottom = "0px";
     document.body.appendChild(videoEle);
     (async () => {
       videoEle.srcObject = new MediaStream([
@@ -93,18 +131,20 @@ const Avatar = React.memo<{
       ]);
     })();
     return () => {
+      setGainRef.current = null;
+      gainValueRef.current = null;
       audioCtx.close();
       gainedAudioTrack.dispatchEvent(new Event("ended"));
       document.body.removeChild(videoEle);
     };
-  }, [audioTrack]);
+  }, [isMyself, audioTrack]);
   useEffect(() => {
     if (!setGainRef.current) return;
     if (distance === undefined || muted) {
       setGainRef.current(0.0);
       return;
     }
-    setGainRef.current(Math.min(1.0, Math.max(0.0, (5 - distance) / 5)));
+    setGainRef.current(Math.min(1.0, Math.max(0.0, (5 - distance) / 4)));
   }, [muted, distance]);
   if (!texture) return null;
   return (
