@@ -1,5 +1,5 @@
 {
-  "name": "@daishi/ckeditor5-build-inline-custom",
+  "name": "@disabled-for-ci_daishi/ckeditor5-build-inline-custom",
   "version": "24.0.0-custom.1",
   "description": "The inline editor build of CKEditor 5 – the best browser-based rich text editor.",
   "keywords": [
