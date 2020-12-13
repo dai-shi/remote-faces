@@ -9,5 +9,8 @@
   },
   "scripts": {
     "test": "yarn workspaces run test"
+  },
+  "resolutions": {
+    "libp2p-webrtc-star": "0.20.1"
   }
 }
