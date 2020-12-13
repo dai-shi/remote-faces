@@ -71,6 +71,7 @@
     "directory": "packages/ckeditor5-build-inline"
   },
   "scripts": {
+    "test": "echo no test",
     "build": "webpack --mode production",
     "preversion": "npm run build"
   }
