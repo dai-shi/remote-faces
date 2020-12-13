@@ -4,3 +4,6 @@
 [submodule "libopus/speexdsp"]
 	path = libopus/speexdsp
 	url = https://github.com/xiph/speexdsp.git
+[submodule "ckeditor5/upstream"]
+	path = ckeditor5/upstream
+	url = https://github.com/ckeditor/ckeditor5.git
