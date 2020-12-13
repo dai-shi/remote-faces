@@ -1,0 +1,1 @@
+{"version":3,"sources":["ScreenShare.css"],"names":[],"mappings":"AAAA,uBACE,0BAA2B,CAC3B,eACF,CAOA,qCACE,UAAW,CACX,YACF","file":"16.557cf295.chunk.css","sourcesContent":[".ScreenShare-container {\n  -webkit-app-region: no-drag;\n  overflow: scroll;\n}\n\n.ScreenShare-body {\n  width: 100%;\n  height: 100vh;\n}\n\n.ScreenShare-video {\n  width: 100%;\n  height: 100vh;\n}\n"]}
