@@ -1,1 +1,0 @@
-upstream/packages/ckeditor5-build-inline/CONTRIBUTING.md
