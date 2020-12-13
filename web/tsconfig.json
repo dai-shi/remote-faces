@@ -18,8 +18,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react",
-    "types":["w3c-image-capture", "jest"]
+    "jsx": "react-jsx",
+    "types": [
+      "w3c-image-capture",
+      "jest"
+    ],
+    "noFallthroughCasesInSwitch": true
   },
   "include": [
     "src"

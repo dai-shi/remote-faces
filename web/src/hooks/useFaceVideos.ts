@@ -38,9 +38,10 @@ export const useFaceVideos = (
 
   const isMounted = useRef(true);
   useEffect(() => {
-    return () => {
+    const cleanup = () => {
       isMounted.current = false;
     };
+    return cleanup;
   }, []);
 
   const onTrack = useCallback(async (track, info) => {
