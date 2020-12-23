@@ -45,20 +45,6 @@ const useStreamTracks = (stream: MediaStream | null) => {
   return { videoTrack, audioTrack };
 };
 
-const intervalTasks = new Set<() => Promise<void>>();
-const loopIntervalTasks = () => {
-  if (intervalTasks.size) {
-    Array.from(intervalTasks).reduce(async (promise, task) => {
-      await promise;
-      await task();
-    }, Promise.resolve());
-    setTimeout(loopIntervalTasks, 1000 / 7.5);
-  } else {
-    setTimeout(loopIntervalTasks, 1000);
-  }
-};
-loopIntervalTasks();
-
 const Avatar = React.memo<{
   nickname: string;
   faceStream: MediaStream | null;
@@ -79,40 +65,17 @@ const Avatar = React.memo<{
       setPosition([fx + (x - ix) / aspect, fy - (y - iy) / aspect, 0]);
     }
   });
-  const [texture, setTexture] = useState<THREE.CanvasTexture>();
+  const [texture, setTexture] = useState<THREE.VideoTexture>();
   const { videoTrack, audioTrack } = useStreamTracks(faceStream);
   const isMyself = !!setPosition;
   const gainValueRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!videoTrack) return undefined;
-    const canvas = document.createElement("canvas");
-    const canvasTexture = new THREE.CanvasTexture(canvas);
-    setTexture(canvasTexture);
-    const imageCapture = new ImageCapture(videoTrack);
-    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    const task = async () => {
-      try {
-        const bitmap = await imageCapture.grabFrame();
-        canvas.width = bitmap.width;
-        canvas.height = bitmap.height;
-        ctx.drawImage(bitmap, 0, 0);
-        ctx.font = "18px selif";
-        ctx.textBaseline = "top";
-        ctx.fillStyle = "blue";
-        ctx.fillText(nickname, 2, 2);
-        if (!isMyself && gainValueRef.current !== null) {
-          ctx.fillStyle = "red";
-          ctx.fillText(gainValueRef.current.toFixed(2), 2, 54);
-        }
-        canvasTexture.needsUpdate = true;
-      } catch (e) {
-        // ignore
-      }
-    };
-    intervalTasks.add(task);
-    return () => {
-      intervalTasks.delete(task);
-    };
+    if (!videoTrack) return;
+    const videoEle = document.createElement("video");
+    videoEle.autoplay = true;
+    videoEle.srcObject = new MediaStream([videoTrack]);
+    const videoTexture = new THREE.VideoTexture(videoEle);
+    setTexture(videoTexture);
   }, [nickname, isMyself, videoTrack]);
   const setGainRef = useRef<((value: number) => void) | null>(null);
   useEffect(() => {

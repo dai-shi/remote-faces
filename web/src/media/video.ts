@@ -28,7 +28,9 @@ const loopRafTasks = () => {
     if (done) {
       rafTasksIterator = null;
     }
-    value();
+    if (value) {
+      value();
+    }
     requestAnimationFrame(loopRafTasks);
   } else {
     setTimeout(loopRafTasks, 1000);
