@@ -45,6 +45,20 @@ const useStreamTracks = (stream: MediaStream | null) => {
   return { videoTrack, audioTrack };
 };
 
+const intervalTasks = new Set<() => Promise<void>>();
+const loopIntervalTasks = () => {
+  if (intervalTasks.size) {
+    Array.from(intervalTasks).reduce(async (promise, task) => {
+      await promise;
+      await task();
+    }, Promise.resolve());
+    setTimeout(loopIntervalTasks, 1000 / 7.5);
+  } else {
+    setTimeout(loopIntervalTasks, 1000);
+  }
+};
+loopIntervalTasks();
+
 const Avatar = React.memo<{
   nickname: string;
   faceStream: MediaStream | null;
@@ -76,7 +90,7 @@ const Avatar = React.memo<{
     setTexture(canvasTexture);
     const imageCapture = new ImageCapture(videoTrack);
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    const timer = setInterval(async () => {
+    const task = async () => {
       try {
         const bitmap = await imageCapture.grabFrame();
         canvas.width = bitmap.width;
@@ -94,9 +108,10 @@ const Avatar = React.memo<{
       } catch (e) {
         // ignore
       }
-    }, 1000 / 7.5);
+    };
+    intervalTasks.add(task);
     return () => {
-      clearInterval(timer);
+      intervalTasks.delete(task);
     };
   }, [nickname, isMyself, videoTrack]);
   const setGainRef = useRef<((value: number) => void) | null>(null);
