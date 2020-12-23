@@ -17,6 +17,25 @@ export const getVideoStream = async (deviceId?: string) => {
   };
 };
 
+const rafTasks = new Set<() => void>();
+let rafTasksIterator: Iterator<() => void> | null = null;
+const loopRafTasks = () => {
+  if (!rafTasksIterator && rafTasks.size) {
+    rafTasksIterator = rafTasks.values();
+  }
+  if (rafTasksIterator) {
+    const { value, done } = rafTasksIterator.next();
+    if (done) {
+      rafTasksIterator = null;
+    }
+    value();
+    requestAnimationFrame(loopRafTasks);
+  } else {
+    setTimeout(loopRafTasks, 1000);
+  }
+};
+loopRafTasks();
+
 export const getFaceVideoStream = async (deviceId?: string) => {
   const constraints = deviceId
     ? {
@@ -49,16 +68,14 @@ export const getFaceVideoStream = async (deviceId?: string) => {
   const height = Math.min(srcH, dstH / ratio);
   const x = (srcW - width) / 2;
   const y = (srcH - height) / 2;
-  let timer: NodeJS.Timeout;
-  const loop = () => {
+  const task = () => {
     ctx.drawImage(video, x, y, width, height, 0, 0, dstW, dstH);
-    timer = setTimeout(loop, 1000 / 15);
   };
-  loop();
+  rafTasks.add(task);
   const canvasStream = (canvas as any).captureStream() as MediaStream;
   const dispose = () => {
     document.body.removeChild(video);
-    clearTimeout(timer);
+    rafTasks.delete(task);
     track.stop();
     canvasStream.getVideoTracks()[0].stop();
   };
