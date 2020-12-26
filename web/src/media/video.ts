@@ -17,7 +17,12 @@ export const getVideoStream = async (deviceId?: string) => {
 
 export const getFaceVideoStream = async (deviceId?: string) => {
   const constraints = {
-    video: { deviceId, width: { exact: 72 }, height: { exact: 72 } },
+    video: {
+      deviceId,
+      frameRate: { max: 5 },
+      width: { exact: 72 },
+      height: { exact: 72 },
+    },
   };
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
   const [track] = stream.getVideoTracks();
