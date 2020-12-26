@@ -70,12 +70,22 @@ const Avatar = React.memo<{
   const isMyself = !!setPosition;
   const gainValueRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!videoTrack) return;
+    if (!videoTrack) return undefined;
     const videoEle = document.createElement("video");
     videoEle.autoplay = true;
+    videoEle.setAttribute("playsinline", "");
+    videoEle.style.display = "block";
+    videoEle.style.width = "1px";
+    videoEle.style.height = "1px";
+    videoEle.style.position = "absolute";
+    videoEle.style.bottom = "0px";
+    document.body.appendChild(videoEle);
     videoEle.srcObject = new MediaStream([videoTrack]);
     const videoTexture = new THREE.VideoTexture(videoEle);
     setTexture(videoTexture);
+    return () => {
+      document.body.removeChild(videoEle);
+    };
   }, [nickname, isMyself, videoTrack]);
   const setGainRef = useRef<((value: number) => void) | null>(null);
   useEffect(() => {
@@ -97,6 +107,7 @@ const Avatar = React.memo<{
     const gainedAudioTrack = destination.stream.getAudioTracks()[0];
     const videoEle = document.createElement("video");
     videoEle.autoplay = true;
+    videoEle.setAttribute("playsinline", "");
     videoEle.style.display = "block";
     videoEle.style.width = "1px";
     videoEle.style.height = "1px";

@@ -25,19 +25,19 @@ export const getFaceVideoStream = async (deviceId?: string) => {
     : { video: true };
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
   const [track] = stream.getVideoTracks();
-  const video = document.createElement("video");
-  video.autoplay = true;
-  video.setAttribute("playsinline", "");
-  video.style.display = "block";
-  video.style.width = "1px";
-  video.style.height = "1px";
-  video.style.position = "absolute";
-  video.style.bottom = "0";
-  document.body.appendChild(video);
-  video.srcObject = stream;
+  const videoEle = document.createElement("video");
+  videoEle.autoplay = true;
+  videoEle.setAttribute("playsinline", "");
+  videoEle.style.display = "block";
+  videoEle.style.width = "1px";
+  videoEle.style.height = "1px";
+  videoEle.style.position = "absolute";
+  videoEle.style.bottom = "0";
+  document.body.appendChild(videoEle);
+  videoEle.srcObject = stream;
   await sleep(1000);
-  const srcW = video.videoWidth;
-  const srcH = video.videoHeight;
+  const srcW = videoEle.videoWidth;
+  const srcH = videoEle.videoHeight;
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
   const dstW = 72;
@@ -50,13 +50,13 @@ export const getFaceVideoStream = async (deviceId?: string) => {
   const x = (srcW - width) / 2;
   const y = (srcH - height) / 2;
   let loop: (() => void) | null = () => {
-    ctx.drawImage(video, x, y, width, height, 0, 0, dstW, dstH);
+    ctx.drawImage(videoEle, x, y, width, height, 0, 0, dstW, dstH);
     if (loop) requestAnimationFrame(loop);
   };
   loop();
   const canvasStream = (canvas as any).captureStream() as MediaStream;
   const dispose = () => {
-    document.body.removeChild(video);
+    document.body.removeChild(videoEle);
     loop = null;
     track.stop();
     canvasStream.getVideoTracks()[0].stop();
