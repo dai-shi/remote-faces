@@ -12,22 +12,20 @@ import { useFaceVideos } from "../hooks/useFaceVideos";
 import { useNicknameMap } from "../hooks/useNicknameMap";
 import { loopbackPeerConnection } from "../network/trackUtils";
 
-const useStreamTracks = (stream: MediaStream | null) => {
+const useAvatarVideo = (faceStream: MediaStream | null) => {
   const [videoTrack, setVideoTrack] = useState<MediaStreamTrack>();
-  const [audioTrack, setAudioTrack] = useState<MediaStreamTrack>();
   useEffect(() => {
-    if (stream) {
-      const s = stream;
+    if (faceStream) {
+      const stream = faceStream;
       const callback = () => {
-        setVideoTrack(s.getVideoTracks()[0]);
-        setAudioTrack(s.getAudioTracks()[0]);
+        setVideoTrack(stream.getVideoTracks()[0]);
       };
-      stream.addEventListener("addtrack", callback);
+      faceStream.addEventListener("addtrack", callback);
       callback();
-      return () => stream.removeEventListener("addtrack", callback);
+      return () => faceStream.removeEventListener("addtrack", callback);
     }
     return undefined;
-  }, [stream]);
+  }, [faceStream]);
   useEffect(() => {
     if (videoTrack) {
       videoTrack.addEventListener("ended", () => {
@@ -35,6 +33,32 @@ const useStreamTracks = (stream: MediaStream | null) => {
       });
     }
   }, [videoTrack]);
+  const [texture, setTexture] = useState<THREE.VideoTexture>();
+  useEffect(() => {
+    if (!videoTrack) return;
+    const videoEle = document.createElement("video");
+    videoEle.autoplay = true;
+    videoEle.srcObject = new MediaStream([videoTrack]);
+    const videoTexture = new THREE.VideoTexture(videoEle);
+    setTexture(videoTexture);
+  }, [videoTrack]);
+  return texture;
+};
+
+const useAvatarAudio = (faceStream: MediaStream | null, isMyself: boolean) => {
+  const [audioTrack, setAudioTrack] = useState<MediaStreamTrack>();
+  useEffect(() => {
+    if (faceStream) {
+      const stream = faceStream;
+      const callback = () => {
+        setAudioTrack(stream.getAudioTracks()[0]);
+      };
+      faceStream.addEventListener("addtrack", callback);
+      callback();
+      return () => faceStream.removeEventListener("addtrack", callback);
+    }
+    return undefined;
+  }, [faceStream]);
   useEffect(() => {
     if (audioTrack) {
       audioTrack.addEventListener("ended", () => {
@@ -42,7 +66,44 @@ const useStreamTracks = (stream: MediaStream | null) => {
       });
     }
   }, [audioTrack]);
-  return { videoTrack, audioTrack };
+  const setGainRef = useRef<((value: number) => void) | null>(null);
+  useEffect(() => {
+    if (isMyself || !audioTrack) return undefined;
+    const audioCtx = new AudioContext();
+    const destination = audioCtx.createMediaStreamDestination();
+    const source = audioCtx.createMediaStreamSource(
+      new MediaStream([audioTrack])
+    );
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0.5;
+    setGainRef.current = (value: number) => {
+      gainNode.gain.setValueAtTime(value, audioCtx.currentTime);
+    };
+    source.connect(gainNode);
+    gainNode.connect(destination);
+    const gainedAudioTrack = destination.stream.getAudioTracks()[0];
+    const videoEle = document.createElement("video");
+    videoEle.autoplay = true;
+    videoEle.setAttribute("playsinline", "");
+    videoEle.style.display = "block";
+    videoEle.style.width = "1px";
+    videoEle.style.height = "1px";
+    videoEle.style.position = "absolute";
+    videoEle.style.bottom = "0px";
+    document.body.appendChild(videoEle);
+    (async () => {
+      videoEle.srcObject = new MediaStream([
+        await loopbackPeerConnection(gainedAudioTrack),
+      ]);
+    })();
+    return () => {
+      setGainRef.current = null;
+      audioCtx.close();
+      gainedAudioTrack.dispatchEvent(new Event("ended"));
+      document.body.removeChild(videoEle);
+    };
+  }, [isMyself, audioTrack]);
+  return setGainRef;
 };
 
 const Avatar = React.memo<{
@@ -65,68 +126,9 @@ const Avatar = React.memo<{
       setPosition([fx + (x - ix) / aspect, fy - (y - iy) / aspect, 0]);
     }
   });
-  const [texture, setTexture] = useState<THREE.VideoTexture>();
-  const { videoTrack, audioTrack } = useStreamTracks(faceStream);
+  const texture = useAvatarVideo(faceStream);
   const isMyself = !!setPosition;
-  const gainValueRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (!videoTrack) return undefined;
-    const videoEle = document.createElement("video");
-    videoEle.autoplay = true;
-    videoEle.setAttribute("playsinline", "");
-    videoEle.style.display = "block";
-    videoEle.style.width = "1px";
-    videoEle.style.height = "1px";
-    videoEle.style.position = "absolute";
-    videoEle.style.bottom = "0px";
-    document.body.appendChild(videoEle);
-    videoEle.srcObject = new MediaStream([videoTrack]);
-    const videoTexture = new THREE.VideoTexture(videoEle);
-    setTexture(videoTexture);
-    return () => {
-      document.body.removeChild(videoEle);
-    };
-  }, [nickname, isMyself, videoTrack]);
-  const setGainRef = useRef<((value: number) => void) | null>(null);
-  useEffect(() => {
-    if (isMyself || !audioTrack) return undefined;
-    const audioCtx = new AudioContext();
-    const destination = audioCtx.createMediaStreamDestination();
-    const source = audioCtx.createMediaStreamSource(
-      new MediaStream([audioTrack])
-    );
-    const gainNode = audioCtx.createGain();
-    gainNode.gain.value = 0.5;
-    gainValueRef.current = 0.5;
-    setGainRef.current = (value: number) => {
-      gainNode.gain.setValueAtTime(value, audioCtx.currentTime);
-      gainValueRef.current = value;
-    };
-    source.connect(gainNode);
-    gainNode.connect(destination);
-    const gainedAudioTrack = destination.stream.getAudioTracks()[0];
-    const videoEle = document.createElement("video");
-    videoEle.autoplay = true;
-    videoEle.setAttribute("playsinline", "");
-    videoEle.style.display = "block";
-    videoEle.style.width = "1px";
-    videoEle.style.height = "1px";
-    videoEle.style.position = "absolute";
-    videoEle.style.bottom = "0px";
-    document.body.appendChild(videoEle);
-    (async () => {
-      videoEle.srcObject = new MediaStream([
-        await loopbackPeerConnection(gainedAudioTrack),
-      ]);
-    })();
-    return () => {
-      setGainRef.current = null;
-      gainValueRef.current = null;
-      audioCtx.close();
-      gainedAudioTrack.dispatchEvent(new Event("ended"));
-      document.body.removeChild(videoEle);
-    };
-  }, [isMyself, audioTrack]);
+  const setGainRef = useAvatarAudio(faceStream, isMyself);
   useEffect(() => {
     if (!setGainRef.current) return;
     if (distance === undefined || muted) {
@@ -134,7 +136,7 @@ const Avatar = React.memo<{
       return;
     }
     setGainRef.current(Math.min(1.0, Math.max(0.0, (5 - distance) / 4)));
-  }, [muted, distance]);
+  }, [muted, distance, setGainRef]);
   if (!texture) return null;
   return (
     <sprite {...(setPosition && bind())} position={position}>
