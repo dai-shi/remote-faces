@@ -1,9 +1,16 @@
 /* eslint react/jsx-props-no-spreading: off */
 
-import React, { Suspense, useRef, useState, useEffect } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
 import * as THREE from "three";
 import { Canvas, useThree } from "react-three-fiber";
 import { useDrag } from "react-use-gesture";
+import { Text } from "@react-three/drei/Text";
 
 import "./SpatialArea.css";
 import { useSpatialArea, AvatarData, AvatarMap } from "../hooks/useSpatialArea";
@@ -66,7 +73,16 @@ const useAvatarAudio = (faceStream: MediaStream | null, isMyself: boolean) => {
       });
     }
   }, [audioTrack]);
-  const setGainRef = useRef<((value: number) => void) | null>(null);
+  const setGainValueRef = useRef<((value: number) => void) | null>(null);
+  const [gain, setGain] = useState<number | null>(null);
+  const setGainCallback = useCallback((value: number) => {
+    if (setGainValueRef.current) {
+      setGain(value);
+      setGainValueRef.current(value);
+    } else {
+      setGain(null);
+    }
+  }, []);
   useEffect(() => {
     if (isMyself || !audioTrack) return undefined;
     const audioCtx = new AudioContext();
@@ -76,7 +92,8 @@ const useAvatarAudio = (faceStream: MediaStream | null, isMyself: boolean) => {
     );
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 0.5;
-    setGainRef.current = (value: number) => {
+    setGain(0.5);
+    setGainValueRef.current = (value: number) => {
       gainNode.gain.setValueAtTime(value, audioCtx.currentTime);
     };
     source.connect(gainNode);
@@ -97,13 +114,13 @@ const useAvatarAudio = (faceStream: MediaStream | null, isMyself: boolean) => {
       ]);
     })();
     return () => {
-      setGainRef.current = null;
+      setGainValueRef.current = null;
       audioCtx.close();
       gainedAudioTrack.dispatchEvent(new Event("ended"));
       document.body.removeChild(videoEle);
     };
   }, [isMyself, audioTrack]);
-  return setGainRef;
+  return [gain, setGainCallback] as const;
 };
 
 const Avatar = React.memo<{
@@ -114,6 +131,7 @@ const Avatar = React.memo<{
   distance?: number;
   muted?: boolean;
 }>(({ nickname, faceStream, position, setPosition, distance, muted }) => {
+  const isMyself = !!setPosition;
   const { size, viewport } = useThree();
   const aspect = size.width / viewport.width;
   const firstPosition = useRef<[number, number, number]>();
@@ -127,21 +145,41 @@ const Avatar = React.memo<{
     }
   });
   const texture = useAvatarVideo(faceStream);
-  const isMyself = !!setPosition;
-  const setGainRef = useAvatarAudio(faceStream, isMyself);
+  const [gain, setGain] = useAvatarAudio(faceStream, isMyself);
   useEffect(() => {
-    if (!setGainRef.current) return;
     if (distance === undefined || muted) {
-      setGainRef.current(0.0);
+      setGain(0.0);
       return;
     }
-    setGainRef.current(Math.min(1.0, Math.max(0.0, (5 - distance) / 4)));
-  }, [muted, distance, setGainRef]);
+    setGain(Math.min(1.0, Math.max(0.0, (5 - distance) / 4)));
+  }, [muted, distance, setGain]);
   if (!texture) return null;
   return (
-    <sprite {...(setPosition && bind())} position={position}>
-      <spriteMaterial map={texture} />
-    </sprite>
+    <>
+      <sprite {...(isMyself && bind())} position={position}>
+        <spriteMaterial map={texture} />
+      </sprite>
+      <Text
+        color="blue"
+        fontSize={0.3}
+        anchorX="left"
+        anchorY="top"
+        position={[position[0] - 0.5, position[1] + 0.5, position[2]]}
+      >
+        {nickname}
+      </Text>
+      {gain !== null && (
+        <Text
+          color="red"
+          fontSize={0.3}
+          anchorX="left"
+          anchorY="bottom"
+          position={[position[0] - 0.5, position[1] - 0.5, position[2]]}
+        >
+          {gain.toFixed(2)}
+        </Text>
+      )}
+    </>
   );
 });
 
