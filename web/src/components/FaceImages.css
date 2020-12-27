@@ -43,7 +43,7 @@
   line-height: 0.5rem;
   font-family: sans-serif;
   cursor: default;
-  animation: FaceImagesBlink 1.5s infinite;
+  /* animation: FaceImagesBlink 1.5s infinite; */
 }
 
 @keyframes FaceImagesBlink {

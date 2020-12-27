@@ -3,7 +3,14 @@ import { useCallback, useState, useRef, useEffect } from "react";
 import { isObject } from "../utils/types";
 import { useRoomData, useBroadcastData } from "./useRoom";
 
+const getInitialPosition = (uid: string): [number, number, number] => [
+  parseInt(uid.slice(0, 2), 16) / 128 - 1,
+  parseInt(uid.slice(2, 4), 16) / 128 - 1,
+  0,
+];
+
 export type AvatarData = {
+  statusMesg: string;
   position: [number, number, number];
 };
 
@@ -11,13 +18,14 @@ const isAvatarData = (x: unknown): x is AvatarData => {
   try {
     const obj = x as AvatarData;
     if (
-      typeof obj.position[0] !== "number" ||
-      typeof obj.position[1] !== "number" ||
-      typeof obj.position[2] !== "number"
+      typeof obj.statusMesg === "string" &&
+      typeof obj.position[0] === "number" &&
+      typeof obj.position[1] === "number" &&
+      typeof obj.position[2] === "number"
     ) {
-      return false;
+      return true;
     }
-    return true;
+    return false;
   } catch (e) {
     return false;
   }
@@ -43,9 +51,24 @@ const isSpatialAreaData = (x: unknown): x is SpatialAreaData =>
     ((x as { spatialArea: unknown }).spatialArea === "avatar" &&
       isAvatarData((x as { avatarData: unknown }).avatarData)));
 
-export const useSpatialArea = (roomId: string, userId: string) => {
+export const useSpatialArea = (
+  roomId: string,
+  userId: string,
+  statusMesg: string
+) => {
   const [avatarMap, setAvatarMap] = useState<AvatarMap>({});
-  const [myAvatar, setMyAvatar] = useState<AvatarData>();
+  const [myAvatar, setMyAvatar] = useState<AvatarData>({
+    statusMesg,
+    position: getInitialPosition(userId),
+  });
+  useEffect(() => {
+    setMyAvatar((prev) => {
+      if (prev.statusMesg === statusMesg) {
+        return prev;
+      }
+      return { ...prev, statusMesg };
+    });
+  }, [statusMesg]);
   const lastMyAvatarRef = useRef<AvatarData>();
   useEffect(() => {
     lastMyAvatarRef.current = myAvatar;
@@ -67,7 +90,7 @@ export const useSpatialArea = (roomId: string, userId: string) => {
       setTimeout(() => {
         broadcastData(dataToBroadcast.current);
         dataToBroadcast.current = undefined;
-      }, 200);
+      }, 500);
     }
   }, [broadcastData, userId, myAvatar]);
 
