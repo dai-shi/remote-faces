@@ -99,7 +99,12 @@ export const SingleRoom = React.memo<{
         className="SingleRoom-3rd-column"
         style={{ display: thirdColumnOpen ? "inherit" : "none" }}
       >
-        <SelectivePane roomId={roomId} userId={userId} nickname={nickname} />
+        <SelectivePane
+          roomId={roomId}
+          userId={userId}
+          nickname={nickname}
+          statusMesg={`${emoji?.native || " "}${statusMesg}`}
+        />
       </div>
     </div>
   );

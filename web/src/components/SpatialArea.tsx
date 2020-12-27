@@ -1,6 +1,7 @@
 /* eslint react/jsx-props-no-spreading: off */
 
 import React, {
+  SetStateAction,
   Suspense,
   useCallback,
   useRef,
@@ -126,82 +127,99 @@ const useAvatarAudio = (faceStream: MediaStream | null, isMyself: boolean) => {
 const Avatar = React.memo<{
   nickname: string;
   faceStream: MediaStream | null;
+  statusMesg: string;
   position: [number, number, number];
   setPosition?: (nextPosition: [number, number, number]) => void;
   distance?: number;
   muted?: boolean;
-}>(({ nickname, faceStream, position, setPosition, distance, muted }) => {
-  const isMyself = !!setPosition;
-  const { size, viewport } = useThree();
-  const aspect = size.width / viewport.width;
-  const firstPosition = useRef<[number, number, number]>();
-  const bind = useDrag(({ first, initial: [ix, iy], xy: [x, y] }) => {
-    if (first) {
-      firstPosition.current = position;
-    }
-    const [fx, fy] = firstPosition.current as [number, number, number];
-    if (setPosition) {
-      setPosition([fx + (x - ix) / aspect, fy - (y - iy) / aspect, 0]);
-    }
-  });
-  const texture = useAvatarVideo(faceStream);
-  const [gain, setGain] = useAvatarAudio(faceStream, isMyself);
-  useEffect(() => {
-    if (distance === undefined || muted) {
-      setGain(0.0);
-      return;
-    }
-    setGain(Math.min(1.0, Math.max(0.0, (5 - distance) / 4)));
-  }, [muted, distance, setGain]);
-  if (!texture) return null;
-  return (
-    <>
-      <sprite {...(isMyself && bind())} position={position}>
-        <spriteMaterial map={texture} />
-      </sprite>
-      <Text
-        color="blue"
-        fontSize={0.3}
-        anchorX="left"
-        anchorY="top"
-        position={[position[0] - 0.5, position[1] + 0.5, position[2]]}
-      >
-        {nickname}
-      </Text>
-      {gain !== null && (
+}>(
+  ({
+    nickname,
+    faceStream,
+    statusMesg,
+    position,
+    setPosition,
+    distance,
+    muted,
+  }) => {
+    const isMyself = !!setPosition;
+    const { size, viewport } = useThree();
+    const aspect = size.width / viewport.width;
+    const firstPosition = useRef<[number, number, number]>();
+    const bind = useDrag(({ first, initial: [ix, iy], xy: [x, y] }) => {
+      if (first) {
+        firstPosition.current = position;
+      }
+      const [fx, fy] = firstPosition.current as [number, number, number];
+      if (setPosition) {
+        setPosition([fx + (x - ix) / aspect, fy - (y - iy) / aspect, 0]);
+      }
+    });
+    const texture = useAvatarVideo(faceStream);
+    const [gain, setGain] = useAvatarAudio(faceStream, isMyself);
+    useEffect(() => {
+      if (distance === undefined || muted) {
+        setGain(0.0);
+        return;
+      }
+      setGain(Math.min(1.0, Math.max(0.0, (5 - distance) / 4)));
+    }, [muted, distance, setGain]);
+    if (!texture) return null;
+    return (
+      <>
+        <sprite {...(isMyself && bind())} position={position}>
+          <spriteMaterial map={texture} />
+        </sprite>
         <Text
-          color="red"
+          color="blue"
           fontSize={0.3}
           anchorX="left"
-          anchorY="bottom"
-          position={[position[0] - 0.5, position[1] - 0.5, position[2]]}
+          anchorY="top"
+          position={[position[0] - 0.5, position[1] + 0.5, position[2]]}
         >
-          {gain.toFixed(2)}
+          {nickname}
         </Text>
-      )}
-    </>
-  );
-});
-
-const getInitialPosition = (uid: string): [number, number, number] => [
-  parseInt(uid.slice(0, 2), 16) / 128 - 1,
-  parseInt(uid.slice(2, 4), 16) / 128 - 1,
-  0,
-];
+        <Text
+          color="darkgreen"
+          fontSize={0.3}
+          anchorX="left"
+          anchorY="middle"
+          font="https://fonts.gstatic.com/ea/notosansjapanese/v6/NotoSansJP-Bold.woff"
+          position={[position[0] - 0.5, position[1], position[2]]}
+        >
+          {statusMesg}
+        </Text>
+        {gain !== null && (
+          <Text
+            color="red"
+            fontSize={0.3}
+            anchorX="left"
+            anchorY="bottom"
+            position={[position[0] - 0.5, position[1] - 0.5, position[2]]}
+          >
+            {gain.toFixed(2)}
+          </Text>
+        )}
+      </>
+    );
+  }
+);
 
 const SpatialCanvas = React.memo<{
   userId: string;
   nickname: string;
+  statusMesg: string;
   faceStream: MediaStream | null;
   nicknameMap: { [userId: string]: string };
   faceStreamMap: { [userId: string]: MediaStream };
   avatarMap: AvatarMap;
   myAvatar?: AvatarData;
-  setMyAvatar: (avatarData: AvatarData) => void;
+  setMyAvatar: (action: SetStateAction<AvatarData>) => void;
 }>(
   ({
     userId,
     nickname,
+    statusMesg,
     faceStream,
     nicknameMap,
     faceStreamMap,
@@ -209,13 +227,13 @@ const SpatialCanvas = React.memo<{
     myAvatar,
     setMyAvatar,
   }) => {
-    const getPosition = (uid: string) =>
-      avatarMap[uid]?.position || getInitialPosition(uid);
+    const getStatusMesg = (uid: string) => avatarMap[uid]?.statusMesg || "";
+    const getPosition = (uid: string) => avatarMap[uid]?.position || [0, 0, 0];
 
     const setMyPosition = (nextPosition: [number, number, number]) => {
-      setMyAvatar({ position: nextPosition });
+      setMyAvatar((prev) => ({ ...prev, position: nextPosition }));
     };
-    const myPosition = myAvatar?.position || getInitialPosition(userId);
+    const myPosition = myAvatar?.position || [0, 0, 0];
 
     return (
       <Canvas>
@@ -234,6 +252,7 @@ const SpatialCanvas = React.memo<{
                 key={uid}
                 nickname={nicknameMap[uid] || ""}
                 faceStream={faceStreamMap[uid] || null}
+                statusMesg={getStatusMesg(uid)}
                 position={getPosition(uid)}
                 distance={distance}
               />
@@ -242,6 +261,7 @@ const SpatialCanvas = React.memo<{
           <Avatar
             nickname={nickname}
             faceStream={faceStream}
+            statusMesg={statusMesg}
             position={myPosition}
             setPosition={setMyPosition}
             muted
@@ -256,7 +276,8 @@ export const SpatialArea = React.memo<{
   roomId: string;
   userId: string;
   nickname: string;
-}>(({ roomId, userId, nickname }) => {
+  statusMesg: string;
+}>(({ roomId, userId, nickname, statusMesg }) => {
   const videoDevices = useVideoDevices();
   const [videoDeviceId, setVideoDeviceId] = useState<string>("");
   const audioDevices = useAudioDevices();
@@ -272,7 +293,11 @@ export const SpatialArea = React.memo<{
     "spatialArea"
   );
   const nicknameMap = useNicknameMap(roomId, userId);
-  const { avatarMap, myAvatar, setMyAvatar } = useSpatialArea(roomId, userId);
+  const { avatarMap, myAvatar, setMyAvatar } = useSpatialArea(
+    roomId,
+    userId,
+    statusMesg
+  );
 
   return (
     <div className="SpatialArea-container">
@@ -310,6 +335,7 @@ export const SpatialArea = React.memo<{
         <SpatialCanvas
           userId={userId}
           nickname={nickname}
+          statusMesg={statusMesg}
           faceStream={faceStream}
           nicknameMap={nicknameMap}
           faceStreamMap={faceStreamMap}

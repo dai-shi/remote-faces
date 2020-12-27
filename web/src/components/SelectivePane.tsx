@@ -16,7 +16,8 @@ export const SelectivePane = React.memo<{
   roomId: string;
   userId: string;
   nickname: string;
-}>(({ roomId, userId, nickname }) => {
+  statusMesg: string;
+}>(({ roomId, userId, nickname, statusMesg }) => {
   const [activePane, setActivePane] = useState<string[]>(["Welcome"]);
   const togglePane = (name: string) => {
     setActivePane((prev) => {
@@ -60,6 +61,7 @@ export const SelectivePane = React.memo<{
               roomId,
               userId,
               nickname,
+              statusMesg,
             })}
           </Suspense>
         ))}
