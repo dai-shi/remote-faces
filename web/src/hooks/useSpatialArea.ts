@@ -1,6 +1,6 @@
 import { useCallback, useState, useRef, useEffect } from "react";
 
-import { isObject } from "../utils/types";
+import { isObject, hasStringProp } from "../utils/types";
 import { useRoomData, useBroadcastData } from "./useRoom";
 
 const getInitialPosition = (uid: string): [number, number, number] => [
@@ -49,7 +49,8 @@ const isSpatialAreaData = (x: unknown): x is SpatialAreaData =>
   isObject(x) &&
   ((x as { spatialArea: unknown }).spatialArea === "init" ||
     ((x as { spatialArea: unknown }).spatialArea === "avatar" &&
-      isAvatarData((x as { avatarData: unknown }).avatarData)));
+      isAvatarData((x as { avatarData: unknown }).avatarData) &&
+      hasStringProp(x, "userId")));
 
 export const useSpatialArea = (
   roomId: string,
@@ -103,17 +104,17 @@ export const useSpatialArea = (
         if (data.spatialArea === "init") {
           if (lastMyAvatarRef.current) {
             // TODO we don't need to broadcastData but sendData is enough
-            broadcastData({
+            const myData: SpatialAreaData = {
               spatialArea: "avatar",
+              userId,
               avatarData: lastMyAvatarRef.current,
-            });
+            };
+            broadcastData(myData);
           }
-        } else if (data.spatialArea === "avatar") {
-          const uid = (data as { userId: string }).userId;
-          const { avatarData } = data as { avatarData: AvatarData };
+        } else {
           setAvatarMap((prev) => ({
             ...prev,
-            [uid]: avatarData,
+            [data.userId]: data.avatarData,
           }));
         }
       },
