@@ -220,12 +220,13 @@ export const useRoomNewPeer = (
 type BroadcastData = ReturnPromiseType<typeof createRoom>["broadcastData"];
 
 export const useBroadcastData = (roomId: string, userId: string) => {
+  const pending = useRef<Parameters<BroadcastData>[]>([]);
   const broadcastDataRef = useRef<BroadcastData>();
   const broadcastData = useCallback((...args: Parameters<BroadcastData>) => {
     if (broadcastDataRef.current) {
       broadcastDataRef.current(...args);
     } else {
-      // TODO pending queue
+      pending.current.push(args);
     }
   }, []);
   useEffect(() => {
@@ -234,6 +235,10 @@ export const useBroadcastData = (roomId: string, userId: string) => {
       const registered = await register(roomId, userId, {});
       broadcastDataRef.current = registered.broadcastData;
       cleanup = registered.unregister;
+      pending.current.forEach((args) => {
+        registered.broadcastData(...args);
+      });
+      pending.current.splice(0, pending.current.length);
     })();
     return () => {
       cleanup();

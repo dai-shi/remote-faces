@@ -118,14 +118,15 @@ export const useSpatialArea = (
           }));
         }
       },
-      [broadcastData]
+      [broadcastData, userId]
     )
   );
 
   useEffect(() => {
-    broadcastData({
+    const data: SpatialAreaData = {
       spatialArea: "init",
-    });
+    };
+    broadcastData(data);
   }, [broadcastData]);
 
   return {
