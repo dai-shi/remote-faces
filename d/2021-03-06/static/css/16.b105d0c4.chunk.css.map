@@ -1,0 +1,1 @@
+{"version":3,"sources":["webpack://src/components/GoBoard.css"],"names":[],"mappings":"AAAA,mBACE,eACF,CAEA,gBACE,UAAW,CACX,YACF","file":"16.b105d0c4.chunk.css","sourcesContent":[".GoBoard-container {\n  overflow: scroll;\n}\n\n.GoBoard-canvas {\n  width: 100%;\n  height: 100vh;\n}\n"]}
