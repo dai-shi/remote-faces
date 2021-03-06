@@ -78,6 +78,7 @@ const FaceImage = React.memo<{
 export const FaceImages = React.memo<{
   roomId: string;
   userId: string;
+  avatar: string;
   nickname: string;
   statusMesg: string;
   suspended: boolean;
@@ -90,6 +91,7 @@ export const FaceImages = React.memo<{
   ({
     roomId,
     userId,
+    avatar,
     nickname,
     statusMesg,
     suspended,
@@ -102,6 +104,7 @@ export const FaceImages = React.memo<{
     const { myImage, roomImages } = useFaceImages(
       roomId,
       userId,
+      avatar,
       nickname,
       statusMesg,
       suspended,

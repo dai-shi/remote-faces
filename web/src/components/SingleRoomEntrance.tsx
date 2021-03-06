@@ -1,78 +1,116 @@
 import React, { useState } from "react";
+import { useProxy } from "valtio";
 
 import "./SingleRoomEntrance.css";
+import { singleRoomState, setConfig } from "../states/singleRoom";
 import { secureRandomId, generateCryptoKey } from "../utils/crypto";
 import { ROOM_ID_PREFIX_LEN } from "../network/room";
-import {
-  getRoomIdFromUrl,
-  extractRoomIdFromLink,
-  copyHashFromLink,
-} from "../utils/url";
+import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 
 const Landing = React.lazy(() => import("./Landing"));
 const SingleRoom = React.lazy(() => import("./SingleRoom"));
 
-const roomIdFromUrl = getRoomIdFromUrl();
-const userId = secureRandomId();
-
 export const SingleRoomEntrance = React.memo(() => {
-  const [roomId, setRoomId] = useState<string | null>(roomIdFromUrl);
-  const [linkShown, setLinkShown] = useState(false);
-  const [linkText, setLinkText] = useState("");
+  const { roomId, roomEntered, config } = useProxy(singleRoomState);
+  const [name, setName] = useState(config.nickname);
+  const [avatar, setAvatar] = useState(config.avatar);
+  const videoDevices = useVideoDevices();
+  const audioDevices = useAudioDevices();
+  const [videoDeviceId, setVideoDeviceId] = useState(config.videoDeviceId);
+  const [audioDeviceId, setAudioDeviceId] = useState(config.audioDeviceId);
+  const [entering, setEntering] = useState(false);
 
-  const onCreateNew = async () => {
-    setRoomId(
-      secureRandomId(ROOM_ID_PREFIX_LEN / 2) + (await generateCryptoKey())
-    );
+  const onChangeAvatar = (files: FileList | null) => {
+    const file = files && files[0];
+    if (!file) {
+      return;
+    }
+    if (file.size > 16 * 1024) {
+      // eslint-disable-next-line no-alert
+      window.alert(`Too large: ${file.size}`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setAvatar(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
-  const onEnter = () => {
-    copyHashFromLink(linkText);
-    setRoomId(extractRoomIdFromLink(linkText));
+  const onEnter = async () => {
+    setEntering(true);
+    if (!singleRoomState.roomId) {
+      singleRoomState.roomId =
+        secureRandomId(ROOM_ID_PREFIX_LEN / 2) + (await generateCryptoKey());
+    }
+    setConfig(avatar, name, videoDeviceId, audioDeviceId);
+    singleRoomState.roomEntered = true;
   };
 
-  if (roomId) {
-    return <SingleRoom roomId={roomId} userId={userId} />;
+  if (roomId && roomEntered) {
+    return <SingleRoom />;
   }
 
   return (
     <div className="SingleRoomEntrance-container">
       <Landing>
         <div className="SingleRoomEntrance-input">
-          {!linkShown && (
-            <>
-              <div>
-                <button type="button" onClick={onCreateNew}>
-                  Create a new room
-                </button>
-              </div>
-              <div className="SingleRoomEntrance-or">OR</div>
-              <div>
-                <button type="button" onClick={() => setLinkShown(true)}>
-                  Enter an existing room link
-                </button>
-              </div>
-            </>
-          )}
-          {linkShown && (
-            <div>
-              <input
-                value={linkText}
-                onChange={(e) => setLinkText(e.target.value)}
-                placeholder="Enter room link..."
-              />
-              <button
-                type="button"
-                onClick={onEnter}
-                disabled={!extractRoomIdFromLink(linkText)}
-              >
-                Enter room
-              </button>
-              <button type="button" onClick={() => setLinkShown(false)}>
-                Cancel
-              </button>
-            </div>
-          )}
+          <div>
+            <img src={avatar} alt="avatar" />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => onChangeAvatar(e.target.files)}
+            />
+          </div>
+          <div>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter nickname"
+            />
+          </div>
+          <div>
+            Select Video Device:{" "}
+            <select
+              value={videoDeviceId}
+              onChange={(e) => {
+                setVideoDeviceId(e.target.value);
+              }}
+            >
+              {videoDevices.map((videoDevice) => (
+                <option key={videoDevice.deviceId} value={videoDevice.deviceId}>
+                  {videoDevice.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            Select Audio Device:{" "}
+            <select
+              value={audioDeviceId}
+              onChange={(e) => {
+                setAudioDeviceId(e.target.value);
+              }}
+            >
+              {audioDevices.map((audioDevice) => (
+                <option key={audioDevice.deviceId} value={audioDevice.deviceId}>
+                  {audioDevice.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <button
+              type="button"
+              onClick={onEnter}
+              disabled={entering || !name}
+            >
+              {roomId ? "Enter the room" : "Create a new room"}
+            </button>
+          </div>
         </div>
       </Landing>
     </div>

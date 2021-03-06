@@ -1,47 +1,19 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { useState } from "react";
 
 import "./UserStatus.css";
 import { Emoji, EmojiPicker, EmojiDataType } from "../utils/emoji";
 
-const TextField = React.memo<{
-  initialText: string;
-  onUpdate: (text: string) => void;
-  buttonLabel?: string;
-  placeholder?: string;
-  clearOnUpdate?: boolean;
-}>(({ initialText, onUpdate, buttonLabel, placeholder, clearOnUpdate }) => {
-  const [text, setText] = useState(initialText);
+export const UserStatus = React.memo<{
+  setStatusMesg: (mesg: string) => void;
+}>(({ setStatusMesg }) => {
+  const [emoji, setEmoji] = useState<EmojiDataType | null>(null);
+  const [text, setText] = useState("");
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (text) {
-      onUpdate(text);
-      if (clearOnUpdate) {
-        setText("");
-      }
+      setStatusMesg(`${emoji?.native || " "}${text}`);
     }
   };
-
-  return (
-    <form onSubmit={onSubmit}>
-      <input
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={placeholder}
-      />
-      {buttonLabel && (
-        <button type="submit" disabled={!text}>
-          {buttonLabel}
-        </button>
-      )}
-    </form>
-  );
-});
-
-export const UserStatus = React.memo<{
-  emoji: EmojiDataType | null;
-  setEmoji: Dispatch<SetStateAction<EmojiDataType | null>>;
-  setStatusMesg: Dispatch<SetStateAction<string>>;
-}>(({ emoji, setEmoji, setStatusMesg }) => {
   const [openEmojiPicker, setOpenEmojiPicker] = useState(false);
   return (
     <div className="UserStatus-container">
@@ -58,18 +30,23 @@ export const UserStatus = React.memo<{
         </div>
         {emoji && (
           <div className="UserStatus-statusmesg">
-            <TextField
-              initialText=""
-              onUpdate={setStatusMesg}
-              placeholder="Enter status message..."
-              buttonLabel="Set"
-            />
+            <form onSubmit={onSubmit}>
+              <input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Enter status message..."
+              />
+              <button type="submit" disabled={!text}>
+                Set
+              </button>
+            </form>
           </div>
         )}
         <button
           type="button"
           onClick={() => {
             setEmoji(null);
+            setText("");
             setStatusMesg("");
             setOpenEmojiPicker(false);
           }}
@@ -82,6 +59,7 @@ export const UserStatus = React.memo<{
         <EmojiPicker
           onSelect={(e) => {
             setEmoji(e);
+            setStatusMesg(`${e?.native || " "}${text}`);
             setOpenEmojiPicker(false);
           }}
           style={{ width: "100%" }}
