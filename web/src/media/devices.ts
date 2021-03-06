@@ -5,6 +5,7 @@ type DeviceInfo = {
 
 export const getVideoDeviceInfoList = async () => {
   try {
+    await navigator.mediaDevices.getUserMedia({ video: true });
     const devices = await navigator.mediaDevices.enumerateDevices();
     const list: DeviceInfo[] = devices
       .filter(({ kind }) => kind === "videoinput")
@@ -18,6 +19,7 @@ export const getVideoDeviceInfoList = async () => {
 
 export const getAudioDeviceInfoList = async () => {
   try {
+    await navigator.mediaDevices.getUserMedia({ audio: true });
     const devices = await navigator.mediaDevices.enumerateDevices();
     const list: DeviceInfo[] = devices
       .filter(({ kind }) => kind === "audioinput")

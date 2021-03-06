@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useProxy } from "valtio";
 
 import "./SingleRoom.css";
+import { singleRoomState } from "../states/singleRoom";
 import { setRoomIdToUrl } from "../utils/url";
-import { getStringItem } from "../utils/storage";
 import { useNicknameMap } from "../hooks/useNicknameMap";
 import { FaceImages } from "./FaceImages";
 import { MomentaryChat } from "./MomentaryChat";
@@ -12,24 +13,15 @@ import { UserStatus } from "./UserStatus";
 import { SelectivePane } from "./SelectivePane";
 import { EmojiDataType } from "../utils/emoji";
 
-const initialNickname = getStringItem("nickname");
-const initialVideoDeviceId = getStringItem("faceimage_video_device_id");
-const initialAudioDeviceId = getStringItem("faceimage_audio_device_id");
-
-export const SingleRoom = React.memo<{
-  roomId: string;
-  userId: string;
-}>(({ roomId, userId }) => {
-  const [nickname, setNickname] = useState(initialNickname);
+export const SingleRoom = React.memo(() => {
+  const { roomId, userId, config } = useProxy(singleRoomState);
   const [statusMesg, setStatusMesg] = useState("");
   const [emoji, setEmoji] = useState<EmojiDataType | null>(null);
   useEffect(() => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
 
-  const [videoDeviceId, setVideoDeviceId] = useState(initialVideoDeviceId);
-  const [audioDeviceId, setAudioDeviceId] = useState(initialAudioDeviceId);
-  const [suspended, setSuspended] = useState(false);
+  const [suspended, setSuspended] = useState(true);
   const [liveMode, setLiveMode] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(false);
@@ -56,9 +48,9 @@ export const SingleRoom = React.memo<{
         <FaceImages
           roomId={roomId}
           userId={userId}
-          videoDeviceId={videoDeviceId}
-          audioDeviceId={audioDeviceId}
-          nickname={nickname}
+          videoDeviceId={config.videoDeviceId}
+          audioDeviceId={config.audioDeviceId}
+          nickname={config.nickname}
           statusMesg={`${emoji?.native || " "}${statusMesg}`}
           suspended={suspended}
           liveMode={liveMode}
@@ -83,17 +75,12 @@ export const SingleRoom = React.memo<{
           setEmoji={setEmoji}
           setStatusMesg={setStatusMesg}
         />
-        <SettingPanel
+        <SettingPanel roomId={roomId} userId={userId} />
+        <MomentaryChat
           roomId={roomId}
           userId={userId}
-          nickname={nickname}
-          setNickname={setNickname}
-          videoDeviceId={videoDeviceId}
-          setVideoDeviceId={setVideoDeviceId}
-          audioDeviceId={audioDeviceId}
-          setAudioDeviceId={setAudioDeviceId}
+          nickname={config.nickname}
         />
-        <MomentaryChat roomId={roomId} userId={userId} nickname={nickname} />
       </div>
       <div
         className="SingleRoom-3rd-column"
@@ -102,7 +89,7 @@ export const SingleRoom = React.memo<{
         <SelectivePane
           roomId={roomId}
           userId={userId}
-          nickname={nickname}
+          nickname={config.nickname}
           statusMesg={`${emoji?.native || " "}${statusMesg}`}
         />
       </div>

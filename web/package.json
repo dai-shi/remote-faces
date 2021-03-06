@@ -29,6 +29,7 @@
     "react-three-fiber": "^5.3.10",
     "react-use-gesture": "^8.0.1",
     "three": "^0.123.0",
+    "valtio": "^0.7.1",
     "wgo": "^3.0.0-alpha.7"
   },
   "devDependencies": {
