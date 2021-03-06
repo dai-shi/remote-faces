@@ -1,7 +1,7 @@
 .SingleRoom-container {
   display: grid;
   column-gap: 12px;
-  grid-template-columns: 36px auto 1fr;
+  grid-template-columns: 36px 1fr;
   grid-template-rows: 100vh;
 }
 
@@ -14,27 +14,4 @@
 }
 
 .SingleRoom-2nd-column {
-  display: grid;
-  grid-template-columns: 240px;
-  grid-template-rows: auto auto 1fr;
-  overflow: hidden;
-  position: relative;
-}
-
-.SingleRoom-3rd-column {
-}
-
-.SingleRoom-toggle-3rd-column {
-  border: none;
-  padding: 0;
-  background-color: transparent;
-  cursor: pointer;
-  position: absolute;
-  top: 0;
-  right: 0;
-  font-size: 0.5rem;
-}
-
-.SingleRoom-toggle-3rd-column:focus {
-  outline: 0;
 }

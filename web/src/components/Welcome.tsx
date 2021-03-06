@@ -1,10 +1,20 @@
 import React from "react";
 
 import "./Welcome.css";
+import { SettingPanel } from "./SettingPanel";
 
-export const Welcome = React.memo(() => (
+export const Welcome = React.memo<{
+  roomId: string;
+  userId: string;
+  setStatusMesg: (mesg: string) => void;
+}>(({ roomId, userId, setStatusMesg }) => (
   <div className="Welcome-container">
     <h1>Welcome to Remote Faces!</h1>
+    <SettingPanel
+      roomId={roomId}
+      userId={userId}
+      setStatusMesg={setStatusMesg}
+    />
     <h2>Instructions</h2>
     <ul>
       <li>At first, enter Your Name and click Set in Setting.</li>

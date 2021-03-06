@@ -160,3 +160,5 @@ export const MomentaryChat = React.memo<{
     </div>
   );
 });
+
+export default MomentaryChat;

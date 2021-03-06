@@ -5,6 +5,7 @@ import "./SelectivePane.css";
 
 const components = {
   Welcome: React.lazy(() => import("./Welcome")),
+  "Momentary Chat": React.lazy(() => import("./MomentaryChat")),
   "Spatial Area": React.lazy(() => import("./SpatialArea")),
   "Screen Share": React.lazy(() => import("./ScreenShare")),
   "White Board": React.lazy(() => import("./CollabWhiteBoard")),
@@ -17,8 +18,12 @@ export const SelectivePane = React.memo<{
   userId: string;
   nickname: string;
   statusMesg: string;
-}>(({ roomId, userId, nickname, statusMesg }) => {
-  const [activePane, setActivePane] = useState<string[]>(["Welcome"]);
+  setStatusMesg: (mesg: string) => void;
+}>(({ roomId, userId, nickname, statusMesg, setStatusMesg }) => {
+  const [activePane, setActivePane] = useState<string[]>([
+    "Welcome",
+    "Momentary Chat",
+  ]);
   const togglePane = (name: string) => {
     setActivePane((prev) => {
       if (prev.includes(name)) {
@@ -62,6 +67,7 @@ export const SelectivePane = React.memo<{
               userId,
               nickname,
               statusMesg,
+              setStatusMesg,
             })}
           </Suspense>
         ))}
