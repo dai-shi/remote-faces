@@ -1,0 +1,1 @@
+{"version":3,"sources":["webpack://src/components/Welcome.css"],"names":[],"mappings":"AAAA,mBACE,UAAW,CACX,YAAa,CACb,eACF,CAEA,sCACE,YACF","file":"18.46a93ca6.chunk.css","sourcesContent":[".Welcome-container {\n  width: 100%;\n  height: 100vh;\n  overflow: scroll;\n}\n\n.Welcome-container::-webkit-scrollbar {\n  display: none;\n}\n"]}
