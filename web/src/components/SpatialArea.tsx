@@ -75,6 +75,7 @@ const useAvatarAudio = (faceStream: MediaStream | null, isMyself: boolean) => {
     }
   }, [audioTrack]);
   const setGainValueRef = useRef<((value: number) => void) | null>(null);
+  const defaultGainRef = useRef(0.5);
   const [gain, setGain] = useState<number | null>(null);
   const setGainCallback = useCallback((value: number) => {
     if (setGainValueRef.current) {
@@ -82,6 +83,7 @@ const useAvatarAudio = (faceStream: MediaStream | null, isMyself: boolean) => {
       setGainValueRef.current(value);
     } else {
       setGain(null);
+      defaultGainRef.current = value;
     }
   }, []);
   useEffect(() => {
@@ -92,8 +94,8 @@ const useAvatarAudio = (faceStream: MediaStream | null, isMyself: boolean) => {
       new MediaStream([audioTrack])
     );
     const gainNode = audioCtx.createGain();
-    gainNode.gain.value = 0.5;
-    setGain(0.5);
+    gainNode.gain.value = defaultGainRef.current;
+    setGain(defaultGainRef.current);
     setGainValueRef.current = (value: number) => {
       gainNode.gain.setValueAtTime(value, audioCtx.currentTime);
     };
@@ -116,6 +118,7 @@ const useAvatarAudio = (faceStream: MediaStream | null, isMyself: boolean) => {
     })();
     return () => {
       setGainValueRef.current = null;
+      setGain(null);
       audioCtx.close();
       gainedAudioTrack.dispatchEvent(new Event("ended"));
       document.body.removeChild(videoEle);
