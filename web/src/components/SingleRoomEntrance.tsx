@@ -13,11 +13,31 @@ const SingleRoom = React.lazy(() => import("./SingleRoom"));
 export const SingleRoomEntrance = React.memo(() => {
   const { roomId, roomEntered, config } = useProxy(singleRoomState);
   const [name, setName] = useState(config.nickname);
+  const [avatar, setAvatar] = useState(config.avatar);
   const videoDevices = useVideoDevices();
   const audioDevices = useAudioDevices();
   const [videoDeviceId, setVideoDeviceId] = useState(config.videoDeviceId);
   const [audioDeviceId, setAudioDeviceId] = useState(config.audioDeviceId);
   const [entering, setEntering] = useState(false);
+
+  const onChangeAvatar = (files: FileList | null) => {
+    const file = files && files[0];
+    if (!file) {
+      return;
+    }
+    if (file.size > 16 * 1024) {
+      // eslint-disable-next-line no-alert
+      window.alert(`Too large: ${file.size}`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setAvatar(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const onEnter = async () => {
     setEntering(true);
@@ -25,7 +45,7 @@ export const SingleRoomEntrance = React.memo(() => {
       singleRoomState.roomId =
         secureRandomId(ROOM_ID_PREFIX_LEN / 2) + (await generateCryptoKey());
     }
-    setConfig(name, videoDeviceId, audioDeviceId);
+    setConfig(avatar, name, videoDeviceId, audioDeviceId);
     singleRoomState.roomEntered = true;
   };
 
@@ -37,6 +57,14 @@ export const SingleRoomEntrance = React.memo(() => {
     <div className="SingleRoomEntrance-container">
       <Landing>
         <div className="SingleRoomEntrance-input">
+          <div>
+            <img src={avatar} alt="avatar" />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => onChangeAvatar(e.target.files)}
+            />
+          </div>
           <div>
             <input
               value={name}

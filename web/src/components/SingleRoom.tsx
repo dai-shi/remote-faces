@@ -50,6 +50,7 @@ export const SingleRoom = React.memo(() => {
           userId={userId}
           videoDeviceId={config.videoDeviceId}
           audioDeviceId={config.audioDeviceId}
+          avatar={config.avatar}
           nickname={config.nickname}
           statusMesg={`${emoji?.native || " "}${statusMesg}`}
           suspended={suspended}
