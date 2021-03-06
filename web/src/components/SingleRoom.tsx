@@ -9,14 +9,11 @@ import { FaceImages } from "./FaceImages";
 import { MomentaryChat } from "./MomentaryChat";
 import { ControlPanel } from "./ControlPanel";
 import { SettingPanel } from "./SettingPanel";
-import { UserStatus } from "./UserStatus";
 import { SelectivePane } from "./SelectivePane";
-import { EmojiDataType } from "../utils/emoji";
 
 export const SingleRoom = React.memo(() => {
   const { roomId, userId, config } = useProxy(singleRoomState);
   const [statusMesg, setStatusMesg] = useState("");
-  const [emoji, setEmoji] = useState<EmojiDataType | null>(null);
   useEffect(() => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
@@ -52,7 +49,7 @@ export const SingleRoom = React.memo(() => {
           audioDeviceId={config.audioDeviceId}
           avatar={config.avatar}
           nickname={config.nickname}
-          statusMesg={`${emoji?.native || " "}${statusMesg}`}
+          statusMesg={statusMesg}
           suspended={suspended}
           liveMode={liveMode}
           micOn={micOn}
@@ -71,12 +68,11 @@ export const SingleRoom = React.memo(() => {
         >
           {thirdColumnOpen ? <>&#9664;</> : <>&#9654;</>}
         </button>
-        <UserStatus
-          emoji={emoji}
-          setEmoji={setEmoji}
+        <SettingPanel
+          roomId={roomId}
+          userId={userId}
           setStatusMesg={setStatusMesg}
         />
-        <SettingPanel roomId={roomId} userId={userId} />
         <MomentaryChat
           roomId={roomId}
           userId={userId}
@@ -91,7 +87,7 @@ export const SingleRoom = React.memo(() => {
           roomId={roomId}
           userId={userId}
           nickname={config.nickname}
-          statusMesg={`${emoji?.native || " "}${statusMesg}`}
+          statusMesg={statusMesg}
         />
       </div>
     </div>

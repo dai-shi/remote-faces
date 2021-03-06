@@ -3,13 +3,15 @@ import React, { useEffect, useState } from "react";
 import "./SettingPanel.css";
 import { setStringItem, getStringItem } from "../utils/storage";
 import { useRoomNetworkStatus } from "../hooks/useRoom";
+import { UserStatus } from "./UserStatus";
 
 const initialConfigOpen = getStringItem("config_hidden") !== "true";
 
 export const SettingPanel = React.memo<{
   roomId: string;
   userId: string;
-}>(({ roomId, userId }) => {
+  setStatusMesg: (mesg: string) => void;
+}>(({ roomId, userId, setStatusMesg }) => {
   const [configOpen, setConfigOpen] = useState(initialConfigOpen);
   useEffect(() => {
     setStringItem("config_hidden", configOpen ? "false" : "true");
@@ -33,6 +35,9 @@ export const SettingPanel = React.memo<{
       </button>
       {configOpen && (
         <div className="SettingPanel-config">
+          <div className="SettingPanel-config-row">
+            <UserStatus setStatusMesg={setStatusMesg} />
+          </div>
           <div className="SettingPanel-config-row">
             <span title="Share this link with your colleagues">
               Room Link:{" "}
