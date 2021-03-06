@@ -165,7 +165,8 @@ const Avatar = React.memo<{
         setGain(0.0);
         return;
       }
-      setGain(Math.min(1.0, Math.max(0.0, (5 - distance) / 4)));
+      const d = Math.max(0.0, distance - 0.2);
+      setGain(Math.min(1.0, Math.max(0.0, 1.0 / (d * d) - 0.1)));
     }, [muted, distance, setGain]);
     if (!texture) return null;
     return (
