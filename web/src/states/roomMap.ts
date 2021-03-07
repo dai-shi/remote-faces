@@ -2,7 +2,6 @@ import { proxy, snapshot, ref } from "valtio";
 import * as Y from "yjs";
 
 import { PeerInfo, createRoom, NetworkStatus } from "../network/room";
-import { ReturnPromiseType } from "../utils/types";
 
 type RoomState = {
   networkStatusList: NetworkStatus[];
@@ -14,39 +13,43 @@ type RoomState = {
       [userId: string]: MediaStreamTrack;
     };
   };
-  addMediaType: (type: string) => void;
-  removeMediaType: (type: string) => void;
-  addTrack: (type: string, track: MediaStreamTrack) => void;
-  removeTrack: (type: string) => void;
-  dispose: () => void;
+  addMediaType: (type: string) => Promise<void>;
+  removeMediaType: (type: string) => Promise<void>;
+  addTrack: (type: string, track: MediaStreamTrack) => Promise<void>;
+  removeTrack: (type: string) => Promise<void>;
+  dispose: () => Promise<void>;
 };
 
 const createRoomState = (roomId: string, userId: string) => {
-  let room: ReturnPromiseType<typeof createRoom>;
-  const addMediaType = (type: string) => {
+  const addMediaType = async (type: string) => {
     if (state.acceptingMediaTypes.includes(type)) {
       console.log("media type already added", type);
       return;
     }
     state.acceptingMediaTypes.push(type);
+    const room = await roomPromise;
     room.acceptMediaTypes(snapshot(state.acceptingMediaTypes));
   };
-  const removeMediaType = (type: string) => {
+  const removeMediaType = async (type: string) => {
     const index = state.acceptingMediaTypes.indexOf(type);
     if (index === -1) {
       console.log("media type already added", type);
       return;
     }
     state.acceptingMediaTypes.splice(index, 1);
+    const room = await roomPromise;
     room.acceptMediaTypes(snapshot(state.acceptingMediaTypes));
   };
-  const addTrack = (type: string, track: MediaStreamTrack) => {
+  const addTrack = async (type: string, track: MediaStreamTrack) => {
+    const room = await roomPromise;
     room.addTrack(type, track);
   };
-  const removeTrack = (type: string) => {
+  const removeTrack = async (type: string) => {
+    const room = await roomPromise;
     room.removeTrack(type);
   };
-  const dispose = () => {
+  const dispose = async () => {
+    const room = await roomPromise;
     room.dispose();
   };
   const state = proxy<RoomState>({
@@ -76,7 +79,9 @@ const createRoomState = (roomId: string, userId: string) => {
   };
   const notifyNewPeer = (peerIndex: number) => {
     const data = { ydocUpdate: Y.encodeStateAsUpdate(state.ydoc) };
-    room.sendData(data, peerIndex);
+    roomPromise.then((room) => {
+      room.sendData(data, peerIndex);
+    });
   };
   const receiveData = (data: any, info: PeerInfo) => {
     state.userIdMap[info.userId] = info.peerIndex;
@@ -85,7 +90,9 @@ const createRoomState = (roomId: string, userId: string) => {
     }
   };
   state.ydoc.on("update", (update: unknown) => {
-    room.broadcastData({ ydocUpdate: update });
+    roomPromise.then((room) => {
+      room.broadcastData({ ydocUpdate: update });
+    });
   });
   const receiveTrack = (
     mediaType: string,
@@ -97,16 +104,14 @@ const createRoomState = (roomId: string, userId: string) => {
     }
     state.trackMap[mediaType][info.userId] = ref(track);
   };
-  createRoom(
+  const roomPromise = createRoom(
     roomId,
     userId,
     updateNetworkStatus,
     notifyNewPeer,
     receiveData,
     receiveTrack
-  ).then((r) => {
-    room = r;
-  });
+  );
   return state;
 };
 
