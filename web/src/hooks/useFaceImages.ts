@@ -1,13 +1,9 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
+import { subscribe } from "valtio";
 
 import { isObject } from "../utils/types";
 import { takePhoto } from "../media/capture";
-import {
-  useRoomData,
-  useBroadcastData,
-  useRoomNetworkStatus,
-  useRoomNewPeer,
-} from "./useRoom";
+import { getRoomState } from "../states/roomMap";
 
 type ImageUrl = string;
 
@@ -21,6 +17,7 @@ type FaceInfo = {
 
 const isFaceInfo = (x: unknown): x is FaceInfo =>
   isObject(x) &&
+  typeof (x as { userId: unknown }).userId === "string" &&
   typeof (x as { nickname: unknown }).nickname === "string" &&
   typeof (x as { message: unknown }).message === "string" &&
   typeof (x as { liveMode: unknown }).liveMode === "boolean" &&
@@ -28,21 +25,17 @@ const isFaceInfo = (x: unknown): x is FaceInfo =>
   typeof (x as { speakerOn: unknown }).speakerOn === "boolean";
 
 type ImageData = {
+  userId: string;
   image: ImageUrl;
   info: FaceInfo;
+  updated: number; // in milliseconds
 };
 
 const isImageData = (x: unknown): x is ImageData =>
   isObject(x) &&
   typeof (x as { image: unknown }).image === "string" &&
-  isFaceInfo((x as { info: unknown }).info);
-
-type RoomImage = ImageData & {
-  userId: string;
-  received: number; // in milliseconds
-  obsoleted: boolean;
-  peerIndex: number;
-};
+  isFaceInfo((x as { info: unknown }).info) &&
+  typeof (x as { updated: unknown }).updated === "number";
 
 export const useFaceImages = (
   roomId: string,
@@ -57,91 +50,66 @@ export const useFaceImages = (
   deviceId?: string
 ) => {
   const [myImage, setMyImage] = useState<ImageUrl>();
-  const [roomImages, setRoomImages] = useState<RoomImage[]>([]);
+  const [roomImages, setRoomImages] = useState<ImageData[]>([]);
 
   const [fatalError, setFatalError] = useState<Error>();
   if (fatalError) {
     throw fatalError;
   }
 
-  const lastDataRef = useRef<ImageData>();
-  useRoomNewPeer(
-    roomId,
-    userId,
-    useCallback((send) => {
-      if (lastDataRef.current) {
-        send(lastDataRef.current);
-      }
-    }, [])
-  );
-
-  const broadcastData = useBroadcastData(roomId, userId);
-  useRoomData(
-    roomId,
-    userId,
-    useCallback((data, info) => {
-      if (!isImageData(data)) return;
-      const roomImage = {
-        ...data,
-        userId: info.userId,
-        received: Date.now(),
-        obsoleted: false,
-        peerIndex: info.peerIndex,
-      };
+  useEffect(() => {
+    const roomState = getRoomState(roomId, userId);
+    const map = roomState.ydoc.getMap("faceImages");
+    const listener = () => {
       setRoomImages((prev) => {
-        const found = prev.find((item) => item.userId === roomImage.userId);
-        if (!found) {
-          return [...prev, roomImage];
-        }
-        return prev.map((item) =>
-          item.userId === roomImage.userId ? roomImage : item
-        );
-      });
-    }, [])
-  );
-
-  useRoomNetworkStatus(
-    roomId,
-    userId,
-    useCallback((networkStatus) => {
-      if (networkStatus && networkStatus.type === "CONNECTION_CLOSED") {
-        const { peerIndex } = networkStatus;
-        setRoomImages((prev) => {
-          let changed = false;
-          const next = prev.map((item) => {
-            if (item.peerIndex === peerIndex) {
-              changed = true;
-              return { ...item, obsoleted: true };
-            }
-            return item;
-          });
-          return changed ? next : prev;
+        const twoMinAgo = Date.now() - 2 * 60 * 1000;
+        const copied = [...prev];
+        let changed = false;
+        map.forEach((data, uid) => {
+          if (uid === userId) return;
+          if (!isImageData(data)) return;
+          if (data.updated >= twoMinAgo) return;
+          const index = copied.findIndex((item) => item.userId === uid);
+          if (index === -1) {
+            copied.push(data);
+            changed = true;
+          } else if (data.updated > copied[index].updated) {
+            copied[index] = data;
+            changed = true;
+          }
         });
-      }
-    }, [])
-  );
+        if (changed) {
+          return copied;
+        }
+        return prev;
+      });
+    };
+    map.observe(listener);
+    const unsub = subscribe(roomState.userIdMap, () => {
+      setRoomImages((prev) => {
+        const next = prev.filter((item) => roomState.userIdMap[item.userId]);
+        return prev.length !== next.length ? next : prev;
+      });
+    });
+    return () => {
+      unsub();
+      map.unobserve(listener);
+    };
+  }, [roomId, userId]);
 
   useEffect(() => {
+    const roomState = getRoomState(roomId, userId);
+    const map = roomState.ydoc.getMap("faceImages");
     const checkObsoletedImage = () => {
-      const twoMinAgo = Date.now() - 2 * 60 * 1000;
       const tenMinAgo = Date.now() - 10 * 60 * 1000;
       setRoomImages((prev) => {
-        let changed = false;
-        const next = prev
-          .map((item) => {
-            if (item.received < twoMinAgo && !item.obsoleted) {
-              changed = true;
-              return { ...item, obsoleted: true };
-            }
-            if (item.received < tenMinAgo && item.obsoleted) {
-              changed = true;
-              return null;
-            }
-            return item;
-          })
-          .filter((item) => item) as typeof prev;
-
-        return changed ? next : prev;
+        const next = prev.flatMap((item) => {
+          if (item.updated < tenMinAgo) {
+            return [];
+          }
+          return [item];
+        });
+        return prev.length !== next.length ? next : prev;
       });
     };
     let didCleanup = false;
@@ -161,11 +129,12 @@ export const useFaceImages = (
           speakerOn,
         };
         const data: ImageData = {
+          userId,
           image,
           info,
+          updated: Date.now(),
         };
-        broadcastData(data);
-        lastDataRef.current = data;
+        map.set(userId, data);
       } catch (e) {
         setFatalError(e);
       }
@@ -187,7 +156,6 @@ export const useFaceImages = (
     liveMode,
     micOn,
     speakerOn,
-    broadcastData,
   ]);
 
   return {

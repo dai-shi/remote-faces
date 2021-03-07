@@ -4,7 +4,6 @@ import { useProxy } from "valtio";
 import "./SingleRoom.css";
 import { singleRoomState } from "../states/singleRoom";
 import { setRoomIdToUrl } from "../utils/url";
-import { useNicknameMap } from "../hooks/useNicknameMap";
 import { FaceImages } from "./FaceImages";
 import { ControlPanel } from "./ControlPanel";
 import { SelectivePane } from "./SelectivePane";
@@ -21,8 +20,6 @@ export const SingleRoom = React.memo(() => {
   const [micOn, setMicOn] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(false);
   const [secondColumnOpen, setSecondColumnOpen] = useState(true);
-
-  useNicknameMap(roomId, userId); // to enable caching
 
   return (
     <div className="SingleRoom-container">

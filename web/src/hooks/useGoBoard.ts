@@ -2,7 +2,13 @@ import { useCallback, useRef, useEffect } from "react";
 import { Color } from "wgo";
 
 import { isObject } from "../utils/types";
-import { useRoomData, useBroadcastData } from "./useRoom";
+
+const useRoomData: any = () => {
+  throw new Error("wip");
+};
+const useBroadcastData: any = () => {
+  throw new Error("wip");
+};
 
 export type PositionData = {
   size: number;
@@ -93,7 +99,7 @@ export const useGoBoard = (
     roomId,
     userId,
     useCallback(
-      (data) => {
+      (data: any) => {
         if (!isGoBoardData(data)) return;
         if (data.goBoard === "init") {
           if (lastActionDataRef.current) {

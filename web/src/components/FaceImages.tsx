@@ -122,6 +122,7 @@ export const FaceImages = React.memo<{
       videoDeviceId,
       audioDeviceId
     );
+    const twoMinAgo = Date.now() - 2 * 60 * 1000;
 
     return (
       <>
@@ -141,7 +142,7 @@ export const FaceImages = React.memo<{
             image={item.image}
             nickname={item.info.nickname}
             statusMesg={item.info.message}
-            obsoleted={item.obsoleted}
+            obsoleted={item.updated < twoMinAgo}
             liveMode={item.info.liveMode}
             stream={(liveMode && faceStreamMap[item.userId]) || undefined}
             muted={!speakerOn}

@@ -1,8 +1,8 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 import { secureRandomId } from "../utils/crypto";
 import { isObject } from "../utils/types";
-import { useRoomData, useBroadcastData, useRoomNewPeer } from "./useRoom";
+import { getRoomState } from "../states/roomMap";
 
 const MAX_CHAT_LIST_SIZE = 100;
 
@@ -22,8 +22,7 @@ export type ChatItem = {
   messageId: string;
   createdAt: number; // in millisecond
   text: string;
-  inReplyTo?: string; // messageId
-  replies?: Reply[];
+  replies: Reply[];
 };
 
 const isChatItem = (x: unknown): x is ChatItem =>
@@ -32,17 +31,7 @@ const isChatItem = (x: unknown): x is ChatItem =>
   typeof (x as { messageId: unknown }).messageId === "string" &&
   typeof (x as { createdAt: unknown }).createdAt === "number" &&
   typeof (x as { text: unknown }).text === "string" &&
-  (typeof (x as { inReplyTo: unknown }).inReplyTo === "undefined" ||
-    typeof (x as { inReplyTo: unknown }).inReplyTo === "string") &&
-  (typeof (x as { replies: unknown }).replies === "undefined" ||
-    isReplies((x as { replies: unknown }).replies));
-
-type ChatData = {
-  chat: ChatItem;
-};
-
-const isChatData = (x: unknown): x is ChatData =>
-  isObject(x) && isChatItem((x as { chat: unknown }).chat);
+  isReplies((x as { replies: unknown }).replies);
 
 const compareReply = (a: Reply, b: Reply) => {
   const countDiff = b[1] - a[1];
@@ -58,104 +47,57 @@ export const useMomentaryChat = (
   nickname: string
 ) => {
   const [chatList, setChatList] = useState<ChatItem[]>([]);
-  const chatListRef = useRef(chatList);
+
   useEffect(() => {
-    chatListRef.current = chatList;
-  });
-
-  const addChatItem = useCallback((chatItem: ChatItem) => {
-    if (chatItem.inReplyTo) {
-      const { text, inReplyTo } = chatItem;
-      setChatList((prev) =>
-        prev.map((item) => {
-          if (item.messageId === inReplyTo) {
-            const replyMap = new Map(item.replies);
-            replyMap.set(text, (replyMap.get(text) || 0) + 1);
-            const replies = [...replyMap.entries()];
-            replies.sort(compareReply);
-            return { ...item, replies };
-          }
-          return item;
-        })
-      );
-      return;
-    }
-    setChatList((prev) => {
-      if (prev.some((item) => item.messageId === chatItem.messageId)) {
-        // Migration: This can happen if a peer with old version is connected.
-        return prev;
-      }
-      const newList = [chatItem, ...prev];
-      if (newList.length > MAX_CHAT_LIST_SIZE) {
-        newList.pop();
-      }
-      newList.sort((a, b) => b.createdAt - a.createdAt); // slow?
-      return newList;
-    });
-  }, []);
-
-  useRoomNewPeer(
-    roomId,
-    userId,
-    useCallback((send) => {
-      // TODO do not let all peers send initial data
-      chatListRef.current.forEach((chatItem) => {
-        const data: ChatData = {
-          chat: chatItem,
-        };
-        send(data);
-      });
-    }, [])
-  );
-
-  const broadcastData = useBroadcastData(roomId, userId);
-
-  useRoomData(
-    roomId,
-    userId,
-    useCallback(
-      (data) => {
-        if (isChatData(data)) {
-          addChatItem(data.chat);
-        }
-      },
-      [addChatItem]
-    )
-  );
+    const roomState = getRoomState(roomId, userId);
+    const list = roomState.ydoc.getArray("momentrayChat");
+    const listener = () => {
+      setChatList(list.toArray().filter(isChatItem));
+    };
+    list.observe(listener);
+    return () => {
+      list.unobserve(listener);
+    };
+  }, [roomId, userId]);
 
   const sendChat = useCallback(
     (text: string) => {
+      const roomState = getRoomState(roomId, userId);
+      const list = roomState.ydoc.getArray("momentrayChat");
       const chatItem: ChatItem = {
         nickname,
         messageId: secureRandomId(),
         createdAt: Date.now(),
         text,
+        replies: [],
       };
-      const data: ChatData = {
-        chat: chatItem,
-      };
-      broadcastData(data);
-      addChatItem(chatItem);
+      list.unshift([chatItem]);
+      if (list.length > MAX_CHAT_LIST_SIZE) {
+        list.delete(list.length - 1, 1);
+      }
+      setChatList(list.toArray().filter(isChatItem));
     },
-    [broadcastData, nickname, addChatItem]
+    [roomId, userId, nickname]
   );
 
   const replyChat = useCallback(
     (text: string, inReplyTo: string) => {
-      const chatItem: ChatItem = {
-        nickname,
-        messageId: secureRandomId(),
-        createdAt: Date.now(),
-        text,
-        inReplyTo,
-      };
-      const data: ChatData = {
-        chat: chatItem,
-      };
-      broadcastData(data);
-      addChatItem(chatItem);
+      const roomState = getRoomState(roomId, userId);
+      const list = roomState.ydoc.getArray("momentrayChat");
+      list.forEach((item, index) => {
+        if (!isChatItem(item)) return;
+        if (item.messageId === inReplyTo) {
+          const replyMap = new Map(item.replies);
+          replyMap.set(text, (replyMap.get(text) || 0) + 1);
+          const replies = [...replyMap.entries()];
+          replies.sort(compareReply);
+          list.delete(index, 1);
+          list.insert(index, [{ ...item, replies }]);
+        }
+      });
+      setChatList(list.toArray().filter(isChatItem));
     },
-    [broadcastData, nickname, addChatItem]
+    [roomId, userId]
   );
 
   return {

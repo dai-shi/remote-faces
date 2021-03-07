@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useProxy } from "valtio";
 
 import { getFaceVideoStream } from "../media/video";
 import { getAudioStream } from "../media/audio";
-import { useRoomMedia } from "./useRoom";
+import { getRoomState } from "../states/roomMap";
 
 const addTrackToStream = (
   track: MediaStreamTrack,
@@ -31,6 +32,8 @@ export const useFaceVideos = (
   audioDeviceId?: string,
   uniqueMediaId?: string
 ) => {
+  const videoType = `${uniqueMediaId || "face"}Video`;
+  const audioType = `${uniqueMediaId || "face"}Audio`;
   const [faceStream, setFaceStream] = useState<MediaStream | null>(null);
   const [faceStreamMap, setFaceStreamMap] = useState<{
     [userId: string]: MediaStream;
@@ -44,11 +47,12 @@ export const useFaceVideos = (
     return cleanup;
   }, []);
 
-  const onTrack = useCallback(async (track, info) => {
+  const onTrack = ([uid, track]: [string, MediaStreamTrack]) => {
+    if (faceStreamMap[uid].getTracks().includes(track)) return;
     const disposeStream = (s: MediaStream) => {
       if (isMounted.current) {
         setFaceStreamMap((prev) => {
-          const { [info.userId]: oldStream, ...rest } = prev;
+          const { [uid]: oldStream, ...rest } = prev;
           if (oldStream === s) {
             return rest;
           }
@@ -57,39 +61,30 @@ export const useFaceVideos = (
       }
     };
     setFaceStreamMap((prev) => {
-      const stream = prev[info.userId];
+      const stream = prev[uid];
       const newStream = addTrackToStream(track, stream, disposeStream);
       if (stream === newStream) {
         return prev;
       }
-      return { ...prev, [info.userId]: newStream };
+      return { ...prev, [uid]: newStream };
     });
-  }, []);
+  };
 
-  const addVideoTrack = useRoomMedia(
-    roomId,
-    userId,
-    onTrack,
-    videoEnabled ? `${uniqueMediaId || "face"}Video` : undefined
-  );
-
-  const addAudioTrack = useRoomMedia(
-    roomId,
-    userId,
-    onTrack,
-    audioEnabled ? `${uniqueMediaId || "face"}Audio` : undefined
-  );
+  const trackMap = useProxy(getRoomState(roomId, userId).trackMap);
+  Object.entries(trackMap[videoType] || {}).forEach(onTrack);
+  Object.entries(trackMap[audioType] || {}).forEach(onTrack);
 
   useEffect(() => {
+    const roomState = getRoomState(roomId, userId);
     let dispose: (() => void) | null = null;
-    if (videoEnabled && addVideoTrack) {
+    if (videoEnabled) {
       (async () => {
         const {
           stream: videoStream,
           dispose: disposeVideo,
         } = await getFaceVideoStream(videoDeviceId);
         const [videoTrack] = videoStream.getVideoTracks();
-        const removeVideoTrack = addVideoTrack(videoTrack);
+        roomState.addTrack(videoType, videoTrack);
         const disposeStream = (s: MediaStream) => {
           if (isMounted.current) {
             setFaceStream((prev) => (prev === s ? null : prev));
@@ -99,7 +94,7 @@ export const useFaceVideos = (
           addTrackToStream(videoTrack, prev, disposeStream)
         );
         dispose = () => {
-          removeVideoTrack();
+          roomState.removeTrack(videoType);
           disposeVideo();
           // XXX we need to manually dispatch ended event, why?
           videoTrack.dispatchEvent(new Event("ended"));
@@ -109,18 +104,19 @@ export const useFaceVideos = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, videoEnabled, videoDeviceId, addVideoTrack]);
+  }, [roomId, userId, videoEnabled, videoDeviceId, videoType]);
 
   useEffect(() => {
+    const roomState = getRoomState(roomId, userId);
     let dispose: (() => void) | null = null;
-    if (audioEnabled && addAudioTrack) {
+    if (audioEnabled) {
       (async () => {
         const {
           stream: audioStream,
           dispose: disposeAudio,
         } = await getAudioStream(audioDeviceId);
         const [audioTrack] = audioStream.getAudioTracks();
-        const removeAudioTrack = addAudioTrack(audioTrack);
+        roomState.addTrack(audioType, audioTrack);
         const disposeStream = (s: MediaStream) => {
           if (isMounted.current) {
             setFaceStream((prev) => (prev === s ? null : prev));
@@ -130,7 +126,7 @@ export const useFaceVideos = (
           addTrackToStream(audioTrack, prev, disposeStream)
         );
         dispose = () => {
-          removeAudioTrack();
+          roomState.removeTrack(audioType);
           disposeAudio();
           // XXX we need to manually dispatch ended event, why?
           audioTrack.dispatchEvent(new Event("ended"));
@@ -140,7 +136,7 @@ export const useFaceVideos = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, audioEnabled, audioDeviceId, addAudioTrack]);
+  }, [roomId, userId, audioEnabled, audioDeviceId, audioType]);
   useEffect(() => {
     if (faceStream) {
       faceStream.getAudioTracks().forEach((track) => {
