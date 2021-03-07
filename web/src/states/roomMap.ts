@@ -78,7 +78,9 @@ const createRoomState = (roomId: string, userId: string) => {
     }
   };
   const notifyNewPeer = (peerIndex: number) => {
-    const data = { ydocUpdate: Y.encodeStateAsUpdate(state.ydoc) };
+    const update = Y.encodeStateAsUpdate(state.ydoc);
+    const base64 = btoa(String.fromCharCode(...update));
+    const data = { ydocUpdate: base64 };
     roomPromise.then((room) => {
       room.sendData(data, peerIndex);
     });
@@ -86,12 +88,19 @@ const createRoomState = (roomId: string, userId: string) => {
   const receiveData = (data: any, info: PeerInfo) => {
     state.userIdMap[info.userId] = info.peerIndex;
     if (data?.ydocUpdate) {
-      Y.applyUpdate(state.ydoc, data.ydocUpdate);
+      const binaryString = atob(data?.ydocUpdate);
+      const update = new Uint8Array(
+        ([].map.call(binaryString, (c: string) =>
+          c.charCodeAt(0)
+        ) as unknown) as ArrayBufferLike
+      );
+      Y.applyUpdate(state.ydoc, update);
     }
   };
-  state.ydoc.on("update", (update: unknown) => {
+  state.ydoc.on("update", (update: Uint8Array) => {
+    const base64 = btoa(String.fromCharCode(...update));
     roomPromise.then((room) => {
-      room.broadcastData({ ydocUpdate: update });
+      room.broadcastData({ ydocUpdate: base64 });
     });
   });
   const receiveTrack = (
