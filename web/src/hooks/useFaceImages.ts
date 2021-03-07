@@ -17,7 +17,6 @@ type FaceInfo = {
 
 const isFaceInfo = (x: unknown): x is FaceInfo =>
   isObject(x) &&
-  typeof (x as { userId: unknown }).userId === "string" &&
   typeof (x as { nickname: unknown }).nickname === "string" &&
   typeof (x as { message: unknown }).message === "string" &&
   typeof (x as { liveMode: unknown }).liveMode === "boolean" &&
@@ -68,7 +67,7 @@ export const useFaceImages = (
         map.forEach((data, uid) => {
           if (uid === userId) return;
           if (!isImageData(data)) return;
-          if (data.updated >= twoMinAgo) return;
+          if (data.updated < twoMinAgo) return;
           const index = copied.findIndex((item) => item.userId === uid);
           if (index === -1) {
             copied.push(data);
