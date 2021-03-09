@@ -55,6 +55,7 @@ export const useMomentaryChat = (
       setChatList(list.toArray().filter(isChatItem));
     };
     list.observe(listener);
+    listener();
     return () => {
       list.unobserve(listener);
     };

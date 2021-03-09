@@ -85,6 +85,7 @@ export const useSpatialArea = (
       });
     };
     map.observe(listener);
+    listener();
     const unsub = subscribe(roomState.userIdMap, () => {
       setAvatarMap((prev) => {
         const keys = Object.keys(prev);

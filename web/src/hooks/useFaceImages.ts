@@ -84,6 +84,7 @@ export const useFaceImages = (
       });
     };
     map.observe(listener);
+    listener();
     const unsub = subscribe(roomState.userIdMap, () => {
       setRoomImages((prev) => {
         const next = prev.filter((item) => roomState.userIdMap[item.userId]);

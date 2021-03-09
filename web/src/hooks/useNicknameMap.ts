@@ -41,6 +41,7 @@ export const useNicknameMap = (roomId: string, userId: string) => {
       });
     };
     map.observe(listener);
+    listener();
     const unsub = subscribe(roomState.userIdMap, () => {
       setNicknameMap((prev) => {
         const keys = Object.keys(prev);
