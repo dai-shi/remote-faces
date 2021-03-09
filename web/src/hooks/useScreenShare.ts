@@ -4,13 +4,14 @@ import { useProxy } from "valtio";
 import { getScreenStream } from "../media/screen";
 import { getRoomState } from "../states/roomMap";
 
+const videoType = "screenVideo";
+
 export const useScreenShare = (
   roomId: string,
   userId: string,
   enabled: boolean,
   setEnabled: (enabled: boolean) => void
 ) => {
-  const videoType = "screenVideo";
   const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [screenStreamMap, setScreenStreamMap] = useState<{
     [userId: string]: MediaStream | null;
@@ -45,6 +46,14 @@ export const useScreenShare = (
 
   const trackMap = useProxy(getRoomState(roomId, userId).trackMap);
   Object.entries(trackMap[videoType] || {}).forEach(onTrack);
+
+  useEffect(() => {
+    const roomState = getRoomState(roomId, userId);
+    roomState.addMediaType(videoType);
+    return () => {
+      roomState.removeMediaType(videoType);
+    };
+  }, [roomId, userId]);
 
   useEffect(() => {
     const roomState = getRoomState(roomId, userId);

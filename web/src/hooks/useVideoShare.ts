@@ -4,6 +4,8 @@ import { useProxy } from "valtio";
 import { getVideoStream } from "../media/video";
 import { getRoomState } from "../states/roomMap";
 
+const videoType = "cameraVideo";
+
 export const useVideoShare = (
   roomId: string,
   userId: string,
@@ -11,7 +13,6 @@ export const useVideoShare = (
   setEnabled: (enabled: boolean) => void,
   videoDeviceId?: string
 ) => {
-  const videoType = "cameraVideo";
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [videoStreamMap, setVideoStreamMap] = useState<{
     [userId: string]: MediaStream | null;
@@ -46,6 +47,14 @@ export const useVideoShare = (
 
   const trackMap = useProxy(getRoomState(roomId, userId).trackMap);
   Object.entries(trackMap[videoType] || {}).forEach(onTrack);
+
+  useEffect(() => {
+    const roomState = getRoomState(roomId, userId);
+    roomState.addMediaType(videoType);
+    return () => {
+      roomState.removeMediaType(videoType);
+    };
+  }, [roomId, userId]);
 
   useEffect(() => {
     const roomState = getRoomState(roomId, userId);

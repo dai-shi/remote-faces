@@ -48,7 +48,7 @@ export const useFaceVideos = (
   }, []);
 
   const onTrack = ([uid, track]: [string, MediaStreamTrack]) => {
-    if (faceStreamMap[uid].getTracks().includes(track)) return;
+    if (faceStreamMap[uid]?.getTracks().includes(track)) return;
     const disposeStream = (s: MediaStream) => {
       if (isMounted.current) {
         setFaceStreamMap((prev) => {
@@ -84,6 +84,7 @@ export const useFaceVideos = (
           dispose: disposeVideo,
         } = await getFaceVideoStream(videoDeviceId);
         const [videoTrack] = videoStream.getVideoTracks();
+        roomState.addMediaType(videoType);
         roomState.addTrack(videoType, videoTrack);
         const disposeStream = (s: MediaStream) => {
           if (isMounted.current) {
@@ -94,6 +95,7 @@ export const useFaceVideos = (
           addTrackToStream(videoTrack, prev, disposeStream)
         );
         dispose = () => {
+          roomState.removeMediaType(videoType);
           roomState.removeTrack(videoType);
           disposeVideo();
           // XXX we need to manually dispatch ended event, why?
@@ -116,6 +118,7 @@ export const useFaceVideos = (
           dispose: disposeAudio,
         } = await getAudioStream(audioDeviceId);
         const [audioTrack] = audioStream.getAudioTracks();
+        roomState.addMediaType(audioType);
         roomState.addTrack(audioType, audioTrack);
         const disposeStream = (s: MediaStream) => {
           if (isMounted.current) {
@@ -126,6 +129,7 @@ export const useFaceVideos = (
           addTrackToStream(audioTrack, prev, disposeStream)
         );
         dispose = () => {
+          roomState.removeMediaType(audioType);
           roomState.removeTrack(audioType);
           disposeAudio();
           // XXX we need to manually dispatch ended event, why?
