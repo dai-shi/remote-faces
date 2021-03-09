@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { subscribe } from "valtio";
 
 import { isObject } from "../utils/types";
 import { getRoomState } from "../states/roomMap";
@@ -42,22 +41,7 @@ export const useNicknameMap = (roomId: string, userId: string) => {
     };
     map.observe(listener);
     listener();
-    const unsub = subscribe(roomState.userIdMap, () => {
-      setNicknameMap((prev) => {
-        const keys = Object.keys(prev);
-        const next = keys.filter((uid) => roomState.userIdMap[uid]);
-        if (keys.length !== next.length) {
-          const nextNicknameMap: NicknameMap = {};
-          next.forEach((uid) => {
-            nextNicknameMap[uid] = prev[uid];
-          });
-          return nextNicknameMap;
-        }
-        return prev;
-      });
-    });
     return () => {
-      unsub();
       map.unobserve(listener);
     };
   }, [roomId, userId]);
