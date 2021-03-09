@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useProxy } from "valtio";
 
 import "./SettingPanel.css";
 import { setStringItem, getStringItem } from "../utils/storage";
-import { useRoomNetworkStatus } from "../hooks/useRoom";
+import { getRoomState } from "../states/roomMap";
 import { UserStatus } from "./UserStatus";
 
 const initialConfigOpen = getStringItem("config_hidden") !== "true";
@@ -17,7 +18,9 @@ export const SettingPanel = React.memo<{
     setStringItem("config_hidden", configOpen ? "false" : "true");
   }, [configOpen]);
 
-  const networkStatus = useRoomNetworkStatus(roomId, userId);
+  const [networkStatus] = useProxy(
+    getRoomState(roomId, userId).networkStatusList
+  );
 
   const appLink = `remote-faces://${window.location.href.replace(
     /^https:\/\//,

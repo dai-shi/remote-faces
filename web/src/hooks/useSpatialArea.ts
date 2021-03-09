@@ -1,7 +1,7 @@
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
+import { subscribe } from "valtio";
 
-import { isObject, hasStringProp } from "../utils/types";
-import { useRoomData, useBroadcastData } from "./useRoom";
+import { getRoomState } from "../states/roomMap";
 
 const getInitialPosition = (uid: string): [number, number, number] => [
   parseInt(uid.slice(0, 2), 16) / 128 - 1,
@@ -31,26 +31,15 @@ const isAvatarData = (x: unknown): x is AvatarData => {
   }
 };
 
+const isEqualAvatarData = (a: AvatarData, b: AvatarData) =>
+  a.statusMesg === b.statusMesg &&
+  a.position[0] === b.position[0] &&
+  a.position[1] === b.position[1] &&
+  a.position[2] === b.position[2];
+
 export type AvatarMap = {
   [userId: string]: AvatarData;
 };
-
-type SpatialAreaData =
-  | {
-      spatialArea: "init";
-    }
-  | {
-      spatialArea: "avatar";
-      userId: string;
-      avatarData: AvatarData;
-    };
-
-const isSpatialAreaData = (x: unknown): x is SpatialAreaData =>
-  isObject(x) &&
-  ((x as { spatialArea: unknown }).spatialArea === "init" ||
-    ((x as { spatialArea: unknown }).spatialArea === "avatar" &&
-      isAvatarData((x as { avatarData: unknown }).avatarData) &&
-      hasStringProp(x, "userId")));
 
 export const useSpatialArea = (
   roomId: string,
@@ -70,64 +59,68 @@ export const useSpatialArea = (
       return { ...prev, statusMesg };
     });
   }, [statusMesg]);
-  const lastMyAvatarRef = useRef<AvatarData>();
-  useEffect(() => {
-    lastMyAvatarRef.current = myAvatar;
-  }, [myAvatar]);
 
-  const broadcastData = useBroadcastData(roomId, userId);
-  const dataToBroadcast = useRef<SpatialAreaData>();
+  useEffect(() => {
+    const roomState = getRoomState(roomId, userId);
+    const map = roomState.ydoc.getMap("spatialArea");
+    const listener = () => {
+      setAvatarMap((prev) => {
+        const copied = { ...prev };
+        let changed = false;
+        map.forEach((data, uid) => {
+          if (uid === userId) return;
+          if (!isAvatarData(data)) return;
+          if (!copied[uid]) {
+            copied[uid] = data;
+            changed = true;
+          } else if (!isEqualAvatarData(data, copied[uid])) {
+            copied[uid] = data;
+            changed = true;
+          }
+        });
+        if (changed) {
+          return copied;
+        }
+        return prev;
+      });
+    };
+    map.observe(listener);
+    listener();
+    const unsub = subscribe(roomState.userIdMap, () => {
+      setAvatarMap((prev) => {
+        const keys = Object.keys(prev);
+        const next = keys.filter((uid) => roomState.userIdMap[uid]);
+        if (keys.length !== next.length) {
+          const nextAvatarMap: AvatarMap = {};
+          next.forEach((uid) => {
+            nextAvatarMap[uid] = prev[uid];
+          });
+          return nextAvatarMap;
+        }
+        return prev;
+      });
+    });
+    return () => {
+      unsub();
+      map.unobserve(listener);
+    };
+  }, [roomId, userId]);
+
+  const dataToBroadcast = useRef<AvatarData>();
   useEffect(() => {
     if (!myAvatar) return;
-    const data: SpatialAreaData = {
-      spatialArea: "avatar",
-      userId,
-      avatarData: myAvatar,
-    };
     if (dataToBroadcast.current) {
-      dataToBroadcast.current = data;
+      dataToBroadcast.current = myAvatar;
     } else {
-      dataToBroadcast.current = data;
+      dataToBroadcast.current = myAvatar;
       setTimeout(() => {
-        broadcastData(dataToBroadcast.current);
+        const roomState = getRoomState(roomId, userId);
+        const map = roomState.ydoc.getMap("spatialArea");
+        map.set(userId, dataToBroadcast.current);
         dataToBroadcast.current = undefined;
       }, 500);
     }
-  }, [broadcastData, userId, myAvatar]);
-
-  useRoomData(
-    roomId,
-    userId,
-    useCallback(
-      (data) => {
-        if (!isSpatialAreaData(data)) return;
-        if (data.spatialArea === "init") {
-          if (lastMyAvatarRef.current) {
-            // TODO we don't need to broadcastData but sendData is enough
-            const myData: SpatialAreaData = {
-              spatialArea: "avatar",
-              userId,
-              avatarData: lastMyAvatarRef.current,
-            };
-            broadcastData(myData);
-          }
-        } else {
-          setAvatarMap((prev) => ({
-            ...prev,
-            [data.userId]: data.avatarData,
-          }));
-        }
-      },
-      [broadcastData, userId]
-    )
-  );
-
-  useEffect(() => {
-    const data: SpatialAreaData = {
-      spatialArea: "init",
-    };
-    broadcastData(data);
-  }, [broadcastData]);
+  }, [roomId, userId, myAvatar]);
 
   return {
     avatarMap,

@@ -10,7 +10,7 @@ import {
 } from "wgo";
 
 import "./GoBoard.css";
-import { useGoBoard, Action, PositionData } from "../hooks/useGoBoard";
+import { useGoBoard, PositionData } from "../hooks/useGoBoard";
 
 const createPosition = (positionData: PositionData) => {
   const position = new Position(positionData.size);
@@ -24,7 +24,7 @@ const createGoBoard = (
   element: HTMLDivElement,
   setColor: (c: "black" | "white") => void,
   setCapCount: (capCount: { black: number; white: number }) => void,
-  sendActionData: (action: Action, positionData: PositionData) => void
+  syncUp: (positions: PositionData[]) => void
 ) => {
   const game = new Game(6);
   const board = new CanvasBoard(element, {
@@ -107,13 +107,18 @@ const createGoBoard = (
       updateFieldObjects();
       setColor(game.turn === Color.B ? "black" : "white");
       setCapCount(game.position.capCount);
-      sendActionData("play", game.position);
+      syncUp(game.positionStack);
     }
   });
   setColor(game.turn === Color.B ? "black" : "white");
-  const receiveData = (_action: Action, positionData: PositionData) => {
-    const position = createPosition(positionData);
-    game.pushPosition(position);
+  const syncDown = (positions: PositionData[]) => {
+    if (game.positionStack.length === positions.length) return;
+    while (game.positionStack.length < positions.length) {
+      game.pushPosition(createPosition(positions[game.positionStack.length]));
+    }
+    while (game.positionStack.length > positions.length) {
+      game.popPosition();
+    }
     updateFieldObjects();
     setColor(game.turn === Color.B ? "black" : "white");
     setCapCount(game.position.capCount);
@@ -122,19 +127,20 @@ const createGoBoard = (
   const pass = () => {
     game.pass();
     setColor(game.turn === Color.B ? "black" : "white");
-    sendActionData("pass", game.position);
+    syncUp(game.positionStack);
   };
   const undo = () => {
-    game.popPosition();
-    updateFieldObjects();
-    setColor(game.turn === Color.B ? "black" : "white");
-    setCapCount(game.position.capCount);
-    sendActionData("undo", game.position);
+    if (game.popPosition()) {
+      updateFieldObjects();
+      setColor(game.turn === Color.B ? "black" : "white");
+      setCapCount(game.position.capCount);
+      syncUp(game.positionStack);
+    }
   };
   const resize = () => {
     board.setWidth(element.clientWidth / 2);
   };
-  return { receiveData, pass, undo, resize };
+  return { syncDown, pass, undo, resize };
 };
 
 export const GoBoard = React.memo<{
@@ -142,20 +148,17 @@ export const GoBoard = React.memo<{
   userId: string;
 }>(({ roomId, userId }) => {
   const actionsRef = useRef<{
-    receiveData: (action: Action, positionData: PositionData) => void;
+    syncDown: (positions: PositionData[]) => void;
     pass: () => void;
     undo: () => void;
     resize: () => void;
   }>();
-  const receiveData = useCallback(
-    (action: Action, positionData: PositionData) => {
-      if (actionsRef.current) {
-        actionsRef.current.receiveData(action, positionData);
-      }
-    },
-    []
-  );
-  const { sendActionData } = useGoBoard(roomId, userId, receiveData);
+  const syncDown = useCallback((positions: PositionData[]) => {
+    if (actionsRef.current) {
+      actionsRef.current.syncDown(positions);
+    }
+  }, []);
+  const { syncUp } = useGoBoard(roomId, userId, syncDown);
   const [color, setColor] = useState<"black" | "white">("black");
   const [capCount, setCapCount] = useState<{
     black: number;
@@ -165,7 +168,7 @@ export const GoBoard = React.memo<{
   useEffect(() => {
     if (divRef.current) {
       const div = divRef.current;
-      const actions = createGoBoard(div, setColor, setCapCount, sendActionData);
+      const actions = createGoBoard(div, setColor, setCapCount, syncUp);
       actionsRef.current = actions;
       window.addEventListener("resize", actions.resize);
       return () => {
@@ -173,7 +176,7 @@ export const GoBoard = React.memo<{
       };
     }
     return undefined;
-  }, [sendActionData]);
+  }, [syncUp]);
   const pass = () => {
     if (actionsRef.current) {
       actionsRef.current.pass();

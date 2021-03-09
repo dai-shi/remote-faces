@@ -30,7 +30,8 @@
     "react-use-gesture": "^8.0.1",
     "three": "^0.123.0",
     "valtio": "^0.7.1",
-    "wgo": "^3.0.0-alpha.7"
+    "wgo": "^3.0.0-alpha.7",
+    "yjs": "^13.5.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.11.6",

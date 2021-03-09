@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useProxy } from "valtio";
 
 import { getVideoStream } from "../media/video";
-import { useRoomMedia } from "./useRoom";
+import { getRoomState } from "../states/roomMap";
+
+const videoType = "cameraVideo";
 
 export const useVideoShare = (
   roomId: string,
@@ -24,35 +27,46 @@ export const useVideoShare = (
     return cleanup;
   }, []);
 
-  const onTrack = useCallback(async (track, info) => {
+  const onTrack = ([uid, track]: [string, MediaStreamTrack]) => {
+    if (videoStreamMap[uid]?.getTracks().includes(track)) return;
     setVideoStreamMap((prev) => ({
       ...prev,
-      [info.userId]: new MediaStream([track]),
+      [uid]: new MediaStream([track]),
     }));
     const onended = () => {
       setVideoStreamMap((prev) => ({
         ...prev,
-        [info.userId]: null,
+        [uid]: null,
       }));
     };
     track.addEventListener("ended", onended);
     cleanupFns.current.push(() => {
       track.removeEventListener("ended", onended);
     });
-  }, []);
+  };
 
-  const addTrack = useRoomMedia(roomId, userId, onTrack, "cameraVideo");
+  const trackMap = useProxy(getRoomState(roomId, userId).trackMap);
+  Object.entries(trackMap[videoType] || {}).forEach(onTrack);
 
   useEffect(() => {
+    const roomState = getRoomState(roomId, userId);
+    roomState.addMediaType(videoType);
+    return () => {
+      roomState.removeMediaType(videoType);
+    };
+  }, [roomId, userId]);
+
+  useEffect(() => {
+    const roomState = getRoomState(roomId, userId);
     let dispose: (() => void) | null = null;
-    if (enabled && addTrack) {
+    if (enabled) {
       (async () => {
         const result = await getVideoStream(videoDeviceId);
         const [track] = result.stream.getVideoTracks();
-        const removeTrack = addTrack(track);
+        roomState.addTrack(videoType, track);
         setVideoStream(result.stream);
         dispose = () => {
-          removeTrack();
+          roomState.removeTrack(videoType);
           result.dispose();
           setVideoStream(null);
           setEnabled(false);
@@ -66,7 +80,7 @@ export const useVideoShare = (
     return () => {
       if (dispose) dispose();
     };
-  }, [roomId, videoDeviceId, enabled, setEnabled, addTrack]);
+  }, [roomId, userId, videoDeviceId, enabled, setEnabled]);
 
   return { videoStream, videoStreamMap };
 };

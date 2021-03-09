@@ -1,8 +1,7 @@
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Color } from "wgo";
 
-import { isObject } from "../utils/types";
-import { useRoomData, useBroadcastData } from "./useRoom";
+import { getRoomState } from "../states/roomMap";
 
 export type PositionData = {
   size: number;
@@ -32,101 +31,61 @@ const isPositionData = (x: unknown): x is PositionData => {
   }
 };
 
-export type Action = "play" | "pass" | "undo";
-
-const isAction = (x: unknown): x is Action =>
-  ["play", "pass", "undo"].indexOf(x as string) >= 0;
-
-type GoBoardActionData = {
-  action: "play" | "pass" | "undo";
-  position: PositionData;
-  updatedAt: number; // in millisecond
-};
-
-const isGoBoardActionData = (x: unknown): x is GoBoardData =>
-  isObject(x) &&
-  isAction((x as { action: unknown }).action) &&
-  typeof (x as { updatedAt: unknown }).updatedAt === "number" &&
-  isPositionData((x as { position: unknown }).position);
-
-type GoBoardData =
+export type Action =
   | {
-      goBoard: "init";
+      type: "play";
+      position: PositionData;
     }
   | {
-      goBoard: "action";
-      actionData: GoBoardActionData;
+      type: "pass";
+      position: PositionData;
+    }
+  | {
+      type: "undo";
     };
-
-const isGoBoardData = (x: unknown): x is GoBoardData =>
-  isObject(x) &&
-  ((x as { goBoard: unknown }).goBoard === "init" ||
-    ((x as { goBoard: unknown }).goBoard === "action" &&
-      isGoBoardActionData((x as { actionData: unknown }).actionData)));
 
 export const useGoBoard = (
   roomId: string,
   userId: string,
-  receiveData: (action: Action, position: PositionData) => void
+  syncDown: (positions: PositionData[]) => void
 ) => {
-  const lastActionDataRef = useRef<GoBoardActionData>();
-
-  const broadcastData = useBroadcastData(roomId, userId);
-  const sendActionData = useCallback(
-    (action: Action, position: PositionData) => {
-      const actionData: GoBoardActionData = {
-        action,
-        position,
-        updatedAt: Date.now(),
-      };
-      const data: GoBoardData = {
-        goBoard: "action",
-        actionData,
-      };
-      broadcastData(data);
-      lastActionDataRef.current = actionData;
-    },
-    [broadcastData]
-  );
-
-  useRoomData(
-    roomId,
-    userId,
-    useCallback(
-      (data) => {
-        if (!isGoBoardData(data)) return;
-        if (data.goBoard === "init") {
-          if (lastActionDataRef.current) {
-            // TODO we don't need to broadcastData but sendData is enough
-            broadcastData({
-              goBoard: "action",
-              actionData: lastActionDataRef.current,
-            });
-          }
-          return;
-        }
-        // FIXME why do we need this type assertion?
-        const { actionData } = data as { actionData: GoBoardActionData };
-        if (
-          lastActionDataRef.current &&
-          lastActionDataRef.current.updatedAt > actionData.updatedAt
-        ) {
-          return;
-        }
-        lastActionDataRef.current = actionData;
-        receiveData(actionData.action, actionData.position);
-      },
-      [broadcastData, receiveData]
-    )
-  );
-
   useEffect(() => {
-    broadcastData({
-      goBoard: "init",
-    });
-  }, [broadcastData]);
+    const roomState = getRoomState(roomId, userId);
+    const list = roomState.ydoc.getArray("goBoard");
+    const listener = () => {
+      syncDown(
+        list.toArray().flatMap((item) => {
+          try {
+            const data = JSON.parse(item as string);
+            if (isPositionData(data)) {
+              return [data];
+            }
+          } catch (e) {
+            // ignored
+          }
+          return [];
+        })
+      );
+    };
+    list.observe(listener);
+    listener();
+    return () => {
+      list.unobserve(listener);
+    };
+  }, [roomId, userId, syncDown]);
 
-  return {
-    sendActionData,
-  };
+  const syncUp = useCallback(
+    (positions: PositionData[]) => {
+      const roomState = getRoomState(roomId, userId);
+      const list = roomState.ydoc.getArray("goBoard");
+      if (list.length < positions.length) {
+        list.push(positions.slice(list.length).map((x) => JSON.stringify(x)));
+      } else if (list.length > positions.length) {
+        list.delete(positions.length, list.length - positions.length);
+      }
+    },
+    [roomId, userId]
+  );
+
+  return { syncUp };
 };
