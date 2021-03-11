@@ -69,7 +69,7 @@ export const useFaceImages = (
           if (!isImageData(data)) return;
           if (data.updated < twoMinAgo) return;
           const index = copied.findIndex((item) => item.userId === uid);
-          if (index === -1) {
+          if (index === -1 && roomState.userIdMap[uid]) {
             copied.push(data);
             changed = true;
           } else if (data.updated > copied[index].updated) {
