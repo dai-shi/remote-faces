@@ -1,6 +1,7 @@
 import React from "react";
 
 import "./FaceImages.css";
+import { Loading } from "./Loading";
 import { BLANK_IMAGE } from "../media/imagePresets";
 import { useFaceImages } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
@@ -150,6 +151,11 @@ export const FaceImages = React.memo<{
             speakerOn={item.info.speakerOn}
           />
         ))}
+        {!roomImages.length && (
+          <div className="FaceImages-card">
+            <Loading />
+          </div>
+        )}
       </>
     );
   }
