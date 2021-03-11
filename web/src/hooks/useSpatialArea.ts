@@ -70,7 +70,7 @@ export const useSpatialArea = (
         map.forEach((data, uid) => {
           if (uid === userId) return;
           if (!isAvatarData(data)) return;
-          if (!copied[uid]) {
+          if (!copied[uid] && roomState.userIdMap[uid]) {
             copied[uid] = data;
             changed = true;
           } else if (!isEqualAvatarData(data, copied[uid])) {

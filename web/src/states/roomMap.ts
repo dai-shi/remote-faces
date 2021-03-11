@@ -88,7 +88,7 @@ const createRoomState = (roomId: string, userId: string) => {
   const receiveData = (data: any, info: PeerInfo) => {
     state.userIdMap[info.userId] = info.peerIndex;
     if (data?.ydocUpdate) {
-      const binaryString = atob(data?.ydocUpdate);
+      const binaryString = atob(data.ydocUpdate);
       const update = new Uint8Array(
         ([].map.call(binaryString, (c: string) =>
           c.charCodeAt(0)
