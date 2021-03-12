@@ -79,6 +79,12 @@ export const useSpatialArea = (
             changed = true;
           }
         });
+        Object.keys(copied).forEach((uid) => {
+          if (!roomState.userIdMap[uid]) {
+            delete copied[uid];
+            changed = true;
+          }
+        });
         if (changed) {
           return copied;
         }
@@ -86,21 +92,8 @@ export const useSpatialArea = (
       });
     };
     map.observe(listener);
+    const unsub = subscribe(roomState.userIdMap, listener);
     listener();
-    const unsub = subscribe(roomState.userIdMap, () => {
-      setAvatarMap((prev) => {
-        const keys = Object.keys(prev);
-        const next = keys.filter((uid) => roomState.userIdMap[uid]);
-        if (keys.length !== next.length) {
-          const nextAvatarMap: AvatarMap = {};
-          next.forEach((uid) => {
-            nextAvatarMap[uid] = prev[uid];
-          });
-          return nextAvatarMap;
-        }
-        return prev;
-      });
-    });
     return () => {
       unsub();
       map.unobserve(listener);

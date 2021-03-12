@@ -61,14 +61,12 @@ export const useFaceImages = (
     const map = roomState.ydoc.getMap("faceImages");
     const listener = () => {
       setRoomImages((prev) => {
-        const twoMinAgo = Date.now() - 2 * 60 * 1000;
         const copied = [...prev];
         let changed = false;
         map.forEach((data, uid) => {
           if (uid === userId) return;
           if (!roomState.userIdMap[uid]) return;
           if (!isImageData(data)) return;
-          if (data.updated < twoMinAgo) return;
           const index = copied.findIndex((item) => item.userId === uid);
           if (index === -1) {
             copied.push(data);
@@ -78,20 +76,19 @@ export const useFaceImages = (
             changed = true;
           }
         });
+        const filtered = copied.filter(
+          (item) => roomState.userIdMap[item.userId]
+        );
+        changed = changed || copied.length !== filtered.length;
         if (changed) {
-          return copied;
+          return filtered;
         }
         return prev;
       });
     };
     map.observe(listener);
+    const unsub = subscribe(roomState.userIdMap, listener);
     listener();
-    const unsub = subscribe(roomState.userIdMap, () => {
-      setRoomImages((prev) => {
-        const next = prev.filter((item) => roomState.userIdMap[item.userId]);
-        return prev.length !== next.length ? next : prev;
-      });
-    });
     return () => {
       unsub();
       map.unobserve(listener);

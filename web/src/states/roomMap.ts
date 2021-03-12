@@ -82,6 +82,7 @@ const createRoomState = (roomId: string, userId: string) => {
     const base64 = btoa(String.fromCharCode(...update));
     const data = { ydocUpdate: base64 };
     roomPromise.then((room) => {
+      // XXX this does not scale
       room.sendData(data, peerIndex);
     });
   };
