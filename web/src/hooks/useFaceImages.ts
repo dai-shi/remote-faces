@@ -66,10 +66,11 @@ export const useFaceImages = (
         let changed = false;
         map.forEach((data, uid) => {
           if (uid === userId) return;
+          if (!roomState.userIdMap[uid]) return;
           if (!isImageData(data)) return;
           if (data.updated < twoMinAgo) return;
           const index = copied.findIndex((item) => item.userId === uid);
-          if (index === -1 && roomState.userIdMap[uid]) {
+          if (index === -1) {
             copied.push(data);
             changed = true;
           } else if (data.updated > copied[index].updated) {

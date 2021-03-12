@@ -111,6 +111,11 @@ const createRoomState = (roomId: string, userId: string) => {
     if (!state.trackMap[mediaType]) {
       state.trackMap[mediaType] = {};
     }
+    track.addEventListener("ended", () => {
+      if (state.trackMap[mediaType][info.userId] === track) {
+        delete state.trackMap[mediaType][info.userId];
+      }
+    });
     state.trackMap[mediaType][info.userId] = ref(track);
   };
   const roomPromise = createRoom(
