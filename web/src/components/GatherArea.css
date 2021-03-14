@@ -6,13 +6,6 @@
   height: 100vh;
 }
 
-.GatherArea-toolbar {
-  overflow: scroll;
-  position: absolute;
-  left: 5px;
-  top: 5px;
-}
-
 .GatherArea-body {
   overflow: scroll;
   position: absolute;
@@ -20,8 +13,12 @@
   height: 100vh;
 }
 
+.GatherArea-region {
+  position: absolute;
+  overflow: hidden;
+}
+
 .GatherArea-avatar {
-  margin: 0 0 2px 0;
   position: absolute;
   width: 36px;
   height: 36px;
@@ -54,4 +51,19 @@
   line-height: 0.5rem;
   font-family: sans-serif;
   cursor: help;
+}
+
+.GatherArea-toolbar {
+  overflow: scroll;
+  position: absolute;
+  left: 5px;
+  top: 5px;
+}
+
+.GatherArea-region-editor {
+  margin: 5px;
+  padding: 10px;
+  background: lightyellow;
+  border: 3px solid gray;
+  border-radius: 8px;
 }

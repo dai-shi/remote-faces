@@ -1,11 +1,38 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 import "./GatherArea.css";
 import { BLANK_IMAGE } from "../media/imagePresets";
-import { useGatherArea } from "../hooks/useGatherArea";
+import { useGatherArea, RegionData } from "../hooks/useGatherArea";
 import { useFaceImages } from "../hooks/useFaceImages";
+import { RegionEditor } from "./RegionEditor";
 
 type OnMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+
+const Region = React.memo<{
+  id: string;
+  data: RegionData;
+  highlight?: boolean;
+}>(({ id, data, highlight }) => {
+  const boxShadow =
+    (data.isMeeting && (highlight ? "0 0 0 5px pink" : "0 0 0 1px pink")) ||
+    undefined;
+  return (
+    <div
+      className="GatherArea-region"
+      style={{
+        left: `${data.position[0]}px`,
+        top: `${data.position[1]}px`,
+        width: `${data.size[0]}px`,
+        height: `${data.size[1]}px`,
+        boxShadow,
+        zIndex: data.zIndex,
+        background: data.background,
+      }}
+    >
+      {data.iframe && <iframe title={id} src={data.iframe} />}
+    </div>
+  );
+});
 
 const Avatar = React.memo<{
   nickname: string;
@@ -88,12 +115,30 @@ export const GatherArea = React.memo<{
       false,
       videoDeviceId
     );
-    const { avatarMap, myAvatar, setMyAvatar } = useGatherArea(roomId, userId);
+    const { avatarMap, myAvatar, setMyAvatar, regionMap } = useGatherArea(
+      roomId,
+      userId
+    );
 
     const onMouseDragRef = useRef<OnMouseMove>();
     const registerOnMouseDrag = useCallback((onMouseMove?: OnMouseMove) => {
       onMouseDragRef.current = onMouseMove;
     }, []);
+
+    const regionIdList = Object.keys(regionMap).sort(
+      (a, b) => (regionMap[b].zIndex ?? 0) - (regionMap[a].zIndex ?? 0)
+    );
+    const activeRegionId = regionIdList.find((id) => {
+      const { position, size } = regionMap[id] as RegionData;
+      return (
+        position[0] <= myAvatar.position[0] &&
+        position[1] <= myAvatar.position[1] &&
+        myAvatar.position[0] + 36 <= position[0] + size[0] &&
+        myAvatar.position[1] + 36 <= position[1] + size[1]
+      );
+    });
+
+    const [showRegionEditor, setShowRegionEditor] = useState(false);
 
     return (
       <div className="GatherArea-container">
@@ -110,6 +155,14 @@ export const GatherArea = React.memo<{
             registerOnMouseDrag();
           }}
         >
+          {Object.entries(regionMap).map(([regionId, regionData]) => (
+            <Region
+              key={regionId}
+              id={regionId}
+              data={regionData}
+              highlight={regionId === activeRegionId}
+            />
+          ))}
           {Object.entries(avatarMap).map(([uid, avatarData]) => {
             if (uid === userId) {
               return null;
@@ -141,9 +194,19 @@ export const GatherArea = React.memo<{
           />
         </div>
         <div className="GatherArea-toolbar">
-          <button type="button" onClick={() => alert("TODO")}>
-            TODO
-          </button>
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowRegionEditor((p) => !p)}
+            >
+              {showRegionEditor ? "Close Region Editor" : "Open Region Editor"}
+            </button>
+            {showRegionEditor && (
+              <div className="GatherArea-region-editor">
+                <RegionEditor roomId={roomId} userId={userId} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
