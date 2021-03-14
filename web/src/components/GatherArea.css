@@ -1,0 +1,41 @@
+.GatherArea-container {
+  -webkit-app-region: no-drag;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.GatherArea-body {
+  overflow: scroll;
+  position: absolute;
+  width: 100%;
+  height: 100vh;
+}
+
+.GatherArea-region {
+  position: absolute;
+  overflow: hidden;
+}
+
+.GatherArea-avatar {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+}
+
+.GatherArea-toolbar {
+  overflow: scroll;
+  position: absolute;
+  left: 5px;
+  top: 5px;
+}
+
+.GatherArea-region-editor {
+  margin: 5px;
+  padding: 10px;
+  background: lightyellow;
+  border: 3px solid gray;
+  border-radius: 8px;
+}
