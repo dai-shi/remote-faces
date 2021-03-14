@@ -57,9 +57,13 @@ export const SingleRoom = React.memo(() => {
         <SelectivePane
           roomId={roomId}
           userId={userId}
+          avatar={config.avatar}
           nickname={config.nickname}
           statusMesg={statusMesg}
           setStatusMesg={setStatusMesg}
+          suspended={suspended}
+          videoDeviceId={config.videoDeviceId}
+          audioDeviceId={config.audioDeviceId}
         />
       </div>
     </div>
