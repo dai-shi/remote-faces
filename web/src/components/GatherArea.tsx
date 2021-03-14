@@ -3,6 +3,7 @@ import React, { useCallback, useRef, useState } from "react";
 import "./GatherArea.css";
 import { useGatherArea, RegionData } from "../hooks/useGatherArea";
 import { useFaceImages } from "../hooks/useFaceImages";
+import { useFaceVideos } from "../hooks/useFaceVideos";
 import { RegionEditor } from "./RegionEditor";
 import { FaceCard } from "./FaceCard";
 
@@ -41,6 +42,8 @@ const Avatar = React.memo<{
   position: [left: number, top: number];
   setPosition?: (nextPosition: [number, number]) => void;
   registerOnMouseDrag: (onMouseMove?: OnMouseMove) => void;
+  stream?: MediaStream;
+  muted?: boolean;
 }>(
   ({
     nickname,
@@ -49,6 +52,8 @@ const Avatar = React.memo<{
     position,
     setPosition,
     registerOnMouseDrag,
+    stream,
+    muted,
   }) => {
     const isMyself = !!setPosition;
     return (
@@ -80,11 +85,11 @@ const Avatar = React.memo<{
           nickname={nickname}
           statusMesg={statusMesg}
           obsoleted={false}
-          liveMode={false}
-          stream={undefined}
-          muted={false}
-          micOn={false}
-          speakerOn={false}
+          liveMode={!!stream}
+          stream={stream}
+          muted={!!muted}
+          micOn={!!stream}
+          speakerOn={!!stream}
         />
       </div>
     );
@@ -136,15 +141,27 @@ export const GatherArea = React.memo<{
     const regionIdList = Object.keys(regionMap).sort(
       (a, b) => (regionMap[b].zIndex ?? 0) - (regionMap[a].zIndex ?? 0)
     );
-    const activeRegionId = regionIdList.find((id) => {
-      const { position, size } = regionMap[id] as RegionData;
+    const activeMeetingRegionId = regionIdList.find((id) => {
+      const { isMeeting, position, size } = regionMap[id] as RegionData;
       return (
+        isMeeting &&
         position[0] <= myAvatar.position[0] &&
         position[1] <= myAvatar.position[1] &&
         myAvatar.position[0] + 36 <= position[0] + size[0] &&
         myAvatar.position[1] + 36 <= position[1] + size[1]
       );
     });
+
+    const { faceStream, faceStreamMap } = useFaceVideos(
+      roomId,
+      userId,
+      !!activeMeetingRegionId,
+      !!activeMeetingRegionId,
+      true,
+      videoDeviceId,
+      audioDeviceId,
+      `gatherArea/meeting/${activeMeetingRegionId}/`
+    );
 
     const [showRegionEditor, setShowRegionEditor] = useState(false);
 
@@ -171,7 +188,7 @@ export const GatherArea = React.memo<{
               key={regionId}
               id={regionId}
               data={regionData}
-              highlight={regionId === activeRegionId}
+              highlight={regionId === activeMeetingRegionId}
             />
           ))}
           {Object.entries(avatarMap).map(([uid, avatarData]) => {
@@ -190,6 +207,7 @@ export const GatherArea = React.memo<{
                 image={imageData.image}
                 position={avatarData.position}
                 registerOnMouseDrag={registerOnMouseDrag}
+                stream={faceStreamMap[uid]}
               />
             );
           })}
@@ -202,6 +220,8 @@ export const GatherArea = React.memo<{
               setMyAvatar((prev) => ({ ...prev, position }))
             }
             registerOnMouseDrag={registerOnMouseDrag}
+            stream={faceStream || undefined}
+            muted
           />
         </div>
         <div className="GatherArea-toolbar">
