@@ -1,10 +1,10 @@
 import React, { useCallback, useRef, useState } from "react";
 
 import "./GatherArea.css";
-import { BLANK_IMAGE } from "../media/imagePresets";
 import { useGatherArea, RegionData } from "../hooks/useGatherArea";
 import { useFaceImages } from "../hooks/useFaceImages";
 import { RegionEditor } from "./RegionEditor";
+import { FaceCard } from "./FaceCard";
 
 type OnMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 
@@ -37,7 +37,7 @@ const Region = React.memo<{
 const Avatar = React.memo<{
   nickname: string;
   statusMesg: string;
-  image: string;
+  image?: string;
   position: [left: number, top: number];
   setPosition?: (nextPosition: [number, number]) => void;
   registerOnMouseDrag: (onMouseMove?: OnMouseMove) => void;
@@ -75,9 +75,17 @@ const Avatar = React.memo<{
           }
         }}
       >
-        <img src={image} alt="avatar" />
-        <div className="GatherArea-avatar-name">{nickname}</div>
-        <div className="GatherArea-avatar-mesg">{statusMesg}</div>
+        <FaceCard
+          image={image}
+          nickname={nickname}
+          statusMesg={statusMesg}
+          obsoleted={false}
+          liveMode={false}
+          stream={undefined}
+          muted={false}
+          micOn={false}
+          speakerOn={false}
+        />
       </div>
     );
   }
@@ -146,6 +154,9 @@ export const GatherArea = React.memo<{
           className="GatherArea-body"
           role="button"
           tabIndex={-1}
+          onMouseDown={(e) => {
+            e.preventDefault();
+          }}
           onMouseMove={(e) => {
             if (onMouseDragRef.current) {
               onMouseDragRef.current(e);
@@ -185,7 +196,7 @@ export const GatherArea = React.memo<{
           <Avatar
             nickname={nickname}
             statusMesg={statusMesg}
-            image={myImage || BLANK_IMAGE}
+            image={myImage}
             position={myAvatar.position}
             setPosition={(position) =>
               setMyAvatar((prev) => ({ ...prev, position }))
