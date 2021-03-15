@@ -30,7 +30,7 @@ const Region = React.memo<{
         background: data.background,
       }}
     >
-      {data.iframe && <iframe title={id} src={data.iframe} />}
+      {data.iframe && <iframe title={id} src={data.iframe} frameBorder="0" />}
     </div>
   );
 });

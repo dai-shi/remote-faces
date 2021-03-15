@@ -13,6 +13,7 @@ export const RegionEditor = React.memo<{
   const [top, setTop] = useState(100);
   const [width, setWidth] = useState(100);
   const [height, setHeight] = useState(100);
+  const [zIndex, setZIndex] = useState(0);
   const [background, setBackground] = useState("");
   const [iframe, setIframe] = useState("");
 
@@ -21,6 +22,7 @@ export const RegionEditor = React.memo<{
       isMeeting,
       position: [left, top],
       size: [width, height],
+      zIndex,
       background,
       iframe,
     };
@@ -79,6 +81,16 @@ export const RegionEditor = React.memo<{
           type="number"
           value={height}
           onChange={(e) => setHeight(Number(e.target.value))}
+        />
+      </label>
+      <hr />
+      <label>
+        zIndex:{" "}
+        <input
+          type="number"
+          value={zIndex}
+          max={0}
+          onChange={(e) => setZIndex(Number(e.target.value))}
         />
       </label>
       <hr />
