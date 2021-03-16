@@ -70,9 +70,8 @@ export const FaceImages = React.memo<{
           />
         </div>
         {roomImages.map((item) => (
-          <div className="FaceImages-item">
+          <div key={item.userId} className="FaceImages-item">
             <FaceCard
-              key={item.userId}
               image={item.image}
               nickname={item.info.nickname}
               statusMesg={item.info.message}
