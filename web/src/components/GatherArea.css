@@ -16,6 +16,7 @@
 .GatherArea-region {
   position: absolute;
   overflow: hidden;
+  background-size: contain;
 }
 
 .GatherArea-region > iframe {

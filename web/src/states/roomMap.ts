@@ -114,7 +114,8 @@ const createRoomState = (roomId: string, userId: string) => {
     }
     track.addEventListener("ended", () => {
       if (state.trackMap[mediaType][info.userId] === track) {
-        delete state.trackMap[mediaType][info.userId];
+        // FIXME somehow this might be causing fatal behavior
+        // delete state.trackMap[mediaType][info.userId];
       }
     });
     state.trackMap[mediaType][info.userId] = ref(track);
