@@ -48,6 +48,7 @@ export const useFaceVideos = (
   }, []);
 
   const onTrack = ([uid, track]: [string, MediaStreamTrack]) => {
+    if (track.readyState === "ended") return;
     if (faceStreamMap[uid]?.getTracks().includes(track)) return;
     const disposeStream = (s: MediaStream) => {
       if (isMounted.current) {
@@ -76,7 +77,7 @@ export const useFaceVideos = (
 
   useEffect(() => {
     const roomState = getRoomState(roomId, userId);
-    let dispose: (() => void) | null = null;
+    let cleanup: (() => void) | null | false = null;
     if (videoEnabled) {
       (async () => {
         const {
@@ -94,23 +95,29 @@ export const useFaceVideos = (
         setFaceStream((prev) =>
           addTrackToStream(videoTrack, prev, disposeStream)
         );
-        dispose = () => {
+        const dispose = () => {
           roomState.removeMediaType(videoType);
           roomState.removeTrack(videoType);
           disposeVideo();
           // XXX we need to manually dispatch ended event, why?
           videoTrack.dispatchEvent(new Event("ended"));
         };
+        if (cleanup === false) {
+          dispose();
+        } else {
+          cleanup = dispose;
+        }
       })();
     }
     return () => {
-      if (dispose) dispose();
+      if (cleanup) cleanup();
+      cleanup = false;
     };
   }, [roomId, userId, videoEnabled, videoDeviceId, videoType]);
 
   useEffect(() => {
     const roomState = getRoomState(roomId, userId);
-    let dispose: (() => void) | null = null;
+    let cleanup: (() => void) | null | false = null;
     if (audioEnabled) {
       (async () => {
         const {
@@ -128,19 +135,26 @@ export const useFaceVideos = (
         setFaceStream((prev) =>
           addTrackToStream(audioTrack, prev, disposeStream)
         );
-        dispose = () => {
+        const dispose = () => {
           roomState.removeMediaType(audioType);
           roomState.removeTrack(audioType);
           disposeAudio();
           // XXX we need to manually dispatch ended event, why?
           audioTrack.dispatchEvent(new Event("ended"));
         };
+        if (cleanup === false) {
+          dispose();
+        } else {
+          cleanup = dispose;
+        }
       })();
     }
     return () => {
-      if (dispose) dispose();
+      if (cleanup) cleanup();
+      cleanup = false;
     };
   }, [roomId, userId, audioEnabled, audioDeviceId, audioType]);
+
   useEffect(() => {
     if (faceStream) {
       faceStream.getAudioTracks().forEach((track) => {

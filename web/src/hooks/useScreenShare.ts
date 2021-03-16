@@ -27,6 +27,7 @@ export const useScreenShare = (
   }, []);
 
   const onTrack = ([uid, track]: [string, MediaStreamTrack]) => {
+    if (track.readyState === "ended") return;
     if (screenStreamMap[uid]?.getTracks().includes(track)) return;
     setScreenStreamMap((prev) => ({
       ...prev,
@@ -57,7 +58,7 @@ export const useScreenShare = (
 
   useEffect(() => {
     const roomState = getRoomState(roomId, userId);
-    let dispose: (() => void) | null = null;
+    let cleanup: (() => void) | null | false = null;
     if (enabled) {
       (async () => {
         const result = await getScreenStream();
@@ -68,20 +69,26 @@ export const useScreenShare = (
         const [track] = result.stream.getVideoTracks();
         roomState.addTrack(videoType, track);
         setScreenStream(result.stream);
-        dispose = () => {
+        track.addEventListener("ended", () => {
+          if (cleanup) cleanup();
+          cleanup = null;
+        });
+        const dispose = () => {
           roomState.removeTrack(videoType);
           result.dispose();
           setScreenStream(null);
           setEnabled(false);
         };
-        track.addEventListener("ended", () => {
-          if (dispose) dispose();
-          dispose = null;
-        });
+        if (cleanup === false) {
+          dispose();
+        } else {
+          cleanup = dispose;
+        }
       })();
     }
     return () => {
-      if (dispose) dispose();
+      if (cleanup) cleanup();
+      cleanup = false;
     };
   }, [roomId, userId, enabled, setEnabled]);
 
