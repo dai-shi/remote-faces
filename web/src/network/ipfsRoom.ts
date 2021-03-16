@@ -211,6 +211,10 @@ export const createRoom: CreateRoom = async (
     const negotiate = async () => {
       const negotiationId = negotiationIdMap.get(conn);
       if (!negotiationId) return;
+      if (conn.sendPc.signalingState === "closed") {
+        negotiationIdMap.delete(conn);
+        return;
+      }
       const offer = await conn.sendPc.createOffer();
       await conn.sendPc.setLocalDescription(offer);
       await sendSDP(conn, { negotiationId, offer });
@@ -409,7 +413,7 @@ export const createRoom: CreateRoom = async (
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
       const senders = conn.sendPc.getSenders();
       const sender = senders.find((s) => s.track === track);
-      if (sender) {
+      if (sender && conn.sendPc.signalingState !== "closed") {
         conn.sendPc.removeTrack(sender);
         startNegotiation(conn);
       }
@@ -433,7 +437,7 @@ export const createRoom: CreateRoom = async (
       const isEffective = acceptingMediaTypes.some(
         (mType) => mediaTypeMap.get(mType)?.track === sender.track
       );
-      if (!isEffective) {
+      if (!isEffective && conn.sendPc.signalingState !== "closed") {
         conn.sendPc.removeTrack(sender);
         startNegotiation(conn);
       }

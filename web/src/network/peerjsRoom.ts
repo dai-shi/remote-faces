@@ -298,6 +298,8 @@ export const createRoom: CreateRoom = async (
       await sleep(5000);
       negotiationScheduled = false;
       if (!connMap.isConnected(conn.peer)) return;
+      if (!conn.peerConnection) return;
+      if (conn.peerConnection.signalingState === "closed") return;
       const offer = await conn.peerConnection.createOffer();
       await conn.peerConnection.setLocalDescription(offer);
       sendSDP(conn, { offer });
@@ -457,16 +459,16 @@ export const createRoom: CreateRoom = async (
     const { track } = item;
     mediaTypeMap.delete(mediaType);
     connMap.forEachConnsAcceptingMedia(mediaType, (conn) => {
-      const senders = conn.peerConnection.getSenders();
+      const senders = conn.peerConnection?.getSenders() ?? [];
       const sender = senders.find((s) => s.track === track);
-      if (sender) {
+      if (sender && conn.peerConnection.signalingState !== "closed") {
         conn.peerConnection.removeTrack(sender);
       }
     });
   };
 
   const syncAllTracks = (conn: Peer.DataConnection) => {
-    const senders = conn.peerConnection.getSenders();
+    const senders = conn.peerConnection?.getSenders() ?? [];
     const acceptingMediaTypes = connMap.getAcceptingMediaTypes(conn);
     acceptingMediaTypes.forEach((mType) => {
       const item = mediaTypeMap.get(mType);
@@ -481,7 +483,7 @@ export const createRoom: CreateRoom = async (
       const isEffective = acceptingMediaTypes.some(
         (mType) => mediaTypeMap.get(mType)?.track === sender.track
       );
-      if (!isEffective) {
+      if (!isEffective && conn.peerConnection.signalingState !== "closed") {
         conn.peerConnection.removeTrack(sender);
       }
     });
@@ -491,9 +493,9 @@ export const createRoom: CreateRoom = async (
   };
 
   const removeAllTracks = (conn: Peer.DataConnection) => {
-    const senders = conn.peerConnection.getSenders();
+    const senders = conn.peerConnection?.getSenders() ?? [];
     senders.forEach((sender) => {
-      if (sender.track) {
+      if (sender.track && conn.peerConnection.signalingState !== "closed") {
         conn.peerConnection.removeTrack(sender);
       }
     });
