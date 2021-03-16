@@ -51,11 +51,6 @@ export const useFaceImages = (
   const [myImage, setMyImage] = useState<ImageUrl>();
   const [roomImages, setRoomImages] = useState<ImageData[]>([]);
 
-  const [fatalError, setFatalError] = useState<Error>();
-  if (fatalError) {
-    throw fatalError;
-  }
-
   useEffect(() => {
     const roomState = getRoomState(roomId, userId);
     const map = roomState.ydoc.getMap("faceImages");
@@ -134,7 +129,7 @@ export const useFaceImages = (
         };
         map.set(userId, data);
       } catch (e) {
-        setFatalError(e);
+        console.error(e);
       }
       timer = setTimeout(loop, 2 * 60 * 1000);
     };
