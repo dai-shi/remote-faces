@@ -1,5 +1,3 @@
-import { sleep } from "../utils/sleep";
-
 const setupMap = new WeakMap<MediaStreamTrack, boolean>();
 
 // XXX we don't get "ended" event with removeTrack,
@@ -12,8 +10,8 @@ export const setupTrackStopOnLongMute = (
     return track;
   }
   setupMap.set(track, true);
-  const onmute = async () => {
-    await sleep(5000);
+  const onmute = (timeout = 1000) => {
+    if (track.readyState === "ended") return;
     const transceiver = pc
       .getTransceivers()
       .find((t) => t.receiver.track === track);
@@ -25,9 +23,13 @@ export const setupTrackStopOnLongMute = (
       track.stop();
       // XXX we need to manually dispatch ended event, why?
       track.dispatchEvent(new Event("ended"));
+    } else if (timeout < 64000) {
+      setTimeout(() => {
+        onmute(timeout * 2);
+      }, timeout);
     }
   };
-  track.addEventListener("mute", onmute);
+  track.addEventListener("mute", () => onmute());
   return track;
 };
 
