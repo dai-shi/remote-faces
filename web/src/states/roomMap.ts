@@ -70,11 +70,14 @@ const createRoomState = (roomId: string, userId: string) => {
       state.networkStatusList.pop();
     }
     if (status?.type === "CONNECTION_CLOSED") {
+      // FIXME somehow this might be causing fatal behavior
+      /*
       Object.entries(state.userIdMap).forEach(([uid, idx]) => {
         if (idx === status.peerIndex) {
           delete state.userIdMap[uid];
         }
       });
+      */
     }
   };
   const notifyNewPeer = (peerIndex: number) => {
@@ -114,8 +117,7 @@ const createRoomState = (roomId: string, userId: string) => {
     }
     track.addEventListener("ended", () => {
       if (state.trackMap[mediaType][info.userId] === track) {
-        // FIXME somehow this might be causing fatal behavior
-        // delete state.trackMap[mediaType][info.userId];
+        delete state.trackMap[mediaType][info.userId];
       }
     });
     state.trackMap[mediaType][info.userId] = ref(track);
