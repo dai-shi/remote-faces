@@ -65,6 +65,7 @@ const createRoomState = (roomId: string, userId: string) => {
     dispose,
   });
   const updateNetworkStatus = (status: NetworkStatus) => {
+    console.log("[network status]", status);
     state.networkStatusList.unshift(status);
     if (state.networkStatusList.length > 10) {
       state.networkStatusList.pop();
