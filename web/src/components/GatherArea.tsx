@@ -1,4 +1,6 @@
-import React, { useCallback, useRef, useState } from "react";
+/* eslint jsx-a11y/no-static-element-interactions: off */
+
+import React, { Suspense, useCallback, useRef, useState } from "react";
 
 import "./GatherArea.css";
 import { useGatherArea, RegionData } from "../hooks/useGatherArea";
@@ -6,16 +8,23 @@ import { useFaceImages } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { RegionEditor } from "./RegionEditor";
 import { FaceCard } from "./FaceCard";
+import { SuspenseFallback } from "./SuspenseFallback";
+
+const MomentaryChat = React.lazy(() => import("./MomentaryChat"));
 
 type OnMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 
 const Region = React.memo<{
+  roomId: string;
+  userId: string;
+  nickname: string;
   id: string;
   data: RegionData;
   highlight?: boolean;
-}>(({ id, data, highlight }) => {
+}>(({ roomId, userId, nickname, id, data, highlight }) => {
   const boxShadow =
-    (data.isMeeting && (highlight ? "0 0 0 5px pink" : "0 0 0 1px pink")) ||
+    (data.type === "meeting" &&
+      (highlight ? "0 0 0 5px pink" : "0 0 0 1px pink")) ||
     undefined;
   return (
     <div
@@ -26,11 +35,21 @@ const Region = React.memo<{
         width: `${data.size[0]}px`,
         height: `${data.size[1]}px`,
         boxShadow,
-        zIndex: data.zIndex,
+        zIndex: data.type !== "chat" ? data.zIndex : undefined,
         background: data.background,
       }}
     >
       {data.iframe && <iframe title={id} src={data.iframe} frameBorder="0" />}
+      {data.type === "chat" && (
+        <Suspense fallback={<SuspenseFallback />}>
+          <MomentaryChat
+            roomId={roomId}
+            userId={userId}
+            nickname={nickname}
+            uniqueId={id}
+          />
+        </Suspense>
+      )}
     </div>
   );
 });
@@ -63,8 +82,6 @@ const Avatar = React.memo<{
           left: `${position[0]}px`,
           top: `${position[1]}px`,
         }}
-        role="button"
-        tabIndex={-1}
         onMouseDown={(e) => {
           e.preventDefault();
           if (isMyself) {
@@ -142,9 +159,9 @@ export const GatherArea = React.memo<{
       (a, b) => (regionMap[b].zIndex ?? 0) - (regionMap[a].zIndex ?? 0)
     );
     const activeMeetingRegionId = regionIdList.find((id) => {
-      const { isMeeting, position, size } = regionMap[id] as RegionData;
+      const { type, position, size } = regionMap[id] as RegionData;
       return (
-        isMeeting &&
+        type === "meeting" &&
         position[0] <= myAvatar.position[0] &&
         position[1] <= myAvatar.position[1] &&
         myAvatar.position[0] + 36 <= position[0] + size[0] &&
@@ -169,11 +186,6 @@ export const GatherArea = React.memo<{
       <div className="GatherArea-container">
         <div
           className="GatherArea-body"
-          role="button"
-          tabIndex={-1}
-          onMouseDown={(e) => {
-            e.preventDefault();
-          }}
           onMouseMove={(e) => {
             if (onMouseDragRef.current) {
               onMouseDragRef.current(e);
@@ -186,6 +198,9 @@ export const GatherArea = React.memo<{
           {Object.entries(regionMap).map(([regionId, regionData]) => (
             <Region
               key={regionId}
+              roomId={roomId}
+              userId={userId}
+              nickname={nickname}
               id={regionId}
               data={regionData}
               highlight={regionId === activeMeetingRegionId}

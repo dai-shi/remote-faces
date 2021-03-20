@@ -4,9 +4,9 @@ import { SuspenseFallback } from "./SuspenseFallback";
 import "./SelectivePane.css";
 
 const components = {
+  "Gather Area": React.lazy(() => import("./GatherArea")),
   Welcome: React.lazy(() => import("./Welcome")),
   "Momentary Chat": React.lazy(() => import("./MomentaryChat")),
-  "Gather Area": React.lazy(() => import("./GatherArea")),
   "Spatial Area": React.lazy(() => import("./SpatialArea")),
   "Screen Share": React.lazy(() => import("./ScreenShare")),
   "White Board": React.lazy(() => import("./CollabWhiteBoard")),
@@ -36,10 +36,7 @@ export const SelectivePane = React.memo<{
     videoDeviceId,
     audioDeviceId,
   }) => {
-    const [activePane, setActivePane] = useState<string[]>([
-      "Welcome",
-      "Momentary Chat",
-    ]);
+    const [activePane, setActivePane] = useState<string[]>(["Gather Area"]);
     const togglePane = (name: string) => {
       setActivePane((prev) => {
         if (prev.includes(name)) {
@@ -88,6 +85,7 @@ export const SelectivePane = React.memo<{
                 suspended,
                 videoDeviceId,
                 audioDeviceId,
+                uniqueId: undefined,
               })}
             </Suspense>
           ))}

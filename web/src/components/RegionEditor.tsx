@@ -8,7 +8,7 @@ export const RegionEditor = React.memo<{
   userId: string;
 }>(({ roomId, userId }) => {
   const [regionId, setRegionId] = useState("");
-  const [isMeeting, setIsMeeting] = useState(false);
+  const [type, setType] = useState<RegionData["type"]>("background");
   const [left, setLeft] = useState(100);
   const [top, setTop] = useState(100);
   const [width, setWidth] = useState(100);
@@ -19,7 +19,7 @@ export const RegionEditor = React.memo<{
 
   const addRegion = () => {
     const data: RegionData = {
-      isMeeting,
+      type,
       position: [left, top],
       size: [width, height],
       zIndex,
@@ -40,12 +40,15 @@ export const RegionEditor = React.memo<{
       </label>
       <hr />
       <label>
-        Is Meeting:{" "}
-        <input
-          type="checkbox"
-          checked={isMeeting}
-          onChange={() => setIsMeeting((p) => !p)}
-        />
+        Type:{" "}
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value as RegionData["type"])}
+        >
+          <option value="background">Background</option>
+          <option value="meeting">Meeting</option>
+          <option value="chat">Chat</option>
+        </select>
       </label>
       <hr />
       <label>

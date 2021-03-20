@@ -44,13 +44,15 @@ const compareReply = (a: Reply, b: Reply) => {
 export const useMomentaryChat = (
   roomId: string,
   userId: string,
-  nickname: string
+  nickname: string,
+  uniqueChatId?: string
 ) => {
+  const chatType = `${uniqueChatId || "momentray"}Chat`;
   const [chatList, setChatList] = useState<ChatItem[]>([]);
 
   useEffect(() => {
     const roomState = getRoomState(roomId, userId);
-    const list = roomState.ydoc.getArray("momentrayChat");
+    const list = roomState.ydoc.getArray(chatType);
     const listener = () => {
       setChatList(list.toArray().filter(isChatItem));
     };
@@ -59,12 +61,12 @@ export const useMomentaryChat = (
     return () => {
       list.unobserve(listener);
     };
-  }, [roomId, userId]);
+  }, [roomId, userId, chatType]);
 
   const sendChat = useCallback(
     (text: string) => {
       const roomState = getRoomState(roomId, userId);
-      const list = roomState.ydoc.getArray("momentrayChat");
+      const list = roomState.ydoc.getArray(chatType);
       const chatItem: ChatItem = {
         nickname,
         messageId: secureRandomId(),
@@ -78,13 +80,13 @@ export const useMomentaryChat = (
       }
       setChatList(list.toArray().filter(isChatItem));
     },
-    [roomId, userId, nickname]
+    [roomId, userId, nickname, chatType]
   );
 
   const replyChat = useCallback(
     (text: string, inReplyTo: string) => {
       const roomState = getRoomState(roomId, userId);
-      const list = roomState.ydoc.getArray("momentrayChat");
+      const list = roomState.ydoc.getArray(chatType);
       list.forEach((item, index) => {
         if (!isChatItem(item)) return;
         if (item.messageId === inReplyTo) {
@@ -98,7 +100,7 @@ export const useMomentaryChat = (
       });
       setChatList(list.toArray().filter(isChatItem));
     },
-    [roomId, userId]
+    [roomId, userId, chatType]
   );
 
   return {
