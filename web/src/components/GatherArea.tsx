@@ -1,3 +1,5 @@
+/* eslint jsx-a11y/no-static-element-interactions: off */
+
 import React, { Suspense, useCallback, useRef, useState } from "react";
 
 import "./GatherArea.css";
@@ -33,7 +35,7 @@ const Region = React.memo<{
         width: `${data.size[0]}px`,
         height: `${data.size[1]}px`,
         boxShadow,
-        zIndex: data.zIndex,
+        zIndex: data.type !== "chat" ? data.zIndex : undefined,
         background: data.background,
       }}
     >
@@ -80,8 +82,6 @@ const Avatar = React.memo<{
           left: `${position[0]}px`,
           top: `${position[1]}px`,
         }}
-        role="button"
-        tabIndex={-1}
         onMouseDown={(e) => {
           e.preventDefault();
           if (isMyself) {
@@ -186,11 +186,6 @@ export const GatherArea = React.memo<{
       <div className="GatherArea-container">
         <div
           className="GatherArea-body"
-          role="button"
-          tabIndex={-1}
-          onMouseDown={(e) => {
-            e.preventDefault();
-          }}
           onMouseMove={(e) => {
             if (onMouseDragRef.current) {
               onMouseDragRef.current(e);
