@@ -101,12 +101,14 @@ export const MomentaryChat = React.memo<{
   roomId: string;
   userId: string;
   nickname: string;
-}>(({ roomId, userId, nickname }) => {
+  uniqueId?: string;
+}>(({ roomId, userId, nickname, uniqueId }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { chatList, sendChat, replyChat } = useMomentaryChat(
     roomId,
     userId,
-    nickname
+    nickname,
+    uniqueId
   );
 
   const clearRef = useRef<() => void>();

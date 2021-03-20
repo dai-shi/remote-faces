@@ -88,6 +88,7 @@ export const SelectivePane = React.memo<{
                 suspended,
                 videoDeviceId,
                 audioDeviceId,
+                uniqueId: undefined,
               })}
             </Suspense>
           ))}
