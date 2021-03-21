@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 
+import "./RegionEditor.css";
 import { getRoomState } from "../states/roomMap";
-import { RegionData } from "../hooks/useGatherArea";
+import { ROOM_STATE_KEY, RegionData } from "../hooks/useGatherArea";
 
 export const RegionEditor = React.memo<{
   roomId: string;
@@ -15,6 +16,7 @@ export const RegionEditor = React.memo<{
   const [height, setHeight] = useState(100);
   const [zIndex, setZIndex] = useState(0);
   const [background, setBackground] = useState("");
+  const [border, setBorder] = useState("");
   const [iframe, setIframe] = useState("");
 
   const addRegion = () => {
@@ -24,11 +26,35 @@ export const RegionEditor = React.memo<{
       size: [width, height],
       zIndex,
       background,
+      border,
       iframe,
     };
     const roomState = getRoomState(roomId, userId);
-    const map = roomState.ydoc.getMap("gatherRegionMap");
+    const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
     map.set(regionId, data);
+  };
+
+  const [allRegionData, setAllRegionData] = useState<string | null>(null);
+
+  const loadAllRegionData = () => {
+    const roomState = getRoomState(roomId, userId);
+    const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
+    setAllRegionData(JSON.stringify(map.toJSON()));
+  };
+
+  const saveAllRegionData = () => {
+    const roomState = getRoomState(roomId, userId);
+    const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
+    try {
+      Object.entries(JSON.parse(allRegionData || "")).forEach(
+        ([key, value]) => {
+          map.set(key, value);
+        }
+      );
+      setAllRegionData(null);
+    } catch (e) {
+      console.log("failed to save all region data", e);
+    }
   };
 
   return (
@@ -59,7 +85,6 @@ export const RegionEditor = React.memo<{
           onChange={(e) => setLeft(Number(e.target.value))}
         />
       </label>
-      <hr />
       <label>
         Top:{" "}
         <input
@@ -77,7 +102,6 @@ export const RegionEditor = React.memo<{
           onChange={(e) => setWidth(Number(e.target.value))}
         />
       </label>
-      <hr />
       <label>
         Height:{" "}
         <input
@@ -87,15 +111,17 @@ export const RegionEditor = React.memo<{
         />
       </label>
       <hr />
-      <label>
-        zIndex:{" "}
-        <input
-          type="number"
-          value={zIndex}
-          max={0}
-          onChange={(e) => setZIndex(Number(e.target.value))}
-        />
-      </label>
+      {type !== "chat" && (
+        <label>
+          zIndex:{" "}
+          <input
+            type="number"
+            value={zIndex}
+            max={0}
+            onChange={(e) => setZIndex(Number(e.target.value))}
+          />
+        </label>
+      )}
       <hr />
       <label>
         Background:{" "}
@@ -103,6 +129,10 @@ export const RegionEditor = React.memo<{
           value={background}
           onChange={(e) => setBackground(e.target.value)}
         />
+      </label>
+      <label>
+        Border:{" "}
+        <input value={border} onChange={(e) => setBorder(e.target.value)} />
       </label>
       <hr />
       <label>
@@ -113,6 +143,34 @@ export const RegionEditor = React.memo<{
       <button type="button" onClick={() => addRegion()} disabled={!regionId}>
         Add Region
       </button>
+      <hr />
+      <button
+        type="button"
+        className="RegionEditor-toggle"
+        onClick={() => {
+          if (allRegionData) {
+            setAllRegionData(null);
+          } else {
+            loadAllRegionData();
+          }
+        }}
+      >
+        Import/Export {allRegionData ? <>&#9660;</> : <>&#9654;</>}
+      </button>
+      {!!allRegionData && (
+        <div>
+          <label>
+            All Region Data:{" "}
+            <textarea
+              value={allRegionData}
+              onChange={(e) => setAllRegionData(e.target.value)}
+            />
+          </label>
+          <button type="button" onClick={saveAllRegionData}>
+            Replace (Be careful)
+          </button>
+        </div>
+      )}
     </div>
   );
 });

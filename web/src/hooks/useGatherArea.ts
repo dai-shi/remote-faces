@@ -36,6 +36,7 @@ export type RegionData = {
   size: [width: number, height: number];
   zIndex?: number;
   background?: string;
+  border?: string;
   iframe?: string;
 };
 
@@ -51,6 +52,7 @@ const isRegionData = (x: unknown): x is RegionData => {
       (typeof obj.zIndex === "undefined" || typeof obj.zIndex === "number") &&
       (typeof obj.background === "undefined" ||
         typeof obj.background === "string") &&
+      (typeof obj.border === "undefined" || typeof obj.border === "string") &&
       (typeof obj.iframe === "undefined" || typeof obj.iframe === "string")
     ) {
       return true;
@@ -69,6 +71,7 @@ const isEqualRegionData = (a: RegionData, b: RegionData) =>
   a.size[1] === b.size[1] &&
   a.zIndex === b.zIndex &&
   a.background === b.background &&
+  a.border === b.border &&
   a.iframe === b.iframe;
 
 export type AvatarMap = {
@@ -78,6 +81,8 @@ export type AvatarMap = {
 export type RegionMap = {
   [regionId: string]: RegionData;
 };
+
+export const ROOM_STATE_KEY = "gatherRegionMap";
 
 export const useGatherArea = (roomId: string, userId: string) => {
   const [avatarMap, setAvatarMap] = useState<AvatarMap>({});
@@ -145,7 +150,7 @@ export const useGatherArea = (roomId: string, userId: string) => {
 
   useEffect(() => {
     const roomState = getRoomState(roomId, userId);
-    const map = roomState.ydoc.getMap("gatherRegionMap");
+    const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
     const listener = () => {
       setRegionMap((prev) => {
         const next: RegionMap = {};
@@ -170,7 +175,7 @@ export const useGatherArea = (roomId: string, userId: string) => {
   const updateRegion = useCallback(
     (id: string, data: RegionData) => {
       const roomState = getRoomState(roomId, userId);
-      const map = roomState.ydoc.getMap("gatherRegionMap");
+      const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
       map.set(id, data);
     },
     [roomId, userId]

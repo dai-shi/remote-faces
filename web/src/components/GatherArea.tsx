@@ -37,6 +37,7 @@ const Region = React.memo<{
         boxShadow,
         zIndex: data.type !== "chat" ? data.zIndex : undefined,
         background: data.background,
+        border: data.border,
       }}
     >
       {data.iframe && <iframe title={id} src={data.iframe} frameBorder="0" />}
