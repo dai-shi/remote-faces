@@ -7,6 +7,7 @@ import { useGatherArea, RegionData } from "../hooks/useGatherArea";
 import { useFaceImages } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { RegionEditor } from "./RegionEditor";
+import { LinkOpener } from "./LinkOpener";
 import { FaceCard } from "./FaceCard";
 import { SuspenseFallback } from "./SuspenseFallback";
 
@@ -181,7 +182,9 @@ export const GatherArea = React.memo<{
       `gatherArea/meeting/${activeMeetingRegionId}/`
     );
 
-    const [showRegionEditor, setShowRegionEditor] = useState(false);
+    const [showModal, setShowModal] = useState<
+      null | "region-editor" | "link-opener"
+    >(null);
 
     return (
       <div className="GatherArea-container">
@@ -244,13 +247,36 @@ export const GatherArea = React.memo<{
           <div>
             <button
               type="button"
-              onClick={() => setShowRegionEditor((p) => !p)}
+              onClick={() =>
+                setShowModal(
+                  showModal === "region-editor" ? null : "region-editor"
+                )
+              }
             >
-              {showRegionEditor ? "Close Region Editor" : "Open Region Editor"}
+              {showModal === "region-editor"
+                ? "Close Region Editor"
+                : "Open Region Editor"}
             </button>
-            {showRegionEditor && (
+            {showModal === "region-editor" && (
               <div className="GatherArea-region-editor">
                 <RegionEditor roomId={roomId} userId={userId} />
+              </div>
+            )}
+          </div>
+          <div>
+            <button
+              type="button"
+              onClick={() =>
+                setShowModal(showModal === "link-opener" ? null : "link-opener")
+              }
+            >
+              {showModal === "link-opener"
+                ? "Close Link Opener"
+                : "Open Link Opener"}
+            </button>
+            {showModal === "link-opener" && (
+              <div className="GatherArea-link-opener">
+                <LinkOpener roomId={roomId} />
               </div>
             )}
           </div>

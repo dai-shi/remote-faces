@@ -35,12 +35,21 @@
   position: absolute;
   left: 5px;
   top: 5px;
+  display: flex;
 }
 
 .GatherArea-region-editor {
   margin: 5px;
   padding: 10px;
   background: lightyellow;
+  border: 3px solid gray;
+  border-radius: 8px;
+}
+
+.GatherArea-link-opener {
+  margin: 5px;
+  padding: 10px;
+  background: skyblue;
   border: 3px solid gray;
   border-radius: 8px;
 }
