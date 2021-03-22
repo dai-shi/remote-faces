@@ -13,6 +13,7 @@ const SingleRoom = React.lazy(() => import("./SingleRoom"));
 export const SingleRoomEntrance = React.memo(() => {
   const { roomId, roomEntered, config } = useProxy(singleRoomState);
   const [name, setName] = useState(config.nickname);
+  const [takePhoto, setTakePhoto] = useState(config.takePhoto);
   const [avatar, setAvatar] = useState(config.avatar);
   const videoDevices = useVideoDevices();
   const audioDevices = useAudioDevices();
@@ -45,7 +46,7 @@ export const SingleRoomEntrance = React.memo(() => {
       singleRoomState.roomId =
         secureRandomId(ROOM_ID_PREFIX_LEN / 2) + (await generateCryptoKey());
     }
-    setConfig(avatar, name, videoDeviceId, audioDeviceId);
+    setConfig(avatar, name, takePhoto, videoDeviceId, audioDeviceId);
     singleRoomState.roomEntered = true;
   };
 
@@ -59,11 +60,23 @@ export const SingleRoomEntrance = React.memo(() => {
         <div className="SingleRoomEntrance-input">
           <div>
             <img src={avatar} alt="avatar" />
+          </div>
+          <div>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => onChangeAvatar(e.target.files)}
             />
+          </div>
+          <div>
+            <label>
+              <input
+                type="checkbox"
+                checked={takePhoto}
+                onChange={(e) => setTakePhoto(e.target.checked)}
+              />
+              Take photo every 2 min
+            </label>
           </div>
           <div>
             <input
@@ -73,7 +86,7 @@ export const SingleRoomEntrance = React.memo(() => {
             />
           </div>
           <div>
-            Select Video Device:{" "}
+            Video:{" "}
             <select
               value={videoDeviceId}
               onChange={(e) => {
@@ -88,7 +101,7 @@ export const SingleRoomEntrance = React.memo(() => {
             </select>
           </div>
           <div>
-            Select Audio Device:{" "}
+            Audio:{" "}
             <select
               value={audioDeviceId}
               onChange={(e) => {

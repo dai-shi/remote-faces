@@ -1,6 +1,7 @@
 type StringItemName =
   | "nickname"
   | "avatar_img"
+  | "take_photo"
   | "config_hidden"
   | "faceimage_video_device_id"
   | "faceimage_audio_device_id";

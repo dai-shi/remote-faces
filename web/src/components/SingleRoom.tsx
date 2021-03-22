@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useProxy } from "valtio";
 
 import "./SingleRoom.css";
-import { singleRoomState } from "../states/singleRoom";
+import { singleRoomState, toggleConfigTakePhoto } from "../states/singleRoom";
 import { setRoomIdToUrl } from "../utils/url";
 import { FaceImages } from "./FaceImages";
 import { ControlPanel } from "./ControlPanel";
@@ -15,7 +15,6 @@ export const SingleRoom = React.memo(() => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
 
-  const [suspended, setSuspended] = useState(true);
   const [liveMode, setLiveMode] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(false);
@@ -25,8 +24,8 @@ export const SingleRoom = React.memo(() => {
     <div className="SingleRoom-container">
       <div className="SingleRoom-1st-column">
         <ControlPanel
-          suspended={suspended}
-          setSuspended={setSuspended}
+          suspended={!config.takePhoto}
+          toggleSuspended={toggleConfigTakePhoto}
           liveMode={liveMode}
           setLiveMode={setLiveMode}
           micOn={micOn}
@@ -44,7 +43,7 @@ export const SingleRoom = React.memo(() => {
           avatar={config.avatar}
           nickname={config.nickname}
           statusMesg={statusMesg}
-          suspended={suspended}
+          suspended={!config.takePhoto}
           liveMode={liveMode}
           micOn={micOn}
           speakerOn={speakerOn}
@@ -61,7 +60,7 @@ export const SingleRoom = React.memo(() => {
           nickname={config.nickname}
           statusMesg={statusMesg}
           setStatusMesg={setStatusMesg}
-          suspended={suspended}
+          suspended={!config.takePhoto}
           videoDeviceId={config.videoDeviceId}
           audioDeviceId={config.audioDeviceId}
         />

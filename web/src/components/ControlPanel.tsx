@@ -4,7 +4,7 @@ import "./ControlPanel.css";
 
 export const ControlPanel = React.memo<{
   suspended: boolean;
-  setSuspended: Dispatch<SetStateAction<boolean>>;
+  toggleSuspended: () => void;
   liveMode: boolean;
   setLiveMode: Dispatch<SetStateAction<boolean>>;
   micOn: boolean;
@@ -16,7 +16,7 @@ export const ControlPanel = React.memo<{
 }>(
   ({
     suspended,
-    setSuspended,
+    toggleSuspended,
     liveMode,
     setLiveMode,
     setMicOn,
@@ -27,7 +27,7 @@ export const ControlPanel = React.memo<{
     <div className="ControlPanel-container">
       <button
         type="button"
-        onClick={() => setSuspended((x) => !x)}
+        onClick={toggleSuspended}
         title={suspended ? "Enable Camera" : "Disable Camera"}
       >
         &#x1F4F7;
