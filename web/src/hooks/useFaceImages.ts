@@ -71,8 +71,10 @@ export const useFaceImages = (
             changed = true;
           }
         });
+        const tenMinAgo = Date.now() - 10 * 60 * 1000;
         const filtered = copied.filter(
-          (item) => roomState.userIdMap[item.userId]
+          (item) =>
+            item.updated >= tenMinAgo && roomState.userIdMap[item.userId]
         );
         changed = changed || copied.length !== filtered.length;
         if (changed) {
@@ -93,24 +95,11 @@ export const useFaceImages = (
   useEffect(() => {
     const roomState = getRoomState(roomId, userId);
     const map = roomState.ydoc.getMap("faceImages");
-    const checkObsoletedImage = () => {
-      const tenMinAgo = Date.now() - 10 * 60 * 1000;
-      setRoomImages((prev) => {
-        const next = prev.flatMap((item) => {
-          if (item.updated < tenMinAgo) {
-            return [];
-          }
-          return [item];
-        });
-        return prev.length !== next.length ? next : prev;
-      });
-    };
     let didCleanup = false;
     let timer: NodeJS.Timeout;
     const loop = async () => {
       if (didCleanup) return;
       try {
-        checkObsoletedImage();
         const image = suspended ? avatar : await takePhoto(deviceId);
         if (didCleanup) return;
         setMyImage(image);

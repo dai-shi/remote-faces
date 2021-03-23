@@ -60,6 +60,7 @@ const Avatar = React.memo<{
   nickname: string;
   statusMesg: string;
   image?: string;
+  obsoleted?: boolean;
   position: [left: number, top: number];
   setPosition?: (nextPosition: [number, number]) => void;
   registerOnMouseDrag: (onMouseMove?: OnMouseMove) => void;
@@ -70,6 +71,7 @@ const Avatar = React.memo<{
     nickname,
     statusMesg,
     image,
+    obsoleted,
     position,
     setPosition,
     registerOnMouseDrag,
@@ -103,7 +105,7 @@ const Avatar = React.memo<{
           image={image}
           nickname={nickname}
           statusMesg={statusMesg}
-          obsoleted={false}
+          obsoleted={!!obsoleted}
           liveMode={!!stream}
           stream={stream}
           muted={!!muted}
@@ -186,6 +188,8 @@ export const GatherArea = React.memo<{
       null | "region-editor" | "link-opener"
     >(null);
 
+    const twoMinAgo = Date.now() - 2 * 60 * 1000;
+
     return (
       <div className="GatherArea-container">
         <div
@@ -224,6 +228,7 @@ export const GatherArea = React.memo<{
                 nickname={imageData.info.nickname}
                 statusMesg={imageData.info.message}
                 image={imageData.image}
+                obsoleted={imageData.updated < twoMinAgo}
                 position={avatarData.position}
                 registerOnMouseDrag={registerOnMouseDrag}
                 stream={faceStreamMap[uid]}
