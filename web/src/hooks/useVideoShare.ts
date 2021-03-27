@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useProxy } from "valtio";
+import { useSnapshot } from "valtio";
 
 import { getVideoStream } from "../media/video";
 import { getRoomState } from "../states/roomMap";
@@ -46,7 +46,7 @@ export const useVideoShare = (
     });
   };
 
-  const trackMap = useProxy(getRoomState(roomId, userId).trackMap);
+  const trackMap = useSnapshot(getRoomState(roomId, userId).trackMap);
   Object.entries(trackMap[videoType] || {}).forEach(onTrack);
 
   useEffect(() => {

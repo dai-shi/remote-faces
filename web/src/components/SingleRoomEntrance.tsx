@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useProxy } from "valtio";
+import { useSnapshot } from "valtio";
 
 import "./SingleRoomEntrance.css";
 import { singleRoomState, setConfig } from "../states/singleRoom";
@@ -11,7 +11,7 @@ const Landing = React.lazy(() => import("./Landing"));
 const SingleRoom = React.lazy(() => import("./SingleRoom"));
 
 export const SingleRoomEntrance = React.memo(() => {
-  const { roomId, roomEntered, config } = useProxy(singleRoomState);
+  const { roomId, roomEntered, config } = useSnapshot(singleRoomState);
   const [name, setName] = useState(config.nickname);
   const [takePhoto, setTakePhoto] = useState(config.takePhoto);
   const [avatar, setAvatar] = useState(config.avatar);

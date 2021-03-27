@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useProxy } from "valtio";
+import { useSnapshot } from "valtio";
 
 import "./SingleRoom.css";
 import { singleRoomState, toggleConfigTakePhoto } from "../states/singleRoom";
@@ -9,7 +9,7 @@ import { ControlPanel } from "./ControlPanel";
 import { SelectivePane } from "./SelectivePane";
 
 export const SingleRoom = React.memo(() => {
-  const { roomId, userId, config } = useProxy(singleRoomState);
+  const { roomId, userId, config } = useSnapshot(singleRoomState);
   const [statusMesg, setStatusMesg] = useState("");
   useEffect(() => {
     setRoomIdToUrl(roomId);

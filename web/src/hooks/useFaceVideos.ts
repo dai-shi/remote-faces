@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useProxy } from "valtio";
+import { useSnapshot } from "valtio";
 
 import { getFaceVideoStream } from "../media/video";
 import { getAudioStream } from "../media/audio";
@@ -71,7 +71,7 @@ export const useFaceVideos = (
     });
   };
 
-  const trackMap = useProxy(getRoomState(roomId, userId).trackMap);
+  const trackMap = useSnapshot(getRoomState(roomId, userId).trackMap);
   Object.entries(trackMap[videoType] || {}).forEach(onTrack);
   Object.entries(trackMap[audioType] || {}).forEach(onTrack);
 

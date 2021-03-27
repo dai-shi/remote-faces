@@ -29,7 +29,7 @@
     "react-three-fiber": "^5.3.10",
     "react-use-gesture": "^8.0.1",
     "three": "^0.123.0",
-    "valtio": "^0.7.1",
+    "valtio": "https://pkg.csb.dev/pmndrs/valtio/commit/52c3c148/valtio",
     "wgo": "^3.0.0-alpha.7",
     "yjs": "^13.5.1"
   },

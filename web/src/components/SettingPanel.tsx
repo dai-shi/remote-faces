@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useProxy } from "valtio";
+import { useSnapshot } from "valtio";
 
 import "./SettingPanel.css";
 import { setStringItem, getStringItem } from "../utils/storage";
@@ -18,7 +18,7 @@ export const SettingPanel = React.memo<{
     setStringItem("config_hidden", configOpen ? "false" : "true");
   }, [configOpen]);
 
-  const [networkStatus] = useProxy(
+  const [networkStatus] = useSnapshot(
     getRoomState(roomId, userId).networkStatusList
   );
 
