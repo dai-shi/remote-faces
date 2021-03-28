@@ -61,15 +61,51 @@ export const MediaShare = React.memo<{
           gridTemplateRows: Array(numOfVideos).fill("100%").join(" "),
         };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [fullscreenMode, setFullscreenMode] = useState(false);
+  const enterFullscreen = async () => {
+    if (containerRef.current) {
+      try {
+        await containerRef.current.requestFullscreen();
+        setFullscreenMode(true);
+        containerRef.current.onfullscreenchange = () => {
+          setFullscreenMode(
+            document.fullscreenElement === containerRef.current
+          );
+        };
+      } catch (e) {
+        // ignored
+      }
+    }
+  };
+  const exitFullscreen = async () => {
+    try {
+      document.exitFullscreen();
+      setFullscreenMode(false);
+    } catch (e) {
+      // ignored
+    }
+  };
+
   return (
-    <div className="MediaShare-container">
+    <div className="MediaShare-container" ref={containerRef}>
       <div className="MediaShare-toolbar">
+        {!fullscreenMode && (
+          <button type="button" onClick={enterFullscreen}>
+            Enter Fullscreen
+          </button>
+        )}
+        {fullscreenMode && (
+          <button type="button" onClick={exitFullscreen}>
+            Exit Fullscreen
+          </button>
+        )}
         <select
           value={displayMode}
           onChange={(e) => setDisplayMode(e.target.value as typeof displayMode)}
         >
           <option value="grid">Display in Grid</option>
-          <option value="vertical">Display in Scroll</option>
+          <option value="vertical">Display Vertically</option>
         </select>
         {mediaId !== null && (
           <button type="button" onClick={close}>
