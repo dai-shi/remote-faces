@@ -74,6 +74,7 @@ export const RegionEditor = React.memo<{
           <option value="background">Background</option>
           <option value="meeting">Meeting</option>
           <option value="chat">Chat</option>
+          <option value="media">Media</option>
         </select>
       </label>
       <hr />
