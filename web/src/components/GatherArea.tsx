@@ -12,6 +12,7 @@ import { FaceCard } from "./FaceCard";
 import { SuspenseFallback } from "./SuspenseFallback";
 
 const MomentaryChat = React.lazy(() => import("./MomentaryChat"));
+const MediaShare = React.lazy(() => import("./MediaShare"));
 
 type OnMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 
@@ -45,6 +46,16 @@ const Region = React.memo<{
       {data.type === "chat" && (
         <Suspense fallback={<SuspenseFallback />}>
           <MomentaryChat
+            roomId={roomId}
+            userId={userId}
+            nickname={nickname}
+            uniqueId={id}
+          />
+        </Suspense>
+      )}
+      {data.type === "media" && (
+        <Suspense fallback={<SuspenseFallback />}>
+          <MediaShare
             roomId={roomId}
             userId={userId}
             nickname={nickname}
