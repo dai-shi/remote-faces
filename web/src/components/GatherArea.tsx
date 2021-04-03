@@ -13,6 +13,7 @@ import { SuspenseFallback } from "./SuspenseFallback";
 
 const MomentaryChat = React.lazy(() => import("./MomentaryChat"));
 const MediaShare = React.lazy(() => import("./MediaShare"));
+const GoBoard = React.lazy(() => import("./GoBoard"));
 
 type OnMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 
@@ -61,6 +62,11 @@ const Region = React.memo<{
             nickname={nickname}
             uniqueId={id}
           />
+        </Suspense>
+      )}
+      {data.type === "goboard" && (
+        <Suspense fallback={<SuspenseFallback />}>
+          <GoBoard roomId={roomId} userId={userId} uniqueId={id} />
         </Suspense>
       )}
     </div>

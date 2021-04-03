@@ -29,7 +29,7 @@ const createGoBoard = (
   const game = new Game(6);
   const board = new CanvasBoard(element, {
     theme: themes.modernTheme,
-    width: element.clientWidth / 2,
+    width: element.clientWidth,
     size: 6,
   });
   let fieldObjects: FieldObject[] = [];
@@ -138,7 +138,7 @@ const createGoBoard = (
     }
   };
   const resize = () => {
-    board.setWidth(element.clientWidth / 2);
+    board.setWidth(element.clientWidth);
   };
   return { syncDown, pass, undo, resize };
 };
@@ -146,7 +146,8 @@ const createGoBoard = (
 export const GoBoard = React.memo<{
   roomId: string;
   userId: string;
-}>(({ roomId, userId }) => {
+  uniqueId?: string;
+}>(({ roomId, userId, uniqueId }) => {
   const actionsRef = useRef<{
     syncDown: (positions: PositionData[]) => void;
     pass: () => void;
@@ -158,7 +159,7 @@ export const GoBoard = React.memo<{
       actionsRef.current.syncDown(positions);
     }
   }, []);
-  const { syncUp } = useGoBoard(roomId, userId, syncDown);
+  const { syncUp } = useGoBoard(roomId, userId, syncDown, uniqueId);
   const [color, setColor] = useState<"black" | "white">("black");
   const [capCount, setCapCount] = useState<{
     black: number;

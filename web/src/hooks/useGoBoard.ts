@@ -47,11 +47,13 @@ export type Action =
 export const useGoBoard = (
   roomId: string,
   userId: string,
-  syncDown: (positions: PositionData[]) => void
+  syncDown: (positions: PositionData[]) => void,
+  uniqueBoardId?: string
 ) => {
+  const boardType = `${uniqueBoardId || "go"}Board`;
   useEffect(() => {
     const roomState = getRoomState(roomId, userId);
-    const list = roomState.ydoc.getArray("goBoard");
+    const list = roomState.ydoc.getArray(boardType);
     const listener = () => {
       syncDown(
         list.toArray().flatMap((item) => {
@@ -72,19 +74,19 @@ export const useGoBoard = (
     return () => {
       list.unobserve(listener);
     };
-  }, [roomId, userId, syncDown]);
+  }, [roomId, userId, syncDown, boardType]);
 
   const syncUp = useCallback(
     (positions: PositionData[]) => {
       const roomState = getRoomState(roomId, userId);
-      const list = roomState.ydoc.getArray("goBoard");
+      const list = roomState.ydoc.getArray(boardType);
       if (list.length < positions.length) {
         list.push(positions.slice(list.length).map((x) => JSON.stringify(x)));
       } else if (list.length > positions.length) {
         list.delete(positions.length, list.length - positions.length);
       }
     },
-    [roomId, userId]
+    [roomId, userId, boardType]
   );
 
   return { syncUp };

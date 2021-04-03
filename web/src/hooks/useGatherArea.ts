@@ -31,7 +31,7 @@ const isEqualAvatarData = (a: AvatarData, b: AvatarData) =>
   a.position[0] === b.position[0] && a.position[1] === b.position[1];
 
 export type RegionData = {
-  type: "background" | "meeting" | "chat" | "media";
+  type: "background" | "meeting" | "chat" | "media" | "goboard";
   position: [left: number, top: number];
   size: [width: number, height: number];
   zIndex?: number;
@@ -44,7 +44,9 @@ const isRegionData = (x: unknown): x is RegionData => {
   try {
     const obj = x as RegionData;
     if (
-      ["background", "meeting", "chat", "media"].includes(obj.type) &&
+      ["background", "meeting", "chat", "media", "goboard"].includes(
+        obj.type
+      ) &&
       typeof obj.position[0] === "number" &&
       typeof obj.position[1] === "number" &&
       typeof obj.size[0] === "number" &&
