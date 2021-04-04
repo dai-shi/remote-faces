@@ -1,0 +1,78 @@
+import React from "react";
+
+import "./FaceList.css";
+import { Loading } from "./Loading";
+import { useFaceImages } from "../hooks/useFaceImages";
+import { FaceCard } from "./FaceCard";
+
+export const FaceList = React.memo<{
+  roomId: string;
+  userId: string;
+  avatar: string;
+  nickname: string;
+  statusMesg: string;
+  setStatusMesg: (mesg: string) => void;
+  suspended: boolean;
+  videoDeviceId?: string;
+}>(
+  ({
+    roomId,
+    userId,
+    avatar,
+    nickname,
+    statusMesg,
+    setStatusMesg,
+    suspended,
+    videoDeviceId,
+  }) => {
+    const { myImage, roomImages } = useFaceImages(
+      roomId,
+      userId,
+      avatar,
+      nickname,
+      statusMesg,
+      suspended,
+      false,
+      false,
+      false,
+      videoDeviceId
+    );
+    const twoMinAgo = Date.now() - 2 * 60 * 1000;
+
+    return (
+      <div className="FaceList-list">
+        <div className="FaceList-item">
+          <FaceCard
+            image={myImage}
+            nickname={nickname}
+            statusMesg={statusMesg}
+            setStatusMesg={setStatusMesg}
+            liveMode={false}
+            muted
+            micOn={false}
+            speakerOn={false}
+          />
+        </div>
+        {roomImages.map((item) => (
+          <div key={item.userId} className="FaceList-item">
+            <FaceCard
+              image={item.image}
+              nickname={item.info.nickname}
+              statusMesg={item.info.message}
+              obsoleted={item.updated < twoMinAgo}
+              liveMode={false}
+              muted
+              micOn={false}
+              speakerOn={false}
+            />
+          </div>
+        ))}
+        {!roomImages.length && (
+          <div className="FaceList-item">
+            <Loading />
+          </div>
+        )}
+      </div>
+    );
+  }
+);

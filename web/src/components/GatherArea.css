@@ -30,10 +30,13 @@
   overflow: hidden;
 }
 
+.GatherArea-facelist {
+}
+
 .GatherArea-toolbar {
   overflow: scroll;
   position: absolute;
-  left: 5px;
+  left: 40px;
   top: 5px;
   display: flex;
 }

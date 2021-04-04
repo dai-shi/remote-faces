@@ -8,6 +8,7 @@ import { useFaceImages } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { RegionEditor } from "./RegionEditor";
 import { LinkOpener } from "./LinkOpener";
+import { FaceList } from "./FaceList";
 import { FaceCard } from "./FaceCard";
 import { SuspenseFallback } from "./SuspenseFallback";
 
@@ -143,7 +144,7 @@ export const GatherArea = React.memo<{
   avatar: string;
   nickname: string;
   statusMesg: string;
-  setStatusMesg?: (mesg: string) => void;
+  setStatusMesg: (mesg: string) => void;
   suspended: boolean;
   videoDeviceId?: string;
   audioDeviceId?: string;
@@ -269,6 +270,18 @@ export const GatherArea = React.memo<{
             registerOnMouseDrag={registerOnMouseDrag}
             stream={faceStream || undefined}
             muted
+          />
+        </div>
+        <div className="GatherArea-facelist">
+          <FaceList
+            roomId={roomId}
+            userId={userId}
+            avatar={avatar}
+            nickname={nickname}
+            statusMesg={statusMesg}
+            setStatusMesg={setStatusMesg}
+            suspended={suspended}
+            videoDeviceId={videoDeviceId}
           />
         </div>
         <div className="GatherArea-toolbar">
