@@ -76,6 +76,7 @@ const Region = React.memo<{
 const Avatar = React.memo<{
   nickname: string;
   statusMesg: string;
+  setStatusMesg?: (mesg: string) => void;
   image?: string;
   obsoleted?: boolean;
   position: [left: number, top: number];
@@ -87,6 +88,7 @@ const Avatar = React.memo<{
   ({
     nickname,
     statusMesg,
+    setStatusMesg,
     image,
     obsoleted,
     position,
@@ -122,6 +124,7 @@ const Avatar = React.memo<{
           image={image}
           nickname={nickname}
           statusMesg={statusMesg}
+          setStatusMesg={setStatusMesg}
           obsoleted={!!obsoleted}
           liveMode={!!stream}
           stream={stream}
@@ -140,6 +143,7 @@ export const GatherArea = React.memo<{
   avatar: string;
   nickname: string;
   statusMesg: string;
+  setStatusMesg?: (mesg: string) => void;
   suspended: boolean;
   videoDeviceId?: string;
   audioDeviceId?: string;
@@ -150,6 +154,7 @@ export const GatherArea = React.memo<{
     avatar,
     nickname,
     statusMesg,
+    setStatusMesg,
     suspended,
     videoDeviceId,
     audioDeviceId,
@@ -255,6 +260,7 @@ export const GatherArea = React.memo<{
           <Avatar
             nickname={nickname}
             statusMesg={statusMesg}
+            setStatusMesg={setStatusMesg}
             image={myImage}
             position={myAvatar.position}
             setPosition={(position) =>

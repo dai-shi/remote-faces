@@ -33,6 +33,13 @@
   cursor: help;
 }
 
+button.FaceCard-mesg {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
 .FaceCard-live-indicator {
   position: absolute;
   top: 1px;
