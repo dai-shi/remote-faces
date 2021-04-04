@@ -21,9 +21,10 @@ export const SelectivePane = React.memo<{
   nickname: string;
   statusMesg: string;
   setStatusMesg: (mesg: string) => void;
-  suspended: boolean;
   videoDeviceId?: string;
   audioDeviceId?: string;
+  toggleSuspended: () => void;
+  suspended: boolean;
 }>(
   ({
     roomId,
@@ -32,9 +33,10 @@ export const SelectivePane = React.memo<{
     nickname,
     statusMesg,
     setStatusMesg,
-    suspended,
     videoDeviceId,
     audioDeviceId,
+    toggleSuspended,
+    suspended,
   }) => {
     const [activePane, setActivePane] = useState<string[]>(["Gather Area"]);
     const togglePane = (name: string) => {
@@ -86,6 +88,7 @@ export const SelectivePane = React.memo<{
                 videoDeviceId,
                 audioDeviceId,
                 uniqueId: undefined,
+                toggleSuspended,
               })}
             </Suspense>
           ))}

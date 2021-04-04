@@ -31,9 +31,11 @@
 }
 
 .GatherArea-facelist {
+  -webkit-app-region: drag;
 }
 
 .GatherArea-toolbar {
+  -webkit-app-region: drag;
   overflow: scroll;
   position: absolute;
   left: 40px;

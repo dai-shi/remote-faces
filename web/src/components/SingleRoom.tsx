@@ -63,6 +63,7 @@ export const SingleRoom = React.memo(() => {
           suspended={!config.takePhoto}
           videoDeviceId={config.videoDeviceId}
           audioDeviceId={config.audioDeviceId}
+          toggleSuspended={toggleConfigTakePhoto}
         />
       </div>
     </div>

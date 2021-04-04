@@ -36,8 +36,12 @@
 button.FaceCard-mesg {
   cursor: pointer;
   border: none;
-  background: none;
+  background: transparent;
   padding: 0;
+}
+
+button.FaceCard-mesg:focus {
+  outline:0;
 }
 
 .FaceCard-live-indicator {
@@ -65,4 +69,29 @@ button.FaceCard-mesg {
   font-size: 0.5rem;
   line-height: 0.5rem;
   cursor: default;
+}
+
+.FaceCard-camera {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  color: red;
+  font-size: 0.5rem;
+  line-height: 0.5rem;
+  font-family: sans-serif;
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.FaceCard-camera:focus {
+  outline:0;
+}
+
+.FaceCard-camera-disabled {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  opacity: 0.5;
 }

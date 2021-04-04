@@ -85,6 +85,8 @@ const Avatar = React.memo<{
   registerOnMouseDrag: (onMouseMove?: OnMouseMove) => void;
   stream?: MediaStream;
   muted?: boolean;
+  toggleSuspended?: () => void;
+  suspended?: boolean;
 }>(
   ({
     nickname,
@@ -97,6 +99,8 @@ const Avatar = React.memo<{
     registerOnMouseDrag,
     stream,
     muted,
+    toggleSuspended,
+    suspended,
   }) => {
     const isMyself = !!setPosition;
     return (
@@ -132,6 +136,8 @@ const Avatar = React.memo<{
           muted={!!muted}
           micOn={!!stream}
           speakerOn={!!stream}
+          toggleSuspended={toggleSuspended}
+          suspended={suspended}
         />
       </div>
     );
@@ -145,9 +151,10 @@ export const GatherArea = React.memo<{
   nickname: string;
   statusMesg: string;
   setStatusMesg: (mesg: string) => void;
-  suspended: boolean;
   videoDeviceId?: string;
   audioDeviceId?: string;
+  toggleSuspended: () => void;
+  suspended: boolean;
 }>(
   ({
     roomId,
@@ -156,9 +163,10 @@ export const GatherArea = React.memo<{
     nickname,
     statusMesg,
     setStatusMesg,
-    suspended,
     videoDeviceId,
     audioDeviceId,
+    toggleSuspended,
+    suspended,
   }) => {
     const { myImage, roomImages } = useFaceImages(
       roomId,
@@ -270,6 +278,8 @@ export const GatherArea = React.memo<{
             registerOnMouseDrag={registerOnMouseDrag}
             stream={faceStream || undefined}
             muted
+            toggleSuspended={toggleSuspended}
+            suspended={suspended}
           />
         </div>
         <div className="GatherArea-facelist">
@@ -280,8 +290,9 @@ export const GatherArea = React.memo<{
             nickname={nickname}
             statusMesg={statusMesg}
             setStatusMesg={setStatusMesg}
-            suspended={suspended}
             videoDeviceId={videoDeviceId}
+            toggleSuspended={toggleSuspended}
+            suspended={suspended}
           />
         </div>
         <div className="GatherArea-toolbar">

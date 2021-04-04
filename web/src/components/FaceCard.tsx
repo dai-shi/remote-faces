@@ -15,6 +15,8 @@ export const FaceCard = React.memo<{
   muted: boolean;
   micOn: boolean;
   speakerOn: boolean;
+  toggleSuspended?: () => void;
+  suspended?: boolean;
 }>(
   ({
     image,
@@ -27,6 +29,8 @@ export const FaceCard = React.memo<{
     muted,
     micOn,
     speakerOn,
+    toggleSuspended,
+    suspended,
   }) => {
     const firstStatusMesgChar: string | undefined = [...statusMesg][0];
     let emoji = setStatusMesg ? String.fromCodePoint(0x1f4dd) : "";
@@ -104,6 +108,19 @@ export const FaceCard = React.memo<{
             {micOn && <span title="Mic On">&#x1F3A4;</span>}
             {speakerOn && <span title="Speaker On">&#x1F508;</span>}
           </div>
+        )}
+        {!liveMode && toggleSuspended && (
+          <button
+            type="button"
+            className="FaceCard-camera"
+            onClick={toggleSuspended}
+            title={suspended ? "Enable Camera" : "Disable Camera"}
+          >
+            &#x1F4F7;
+            {suspended && (
+              <span className="FaceCard-camera-disabled">&#10060;</span>
+            )}
+          </button>
         )}
       </div>
     );
