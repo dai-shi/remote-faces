@@ -30,6 +30,7 @@ const createGoBoard = (
   const board = new CanvasBoard(element, {
     theme: themes.modernTheme,
     width: element.clientWidth,
+    height: element.clientHeight,
     size: 6,
   });
   let fieldObjects: FieldObject[] = [];
@@ -138,7 +139,7 @@ const createGoBoard = (
     }
   };
   const resize = () => {
-    board.setWidth(element.clientWidth);
+    board.setDimensions(element.clientWidth, element.clientHeight);
   };
   return { syncDown, pass, undo, resize };
 };
@@ -171,9 +172,16 @@ export const GoBoard = React.memo<{
       const div = divRef.current;
       const actions = createGoBoard(div, setColor, setCapCount, syncUp);
       actionsRef.current = actions;
-      window.addEventListener("resize", actions.resize);
+      const observer = new MutationObserver(actions.resize);
+      const region = div.parentNode?.parentNode;
+      if (region) {
+        observer.observe(region, {
+          attributes: true,
+          attributeFilter: ["style"],
+        });
+      }
       return () => {
-        window.removeEventListener("resize", actions.resize);
+        observer.disconnect();
       };
     }
     return undefined;
