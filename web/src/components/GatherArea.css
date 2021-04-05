@@ -32,6 +32,7 @@
 
 .GatherArea-facelist {
   -webkit-app-region: drag;
+  width: 36px;
 }
 
 .GatherArea-toolbar {
@@ -44,6 +45,7 @@
 }
 
 .GatherArea-region-editor {
+  -webkit-app-region: no-drag;
   margin: 5px;
   padding: 10px;
   background: lightyellow;
@@ -52,6 +54,7 @@
 }
 
 .GatherArea-link-opener {
+  -webkit-app-region: no-drag;
   margin: 5px;
   padding: 10px;
   background: skyblue;
