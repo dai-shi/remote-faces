@@ -1,0 +1,1 @@
+{"version":3,"sources":["webpack://src/components/SpatialArea.css"],"names":[],"mappings":"AAAA,uBACE,0BAA2B,CAC3B,eACF,CAEA,kBACE,UAAW,CACX,YACF","file":"19.78e67005.chunk.css","sourcesContent":[".SpatialArea-container {\n  -webkit-app-region: no-drag;\n  overflow: scroll;\n}\n\n.SpatialArea-body {\n  width: 100%;\n  height: 100vh;\n}\n"]}
