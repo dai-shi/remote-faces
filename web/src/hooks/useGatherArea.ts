@@ -4,8 +4,8 @@ import { subscribe } from "valtio";
 import { getRoomState } from "../states/roomMap";
 
 const getInitialPosition = (uid: string): [number, number] => [
-  parseInt(uid.slice(0, 2), 16) / 2 + 20,
-  parseInt(uid.slice(2, 4), 16) / 2 + 20,
+  parseInt(uid.slice(0, 2), 16) / 2 + 50,
+  parseInt(uid.slice(2, 4), 16) / 2 + 30,
 ];
 
 export type AvatarData = {
