@@ -5,6 +5,7 @@ const {
   Menu,
   dialog,
   shell,
+  ipcMain,
 } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const Store = require('electron-store');
@@ -54,6 +55,10 @@ const createWindow = () => {
     height: store.get('height', 300),
     alwaysOnTop: store.get('alwaysOnTop', false),
     frame: false,
+    webPreferences: {
+      contextIsolation: false,
+      preload: `${__dirname}/prompt.js`,
+    },
   });
   win.webContents.session.setPreloads([
     path.join(__dirname, 'get-display-media-polyfill.js'),
@@ -92,6 +97,41 @@ const createWindow = () => {
   });
   win.on('closed', () => {
     win = null;
+  });
+  let promptResponse;
+  ipcMain.on('prompt', (event, arg) => {
+    const eventRet = event;
+    promptResponse = null;
+    let promptWindow = new BrowserWindow({
+      width: 200,
+      height: 100,
+      show: false,
+      resizable: false,
+      movable: false,
+      alwaysOnTop: true,
+      frame: false,
+      webPreferences: {
+        contextIsolation: false,
+        preload: `${__dirname}/prompt.js`,
+      },
+    });
+    const { val = '', title } = arg;
+    const promptHtml = `
+      <label for="val">${title}</label>
+      <input id="val" value="${val}" autofocus />
+      <button onclick="window.promptRespond(document.getElementById('val').value);window.close()">OK</button>
+      <button onclick="window.close()">Cancel</button>
+      <style>body {font-family: sans-serif;} button {float:right; margin-left: 10px;} label,input {margin-bottom: 10px; width: 100%; display:block;}</style>
+    `;
+    promptWindow.loadURL('data:text/html,' + promptHtml);
+    promptWindow.show();
+    promptWindow.on('closed', () => {
+      eventRet.returnValue = promptResponse;
+      promptWindow = null;
+    });
+  });
+  ipcMain.on('prompt-response', (event, arg) => {
+    promptResponse = arg === '' ? null : arg;
   });
 };
 
