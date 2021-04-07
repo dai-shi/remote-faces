@@ -1,17 +1,4 @@
 .SingleRoom-container {
-  display: grid;
-  column-gap: 12px;
-  grid-template-columns: 36px 1fr;
-  grid-template-rows: 100vh;
-}
-
-.SingleRoom-1st-column {
-  overflow: scroll;
-}
-
-.SingleRoom-1st-column::-webkit-scrollbar {
-  display: none;
-}
-
-.SingleRoom-2nd-column {
+  width: 100%;
+  height: 100%;
 }
