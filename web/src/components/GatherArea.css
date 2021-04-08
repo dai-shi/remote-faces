@@ -25,9 +25,19 @@
 
 .GatherArea-avatar {
   position: absolute;
-  width: 36px;
-  height: 36px;
-  overflow: hidden;
+}
+
+.GatherArea-avatar-balloon {
+  position: absolute;
+  left: -10px;
+  bottom: 38px;
+  color: black;
+  background-color: white;
+  border: gray solid 1px;
+  border-radius: 20px;
+  padding: 3px 6px;
+  font-size: 0.5rem;
+  text-align: center;
 }
 
 .GatherArea-facelist {

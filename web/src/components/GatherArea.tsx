@@ -125,6 +125,9 @@ const Avatar = React.memo<{
           }
         }}
       >
+        {statusMesg && (
+          <div className="GatherArea-avatar-balloon">{statusMesg}</div>
+        )}
         <FaceCard
           image={image}
           nickname={nickname}
