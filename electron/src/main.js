@@ -57,12 +57,9 @@ const createWindow = () => {
     frame: false,
     webPreferences: {
       contextIsolation: false,
-      preload: `${__dirname}/prompt.js`,
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
-  win.webContents.session.setPreloads([
-    path.join(__dirname, 'get-display-media-polyfill.js'),
-  ]);
   // win.webContents.openDevTools();
   loadURL();
   win.webContents.reloadIgnoringCache();
@@ -112,7 +109,7 @@ const createWindow = () => {
       frame: false,
       webPreferences: {
         contextIsolation: false,
-        preload: `${__dirname}/prompt.js`,
+        preload: path.join(__dirname, 'prompt-polyfill.js'),
       },
     });
     const { val = '', title } = arg;
