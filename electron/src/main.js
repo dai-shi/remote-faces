@@ -128,7 +128,7 @@ const createWindow = () => {
     });
   });
   ipcMain.on('prompt-response', (event, arg) => {
-    promptResponse = arg === '' ? null : arg;
+    promptResponse = arg;
   });
 };
 
