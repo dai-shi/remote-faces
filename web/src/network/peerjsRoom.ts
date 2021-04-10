@@ -103,16 +103,15 @@ export const createRoom: CreateRoom = async (
             console.log("initMyPeer reconnecting", index);
             updateNetworkStatus({ type: "RECONNECTING" });
             peer.reconnect();
+            setTimeout(async () => {
+              if (peer.disconnected) {
+                console.log("reconnect failed, re-initializing", index);
+                peer.destroy();
+                myPeer = await initMyPeer();
+              }
+            }, 60 * 1000);
           }
         }, 5 * 1000);
-      });
-      peer.on("close", () => {
-        if (!peer.destroyed) {
-          console.log("initMyPeer closed, re-initializing", index);
-          setTimeout(async () => {
-            myPeer = await initMyPeer();
-          }, 20 * 1000);
-        }
       });
     });
   let myPeer = await initMyPeer();
