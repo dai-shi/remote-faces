@@ -304,6 +304,10 @@ export const createRoom: CreateRoom = async (
       sendSDP(conn, { offer });
     });
     conn.peerConnection.addEventListener("track", (event: RTCTrackEvent) => {
+      if (!connMap.isConnected(conn.peer)) {
+        console.warn("received track from non-connected peer, ignoring");
+        return;
+      }
       const { mid } = event.transceiver;
       const mType = mid && connMap.getRemoteMediaType(conn, mid);
       if (!mType) {
