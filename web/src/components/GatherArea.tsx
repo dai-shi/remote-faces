@@ -84,6 +84,7 @@ const Avatar = React.memo<{
   setPosition?: (nextPosition: [number, number]) => void;
   registerOnMouseDrag: (onMouseMove?: OnMouseMove) => void;
   stream?: MediaStream;
+  liveMode: boolean;
   muted?: boolean;
   toggleSuspended?: () => void;
   suspended?: boolean;
@@ -98,6 +99,7 @@ const Avatar = React.memo<{
     setPosition,
     registerOnMouseDrag,
     stream,
+    liveMode,
     muted,
     toggleSuspended,
     suspended,
@@ -134,11 +136,11 @@ const Avatar = React.memo<{
           statusMesg={statusMesg}
           setStatusMesg={setStatusMesg}
           obsoleted={!!obsoleted}
-          liveMode={!!stream}
+          liveMode={liveMode}
           stream={stream}
           muted={!!muted}
           micOn={!!stream}
-          speakerOn={!!stream}
+          speakerOn={liveMode}
           toggleSuspended={toggleSuspended}
           suspended={suspended}
         />
@@ -266,6 +268,7 @@ export const GatherArea = React.memo<{
                 position={avatarData.position}
                 registerOnMouseDrag={registerOnMouseDrag}
                 stream={faceStreamMap[uid]}
+                liveMode={!!activeMeetingRegionId}
               />
             );
           })}
@@ -280,6 +283,7 @@ export const GatherArea = React.memo<{
             }
             registerOnMouseDrag={registerOnMouseDrag}
             stream={faceStream || undefined}
+            liveMode={!!activeMeetingRegionId}
             muted
             toggleSuspended={toggleSuspended}
             suspended={suspended}

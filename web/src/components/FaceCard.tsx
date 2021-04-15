@@ -55,7 +55,7 @@ export const FaceCard = React.memo<{
         className="FaceCard-container"
         style={{ opacity: obsoleted ? 0.2 : 1 }}
       >
-        {liveMode && !obsoleted && stream ? (
+        {liveMode && stream ? (
           <video
             className="FaceCard-photo"
             ref={(videoEle) => {
@@ -93,17 +93,17 @@ export const FaceCard = React.memo<{
             {emoji}
           </div>
         )}
-        {liveMode && !obsoleted && stream && (
+        {liveMode && stream && (
           <div className="FaceCard-live-indicator" title="Live Mode On">
             &#9673;
           </div>
         )}
-        {liveMode && !obsoleted && !stream && (
+        {liveMode && !stream && (
           <div className="FaceCard-live-indicator" title="Live Mode Available">
             &#9678;
           </div>
         )}
-        {liveMode && !obsoleted && (
+        {liveMode && (
           <div className="FaceCard-mic-speaker-icons">
             {micOn && <span title="Mic On">&#x1F3A4;</span>}
             {speakerOn && <span title="Speaker On">&#x1F508;</span>}
