@@ -98,12 +98,7 @@ export const FaceCard = React.memo<{
             &#9673;
           </div>
         )}
-        {liveMode && !stream && (
-          <div className="FaceCard-live-indicator" title="Live Mode Available">
-            &#9678;
-          </div>
-        )}
-        {liveMode && (
+        {liveMode && stream && (
           <div className="FaceCard-mic-speaker-icons">
             {micOn && <span title="Mic On">&#x1F3A4;</span>}
             {speakerOn && <span title="Speaker On">&#x1F508;</span>}
