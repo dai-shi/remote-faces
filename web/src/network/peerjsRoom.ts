@@ -125,8 +125,11 @@ export const createRoom: CreateRoom = async (
   };
 
   const connectPeer = (id: string) => {
+    console.log("try1 connectPeer", id);
     if (disposed) return;
+    console.log("try2 connectPeer", id);
     if (myPeer.id === id || myPeer.disconnected) return;
+    console.log("try3 connectPeer", id);
     if (connMap.hasConn(id)) return;
     console.log("connectPeer", id);
     const conn = myPeer.connect(id);

@@ -90,10 +90,10 @@ export const createConnectionMap = () => {
   };
 
   const delConn = (conn: Peer.DataConnection) => {
-    const value = map.get(conn.peer);
-    if (value && value.conn === conn) {
-      map.delete(conn.peer);
-    }
+    // const value = map.get(conn.peer);
+    // if (value && value.conn === conn) {
+    map.delete(conn.peer);
+    // }
   };
 
   const getConnectedPeerIds = () =>
