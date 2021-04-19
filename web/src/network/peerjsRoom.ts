@@ -338,7 +338,11 @@ export const createRoom: CreateRoom = async (
       showConnectedStatus();
       if (connMap.getConnectedPeerIds().length === 0) {
         reInitMyPeer(true);
-      } else if (guessSeed(conn.peer) && !myPeer.disconnected) {
+      } else if (
+        guessSeed(conn.peer) &&
+        !myPeer.disconnected &&
+        !guessSeed(myPeer.id)
+      ) {
         const waitSec = 30 + Math.floor(Math.random() * 60);
         console.log(
           `Disconnected seed peer: ${getPeerIndexFromPeerId(
@@ -353,10 +357,11 @@ export const createRoom: CreateRoom = async (
   const reInitMyPeer = async (force?: boolean) => {
     if (myPeer.disconnected) return; // should already be handled
     if (!force) {
+      if (guessSeed(myPeer.id)) return;
       let existsAllSeeds = true;
       for (let i = MIN_SEED_PEER_INDEX; i <= MAX_SEED_PEER_INDEX; i += 1) {
         const id = generatePeerId(roomId, i);
-        if (id !== myPeer.id && connMap.isConnected(id)) {
+        if (!connMap.isConnected(id)) {
           existsAllSeeds = false;
           break;
         }
