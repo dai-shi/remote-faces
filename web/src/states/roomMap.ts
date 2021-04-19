@@ -103,6 +103,7 @@ const createRoomState = (roomId: string, userId: string) => {
         update,
         Y.encodeStateAsUpdate(state.ydoc),
       ]);
+      console.log("initializing ydoc", state.ydoc.toJSON());
       Y.applyUpdate(state.ydoc, mergedUpdate);
     }
     if (data?.ydocUpdate) {
@@ -112,6 +113,7 @@ const createRoomState = (roomId: string, userId: string) => {
           c.charCodeAt(0)
         ) as unknown) as ArrayBufferLike
       );
+      console.log("updating ydoc", state.ydoc.toJSON());
       Y.applyUpdate(state.ydoc, update);
     }
   };
