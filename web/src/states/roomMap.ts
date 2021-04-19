@@ -84,7 +84,7 @@ const createRoomState = (roomId: string, userId: string) => {
   const notifyNewPeer = (peerIndex: number) => {
     const update = Y.encodeStateAsUpdate(state.ydoc);
     const base64 = btoa(String.fromCharCode(...update));
-    const data = { ydocInit: base64 };
+    const data = { ydocUpdate: base64 };
     roomPromise.then((room) => {
       // XXX this does not scale
       room.sendData(data, peerIndex);
@@ -92,19 +92,6 @@ const createRoomState = (roomId: string, userId: string) => {
   };
   const receiveData = (data: any, info: PeerInfo) => {
     state.userIdMap[info.userId] = info.peerIndex;
-    if (data?.ydocInit) {
-      const binaryString = atob(data.ydocInit);
-      const update = new Uint8Array(
-        ([].map.call(binaryString, (c: string) =>
-          c.charCodeAt(0)
-        ) as unknown) as ArrayBufferLike
-      );
-      const mergedUpdate = Y.mergeUpdates([
-        update,
-        Y.encodeStateAsUpdate(state.ydoc),
-      ]);
-      Y.applyUpdate(state.ydoc, mergedUpdate);
-    }
     if (data?.ydocUpdate) {
       const binaryString = atob(data.ydocUpdate);
       const update = new Uint8Array(
