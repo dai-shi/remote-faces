@@ -1,9 +1,13 @@
 import React from "react";
+import { useSnapshot } from "valtio";
 
 import "./FaceList.css";
 import { Loading } from "./Loading";
 import { useFaceImages } from "../hooks/useFaceImages";
 import { FaceCard } from "./FaceCard";
+
+// XXX temporary global state for debugging
+import { getRoomState } from "../states/roomMap";
 
 export const FaceList = React.memo<{
   roomId: string;
@@ -27,6 +31,7 @@ export const FaceList = React.memo<{
     toggleSuspended,
     suspended,
   }) => {
+    const userIdMap = useSnapshot(getRoomState(roomId, userId).userIdMap);
     const { myImage, roomImages } = useFaceImages(
       roomId,
       userId,
@@ -58,7 +63,15 @@ export const FaceList = React.memo<{
           />
         </div>
         {roomImages.map((item) => (
-          <div key={item.userId} className="FaceList-item">
+          <div
+            key={item.userId}
+            className="FaceList-item"
+            style={
+              userIdMap[item.userId] === "closed"
+                ? { transform: "scale(0.5)" }
+                : {}
+            }
+          >
             <FaceCard
               image={item.image}
               nickname={item.info.nickname}

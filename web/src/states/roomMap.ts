@@ -5,7 +5,8 @@ import { PeerInfo, createRoom, NetworkStatus } from "../network/room";
 
 type RoomState = {
   networkStatusList: NetworkStatus[];
-  userIdMap: { [userId: string]: number }; // peerIndex
+  // userIdMap: number is peerIndex
+  userIdMap: { [userId: string]: number | "closed" };
   ydoc: Y.Doc;
   acceptingMediaTypes: string[];
   trackMap: {
@@ -71,14 +72,13 @@ const createRoomState = (roomId: string, userId: string) => {
       state.networkStatusList.pop();
     }
     if (status?.type === "CONNECTION_CLOSED") {
-      // FIXME somehow this might be causing fatal behavior
-      /*
       Object.entries(state.userIdMap).forEach(([uid, idx]) => {
         if (idx === status.peerIndex) {
-          delete state.userIdMap[uid];
+          state.userIdMap[uid] = "closed";
+          // FIXME somehow this might be causing fatal behavior
+          // delete state.userIdMap[uid];
         }
       });
-      */
     }
   };
   const notifyNewPeer = (peerIndex: number) => {
