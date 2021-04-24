@@ -240,7 +240,7 @@ export const createRoom: CreateRoom = async (
     if (disposed) return;
     try {
       const payload = JSON.parse(await decryptString(encrypted, cryptoKey));
-      console.log("decrypted payload", conn.peer, payload);
+      // console.log("decrypted payload", conn.peer, payload);
       if (!isObject(payload)) return;
 
       handlePayloadSDP(conn, (payload as { SDP?: unknown }).SDP);
@@ -267,12 +267,14 @@ export const createRoom: CreateRoom = async (
 
   const initConnection = (conn: Peer.DataConnection) => {
     if (connMap.isConnected(conn.peer)) {
+      console.info("dataConnection already in map, closing", conn);
       conn.close();
       return;
     }
     connMap.addConn(conn);
     setTimeout(() => {
       if (!connMap.isConnected(conn.peer)) {
+        console.info("dataConnection failed to open, closing", conn);
         conn.close();
       }
     }, 30 * 1000);
