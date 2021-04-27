@@ -2,6 +2,7 @@ import { proxy, snapshot, ref } from "valtio";
 import * as Y from "yjs";
 
 import { PeerInfo, createRoom, NetworkStatus } from "../network/room";
+import { encodeBase64Async, decodeBase64Async } from "../utils/base64";
 
 type RoomState = {
   networkStatusList: NetworkStatus[];
@@ -81,29 +82,24 @@ const createRoomState = (roomId: string, userId: string) => {
       });
     }
   };
-  const notifyNewPeer = (peerIndex: number) => {
+  const notifyNewPeer = async (peerIndex: number) => {
     const update = Y.encodeStateAsUpdate(state.ydoc);
-    const base64 = btoa(String.fromCharCode(...update));
+    const base64 = await encodeBase64Async(update);
     const data = { ydocUpdate: base64 };
     roomPromise.then((room) => {
       // XXX this does not scale
       room.sendData(data, peerIndex);
     });
   };
-  const receiveData = (data: any, info: PeerInfo) => {
+  const receiveData = async (data: any, info: PeerInfo) => {
     state.userIdMap[info.userId] = info.peerIndex;
     if (data?.ydocUpdate) {
-      const binaryString = atob(data.ydocUpdate);
-      const update = new Uint8Array(
-        ([].map.call(binaryString, (c: string) =>
-          c.charCodeAt(0)
-        ) as unknown) as ArrayBufferLike
-      );
+      const update = await decodeBase64Async(data.ydocUpdate);
       Y.applyUpdate(state.ydoc, update);
     }
   };
-  state.ydoc.on("update", (update: Uint8Array) => {
-    const base64 = btoa(String.fromCharCode(...update));
+  state.ydoc.on("update", async (update: Uint8Array) => {
+    const base64 = await encodeBase64Async(update);
     roomPromise.then((room) => {
       room.broadcastData({ ydocUpdate: base64 });
     });
