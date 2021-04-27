@@ -37,8 +37,10 @@ const captureImage = async (stream: MediaStream, track: MediaStreamTrack) => {
 
 export const takePhoto = async (deviceId?: string) => {
   const constraints = {
-    video: deviceId ? { deviceId } : true,
-    aspectRatio: 16 / 9,
+    video: {
+      deviceId,
+      aspectRatio: 16 / 9,
+    },
   };
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
   const [track] = stream.getVideoTracks();
