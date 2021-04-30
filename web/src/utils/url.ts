@@ -67,3 +67,9 @@ export const hasPubsubConfigInUrl = () => {
   const searchParams = new URLSearchParams(hash);
   return searchParams.has("pubsub");
 };
+
+export const getRoomPresetFromUrl = () => {
+  const hash = window.location.hash.slice(1);
+  const searchParams = new URLSearchParams(hash);
+  return searchParams.get("roomPreset");
+};
