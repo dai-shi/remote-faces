@@ -39,7 +39,8 @@ export const takePhoto = async (deviceId?: string) => {
   const constraints = {
     video: {
       deviceId,
-      aspectRatio: 16 / 9,
+      width: 1280,
+      height: 720,
     },
   };
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
