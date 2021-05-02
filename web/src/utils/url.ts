@@ -73,3 +73,10 @@ export const getRoomPresetFromUrl = () => {
   const searchParams = new URLSearchParams(hash);
   return searchParams.get("roomPreset");
 };
+
+export const setRoomPresetToUrl = (roomPreset: string) => {
+  const hash = window.location.hash.slice(1);
+  const searchParams = new URLSearchParams(hash);
+  searchParams.set("roomPreset", roomPreset);
+  window.location.hash = searchParams.toString();
+};
