@@ -26,36 +26,26 @@ export const Landing = React.memo<{
         </p>
       </div>
       <div>
-        <h1>Opt-in Live Mode and Momentary Chat</h1>
+        <h1>Face List and Gather Area</h1>
         <p>
-          In case you want to feel more connected, you can enable Live Mode and
-          your image become a video. If speaker and mic is activated, you can
-          talk with others who too enable the Live Mode. There is a chat area
-          next to face images where you can text. The chat is visible to all
-          members in the room. The chat history is only available until some
-          mebers are in the room. It will disappear if everyone close the room
-          in the browser. (Note: the link itself is still effective.)
+          On the left of the screen, you will see faces in a column, which we
+          call face list and the rest is what we call gather area. In the gather
+          area, you can drag your avatar, and the location is shared with
+          others. We can define regions in the gather area. Regions can be just
+          background or add some features. There is a preset you can choose when
+          creating a new room.
         </p>
       </div>
       <div>
-        <h1>Other tools for collaboration</h1>
+        <h1>Real-time communication</h1>
         <p>
-          There is another area next to the chat area. Members can do
-          collaborative work there. Currently, there are three features are
-          included. 1) Screen Share: Share screen video of your desktop or
-          window. 2) Share Video: In addition to the small images, you can share
-          bigger images. This does not have to be the same webcam image. 3)
-          White Board: Powered by{" "}
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://excalidraw.com"
-          >
-            Excalidraw
-          </a>
-          . This allows to work with a shared white board. White board data will
-          go through the server to synchronzize, but the data is encrypted and
-          the server is unable to see its content.
+          One of the regions is called &quot;Meeting&quot; in which you can talk
+          with others in the same meeting region. The face becomes a small video
+          in the meeting region. We can create as many meeting regions as we
+          want. There is another region called &quot;Media&quot;, with which we
+          can share screens and videos in high resolution. &quot;Chat&quot;
+          region is to text. The chat texts are not stored anywhere other than
+          all connected peers.
         </p>
       </div>
     </div>
@@ -64,21 +54,22 @@ export const Landing = React.memo<{
         <h2>Getting started</h2>
         <ol>
           <li>
-            You or someone needs to create a new room. Just click the button and
-            it will issue a unique link.
+            You or someone needs to create a new room. Just click the
+            &quot;Create a new room&quot; button and it will issue a unique
+            link.
           </li>
           <li>
             Copy the link from the browser address bar and send it to your
             friends or colleagues. If you receive the link, open it in the
-            browser. It may take several seconds for everyone sees each other.
+            browser. It may take several seconds for everyone to see each other.
             If it keeps unconnected more than two minutes, there can be a
             connectivity issue. Sometimes, reloading the page in the browser
             solves the situation.
           </li>
           <li>
             If it is the first time to run this app, the browser will prompt the
-            permission for webcam. After allowing the permisson, you may need to
-            reload the page in the browser to make the psermission effective.
+            permission for camera and microphone. It may also ask permission for
+            notification.
           </li>
         </ol>
       </div>
