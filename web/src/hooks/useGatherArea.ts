@@ -2,6 +2,8 @@ import { useCallback, useState, useRef, useEffect } from "react";
 import { subscribe } from "valtio";
 
 import { getRoomState } from "../states/roomMap";
+import { roomPresets } from "../states/roomPresets";
+import { getRoomPresetFromUrl } from "../utils/url";
 
 const getInitialPosition = (uid: string): [number, number] => [
   parseInt(uid.slice(0, 2), 16) / 2 + 50,
@@ -169,7 +171,17 @@ export const useGatherArea = (roomId: string, userId: string) => {
     };
     map.observe(listener);
     listener();
+    const timer = setTimeout(() => {
+      const roomPreset = getRoomPresetFromUrl() || "";
+      const preset = roomPresets[roomPreset];
+      if (!preset) return;
+      if (map.size > 0) return;
+      Object.entries(preset).forEach(([key, value]) => {
+        map.set(key, value);
+      });
+    }, 10 * 1000);
     return () => {
+      clearTimeout(timer);
       map.unobserve(listener);
     };
   }, [roomId, userId]);

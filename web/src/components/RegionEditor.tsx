@@ -57,6 +57,26 @@ export const RegionEditor = React.memo<{
     }
   };
 
+  const existingRegionIds = [
+    ...getRoomState(roomId, userId).ydoc.getMap(ROOM_STATE_KEY).keys(),
+  ];
+  const loadRegionData = (id: string) => {
+    setRegionId(id);
+    if (!id) return;
+    const roomState = getRoomState(roomId, userId);
+    const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
+    const value = map.get(id);
+    setType(value.type);
+    setLeft(value.position[0]);
+    setTop(value.position[1]);
+    setWidth(value.size[0]);
+    setHeight(value.size[1]);
+    setZIndex(value.zIndex);
+    setBackground(value.background);
+    setBorder(value.border);
+    setIframe(value.iframe);
+  };
+
   return (
     <div className="RegionEditor-container">
       <h3>Region Editor</h3>
@@ -64,6 +84,18 @@ export const RegionEditor = React.memo<{
         Region ID:{" "}
         <input value={regionId} onChange={(e) => setRegionId(e.target.value)} />
       </label>
+      <select
+        onChange={(e) => {
+          loadRegionData(e.target.value);
+        }}
+      >
+        <option value="">(Select to load existing region)</option>
+        {existingRegionIds.map((id) => (
+          <option key={id} value={id}>
+            {id}
+          </option>
+        ))}
+      </select>
       <hr />
       <label>
         Type:{" "}
@@ -143,7 +175,7 @@ export const RegionEditor = React.memo<{
       </label>
       <hr />
       <button type="button" onClick={() => addRegion()} disabled={!regionId}>
-        Add Region
+        Add/Update Region
       </button>
       <hr />
       <button

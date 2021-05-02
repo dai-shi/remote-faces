@@ -6,6 +6,7 @@ import { singleRoomState, setConfig } from "../states/singleRoom";
 import { secureRandomId, generateCryptoKey } from "../utils/crypto";
 import { ROOM_ID_PREFIX_LEN } from "../network/room";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
+import { setRoomPresetToUrl } from "../utils/url";
 
 const Landing = React.lazy(() => import("./Landing"));
 const SingleRoom = React.lazy(() => import("./SingleRoom"));
@@ -19,6 +20,7 @@ export const SingleRoomEntrance = React.memo(() => {
   const audioDevices = useAudioDevices();
   const [videoDeviceId, setVideoDeviceId] = useState(config.videoDeviceId);
   const [audioDeviceId, setAudioDeviceId] = useState(config.audioDeviceId);
+  const [roomPreset, setRoomPreset] = useState("intro");
   const [entering, setEntering] = useState(false);
 
   const onChangeAvatar = (files: FileList | null) => {
@@ -43,6 +45,9 @@ export const SingleRoomEntrance = React.memo(() => {
   const onEnter = async () => {
     setEntering(true);
     if (!singleRoomState.roomId) {
+      if (roomPreset) {
+        setRoomPresetToUrl(roomPreset);
+      }
       singleRoomState.roomId =
         secureRandomId(ROOM_ID_PREFIX_LEN / 2) + (await generateCryptoKey());
     }
@@ -115,6 +120,23 @@ export const SingleRoomEntrance = React.memo(() => {
               ))}
             </select>
           </div>
+          {!roomId && (
+            <div>
+              Room Preset:{" "}
+              <select
+                value={roomPreset}
+                onChange={(e) => {
+                  setRoomPreset(e.target.value);
+                }}
+              >
+                <option value="">Empty</option>
+                <option value="intro">Intro</option>
+                <option value="phone">Phone</option>
+                <option value="igo">Igo</option>
+              </select>
+              (It takes about 10 seconds to apply the preset.)
+            </div>
+          )}
           <div>
             <button
               type="button"
