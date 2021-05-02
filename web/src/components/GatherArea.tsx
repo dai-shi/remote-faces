@@ -3,7 +3,12 @@
 import React, { Suspense, useCallback, useRef, useState } from "react";
 
 import "./GatherArea.css";
-import { useGatherArea, RegionData } from "../hooks/useGatherArea";
+import {
+  useGatherArea,
+  RegionData,
+  RegionMap,
+  AvatarData,
+} from "../hooks/useGatherArea";
 import { useFaceImages } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { RegionEditor } from "./RegionEditor";
@@ -18,18 +23,50 @@ const GoBoard = React.lazy(() => import("./GoBoard"));
 
 type OnMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 
+const getActiveMeetingRegionId = (avatar: AvatarData, regionMap: RegionMap) => {
+  const regionIdList = Object.keys(regionMap).sort(
+    (a, b) => (regionMap[b].zIndex ?? 0) - (regionMap[a].zIndex ?? 0)
+  );
+  const activeId = regionIdList.find((id) => {
+    const { type, position, size } = regionMap[id] as RegionData;
+    return (
+      type === "meeting" &&
+      position[0] <= avatar.position[0] + 36 &&
+      position[1] <= avatar.position[1] + 36 &&
+      avatar.position[0] <= position[0] + size[0] &&
+      avatar.position[1] <= position[1] + size[1]
+    );
+  });
+  return activeId;
+};
+
+const getMicOn = (avatar: AvatarData, regionMap: RegionMap, id?: string) => {
+  if (!id) return undefined;
+  const { position, size } = regionMap[id];
+  const micOn =
+    position[0] <= avatar.position[0] &&
+    position[1] <= avatar.position[1] &&
+    avatar.position[0] + 36 <= position[0] + size[0] &&
+    avatar.position[1] + 36 <= position[1] + size[1];
+  return micOn;
+};
+
 const Region = React.memo<{
   roomId: string;
   userId: string;
   nickname: string;
   id: string;
   data: RegionData;
-  highlight?: boolean;
+  highlight?: "meeting" | "active-meeting" | "micon-meeting";
 }>(({ roomId, userId, nickname, id, data, highlight }) => {
-  const boxShadow =
-    (data.type === "meeting" &&
-      (highlight ? "0 0 0 5px pink" : "0 0 0 1px pink")) ||
-    undefined;
+  let boxShadow: string | undefined;
+  if (highlight === "micon-meeting") {
+    boxShadow = "0 0 0 5px rgba(255, 0, 0, 0.6)";
+  } else if (highlight === "active-meeting") {
+    boxShadow = "0 0 0 3px rgba(255, 0, 0, 0.3)";
+  } else if (highlight === "meeting") {
+    boxShadow = "0 0 0 1px rgba(255, 0, 0, 0.3)";
+  }
   return (
     <div
       className="GatherArea-region"
@@ -86,6 +123,7 @@ const Avatar = React.memo<{
   stream?: MediaStream;
   liveMode: boolean;
   muted?: boolean;
+  micOn?: boolean;
   toggleSuspended?: () => void;
   suspended?: boolean;
 }>(
@@ -101,6 +139,7 @@ const Avatar = React.memo<{
     stream,
     liveMode,
     muted,
+    micOn,
     toggleSuspended,
     suspended,
   }) => {
@@ -144,7 +183,7 @@ const Avatar = React.memo<{
           liveMode={liveMode}
           stream={stream}
           muted={!!muted}
-          micOn={!!stream}
+          micOn={!!micOn}
           speakerOn={liveMode}
           toggleSuspended={toggleSuspended}
           suspended={suspended}
@@ -200,26 +239,19 @@ export const GatherArea = React.memo<{
       onMouseDragRef.current = onMouseMove;
     }, []);
 
-    const regionIdList = Object.keys(regionMap).sort(
-      (a, b) => (regionMap[b].zIndex ?? 0) - (regionMap[a].zIndex ?? 0)
+    const activeMeetingRegionId = getActiveMeetingRegionId(myAvatar, regionMap);
+    const activeMeetingMicOn = getMicOn(
+      myAvatar,
+      regionMap,
+      activeMeetingRegionId
     );
-    const activeMeetingRegionId = regionIdList.find((id) => {
-      const { type, position, size } = regionMap[id] as RegionData;
-      return (
-        type === "meeting" &&
-        position[0] <= myAvatar.position[0] &&
-        position[1] <= myAvatar.position[1] &&
-        myAvatar.position[0] + 36 <= position[0] + size[0] &&
-        myAvatar.position[1] + 36 <= position[1] + size[1]
-      );
-    });
 
     const { faceStream, faceStreamMap } = useFaceVideos(
       roomId,
       userId,
       !!activeMeetingRegionId,
       !!activeMeetingRegionId,
-      true,
+      !!activeMeetingMicOn,
       videoDeviceId,
       audioDeviceId,
       `gatherArea/meeting/${activeMeetingRegionId}/`
@@ -252,7 +284,11 @@ export const GatherArea = React.memo<{
               nickname={nickname}
               id={regionId}
               data={regionData}
-              highlight={regionId === activeMeetingRegionId}
+              highlight={
+                (regionId === activeMeetingRegionId &&
+                  (activeMeetingMicOn ? "micon-meeting" : "active-meeting")) ||
+                (regionData.type === "meeting" ? "meeting" : undefined)
+              }
             />
           ))}
           {Object.entries(avatarMap).map(([uid, avatarData]) => {
@@ -274,6 +310,7 @@ export const GatherArea = React.memo<{
                 registerOnMouseDrag={registerOnMouseDrag}
                 stream={faceStreamMap[uid]}
                 liveMode={!!activeMeetingRegionId}
+                micOn={getMicOn(avatarData, regionMap, activeMeetingRegionId)}
               />
             );
           })}
@@ -290,6 +327,7 @@ export const GatherArea = React.memo<{
             stream={faceStream || undefined}
             liveMode={!!activeMeetingRegionId}
             muted
+            micOn={activeMeetingMicOn}
             toggleSuspended={toggleSuspended}
             suspended={suspended}
           />
