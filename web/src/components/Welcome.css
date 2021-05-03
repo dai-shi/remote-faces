@@ -1,9 +1,0 @@
-.Welcome-container {
-  width: 100%;
-  height: 100vh;
-  overflow: scroll;
-}
-
-.Welcome-container::-webkit-scrollbar {
-  display: none;
-}

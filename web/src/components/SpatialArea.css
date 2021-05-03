@@ -1,9 +1,0 @@
-.SpatialArea-container {
-  -webkit-app-region: no-drag;
-  overflow: scroll;
-}
-
-.SpatialArea-body {
-  width: 100%;
-  height: 100vh;
-}
