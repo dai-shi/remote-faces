@@ -1,4 +1,4 @@
-import Ipfs, { PubsubHandler } from "ipfs";
+import Ipfs from "ipfs";
 
 import { sleep } from "../utils/sleep";
 import {
@@ -18,6 +18,14 @@ import {
   videoTrackToImageConverter,
   imageToVideoTrackConverter,
 } from "./trackUtils";
+
+// copied from node_modules/ipfs-core/dist/src/components/pubsub.d.ts
+type Message = {
+  from: string;
+  seqno: Uint8Array;
+  data: Uint8Array;
+  topicIDs: string[];
+};
 
 const topicsForMediaTypes = new Map<string, string>();
 
@@ -59,6 +67,10 @@ export const createRoom: CreateRoom = async (
           // "/dns4/wrtc-star2.sjc.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
         ],
       },
+      Discovery: {
+        MDNS: { Enabled: true },
+        webRTCStar: { Enabled: true },
+      },
     },
   });
   const myPeerId = (await myIpfs.id()).id;
@@ -90,7 +102,7 @@ export const createRoom: CreateRoom = async (
         JSON.stringify(payload),
         cryptoKey
       )) {
-        await myIpfs.pubsub.publish(topic, Buffer.from(encrypted));
+        await myIpfs.pubsub.publish(topic, Buffer.from(encrypted), {});
       }
     } catch (e) {
       console.error("sendPayload", e);
@@ -126,7 +138,7 @@ export const createRoom: CreateRoom = async (
     const disposeList: (() => void)[] = [];
     mediaTypeDisposeMap.set(mediaType, disposeList);
     const topic = await getTopicForMediaType(roomId, mediaType);
-    const audioHandler: PubsubHandler = async (msg) => {
+    const audioHandler = async (msg: Message) => {
       if (msg.from === myPeerId) return;
       const conn = connMap.getConn(msg.from);
       if (!conn) {
@@ -195,7 +207,7 @@ export const createRoom: CreateRoom = async (
     const disposeList: (() => void)[] = [];
     mediaTypeDisposeMap.set(mediaType, disposeList);
     const topic = await getTopicForMediaType(roomId, mediaType);
-    const videoHandler: PubsubHandler = async (msg) => {
+    const videoHandler = async (msg: Message) => {
       if (msg.from === myPeerId) return;
       const conn = connMap.getConn(msg.from);
       if (!conn) {
@@ -311,7 +323,7 @@ export const createRoom: CreateRoom = async (
     return payloadUserId;
   };
 
-  const pubsubHandler: PubsubHandler = async (msg) => {
+  const pubsubHandler = async (msg: Message) => {
     if (disposed) return;
     if (msg.from === myPeerId) return;
     const payload = await parsePayload(msg.data);
@@ -334,7 +346,7 @@ export const createRoom: CreateRoom = async (
 
   const checkPeers = async () => {
     if (disposed) return;
-    const peers = myIpfs.pubsub.peers(roomTopic);
+    const peers = await myIpfs.pubsub.peers(roomTopic);
     connMap.forEachConns((conn) => {
       if (!peers.includes(conn.peer)) {
         connMap.delConn(conn);
@@ -381,7 +393,7 @@ export const createRoom: CreateRoom = async (
         bufList.splice(0, bufList.length),
         cryptoKey
       );
-      myIpfs.pubsub.publish(topic, Buffer.from(encrypted));
+      myIpfs.pubsub.publish(topic, Buffer.from(encrypted), {});
     };
     trackSource.connect(audioEncoder);
     trackDisposeMap.set(track, () => {
@@ -403,7 +415,7 @@ export const createRoom: CreateRoom = async (
           cryptoKey
         )) {
           if (videoDisposed) return;
-          await myIpfs.pubsub.publish(topic, Buffer.from(encrypted));
+          await myIpfs.pubsub.publish(topic, Buffer.from(encrypted), {});
           await sleep(1000);
         }
       } else {

@@ -1,4 +1,4 @@
-import Ipfs, { PubsubHandler } from "ipfs";
+import Ipfs from "ipfs";
 import IpfsPubSubRoom from "ipfs-pubsub-room";
 
 import { sleep } from "../utils/sleep";
@@ -12,6 +12,14 @@ import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./ipfsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
+
+// copied from node_modules/ipfs-core/dist/src/components/pubsub.d.ts
+type Message = {
+  from: string;
+  seqno: Uint8Array;
+  data: Uint8Array;
+  topicIDs: string[];
+};
 
 export const createRoom: CreateRoom = async (
   roomId,
@@ -40,6 +48,10 @@ export const createRoom: CreateRoom = async (
           "/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
           // "/dns4/wrtc-star2.sjc.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
         ],
+      },
+      Discovery: {
+        MDNS: { Enabled: true },
+        webRTCStar: { Enabled: true },
       },
     },
   });
@@ -343,7 +355,7 @@ export const createRoom: CreateRoom = async (
     return payloadUserId;
   };
 
-  const pubsubHandler: PubsubHandler = async (msg) => {
+  const pubsubHandler = async (msg: Message) => {
     if (disposed) return;
     if (msg.from === myPeerId) return;
     const payload = await parsePayload(msg.data);
