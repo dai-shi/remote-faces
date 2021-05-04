@@ -10,6 +10,7 @@ import {
   encryptBufferFromChunks,
   decryptBufferToChunks,
 } from "../utils/crypto";
+import { getWebrtcStarFromUrl } from "../utils/url";
 import { isObject } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./pubsubUtils";
@@ -63,8 +64,8 @@ export const createRoom: CreateRoom = async (
     config: {
       Addresses: {
         Swarm: [
-          "/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
-          // "/dns4/wrtc-star2.sjc.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
+          getWebrtcStarFromUrl() ||
+            "/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
         ],
       },
       Discovery: {
