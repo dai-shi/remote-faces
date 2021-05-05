@@ -63,7 +63,9 @@ for it.
 
 This is an open source project and your contribution is important.
 The web app is built with [React](https://reactjs.org) and
-[PeerJS](https://peerjs.com).
+[IPFS](https://github.com/ipfs/js-ipfs) PubSub
+with [WebRTC](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API),
+alternatively [PeerJS](https://peerjs.com).
 
 We welcome your contribution at any level; from coding,
 issue reporting, bug fixing, discussing features, documentation
