@@ -275,10 +275,19 @@ export const createRoom: CreateRoom = async (
     connMap.addConn(conn);
     setTimeout(() => {
       if (!connMap.isConnected(conn.peer)) {
-        console.info("dataConnection failed to open, closing", conn);
+        console.info(
+          "dataConnection failed to open, closing",
+          conn.peer,
+          conn.open
+        );
         conn.close();
       }
     }, 30 * 1000);
+    if (conn.open) {
+      console.info(
+        "dataConnection is already open before adding handler, this can cause a bug"
+      );
+    }
     conn.on("open", () => {
       connMap.markConnected(conn);
       console.log("dataConnection open", conn);
