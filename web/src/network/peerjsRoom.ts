@@ -122,6 +122,7 @@ export const createRoom: CreateRoom = async (
       .getConnectedPeerIds()
       .map(getPeerIndexFromPeerId);
     updateNetworkStatus({ type: "CONNECTED_PEERS", peerIndexList });
+    console.log("myPeer index", getPeerIndexFromPeerId(myPeer.id));
   };
 
   const connectPeer = (id: string) => {
