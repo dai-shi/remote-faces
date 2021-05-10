@@ -67,9 +67,9 @@ export const FaceList = React.memo<{
             key={item.userId}
             className="FaceList-item"
             style={
-              userIdMap[item.userId] === "closed"
-                ? { transform: "scale(0.5)" }
-                : {}
+              typeof userIdMap[item.userId] === "number"
+                ? {}
+                : { transform: "scale(0.5)" }
             }
           >
             <FaceCard
