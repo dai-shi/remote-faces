@@ -5,6 +5,7 @@ import "./FaceList.css";
 import { Loading } from "./Loading";
 import { useFaceImages } from "../hooks/useFaceImages";
 import { FaceCard } from "./FaceCard";
+import { NG_IMAGE } from "../media/imagePresets";
 
 // XXX temporary global state for debugging
 import { getRoomState } from "../states/roomMap";
@@ -63,17 +64,13 @@ export const FaceList = React.memo<{
           />
         </div>
         {roomImages.map((item) => (
-          <div
-            key={item.userId}
-            className="FaceList-item"
-            style={
-              typeof userIdMap[item.userId] === "number"
-                ? {}
-                : { transform: "scale(0.5)" }
-            }
-          >
+          <div key={item.userId} className="FaceList-item">
             <FaceCard
-              image={item.image}
+              image={
+                typeof userIdMap[item.userId] === "number"
+                  ? item.image
+                  : NG_IMAGE
+              }
               nickname={item.info.nickname}
               statusMesg={item.info.message}
               obsoleted={item.updated < twoMinAgo}
