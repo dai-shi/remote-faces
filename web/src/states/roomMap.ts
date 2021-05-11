@@ -82,17 +82,6 @@ const createRoomState = (roomId: string, userId: string) => {
       });
     }
   };
-  // XXX for debug purpose, doesn't scale
-  const forceSyncFullData = async () => {
-    const update = Y.encodeStateAsUpdate(state.ydoc);
-    const base64 = await encodeBase64Async(update);
-    const data = { ydocUpdate: base64 };
-    roomPromise.then((room) => {
-      room.broadcastData(data);
-      setTimeout(forceSyncFullData, Math.floor(Math.random() * 10 * 60 * 1000));
-    });
-  };
-  setTimeout(forceSyncFullData, 3 * 60 * 1000); // after 3min
   const notifyNewPeer = async (peerIndex: number) => {
     const update = Y.encodeStateAsUpdate(state.ydoc);
     const base64 = await encodeBase64Async(update);
