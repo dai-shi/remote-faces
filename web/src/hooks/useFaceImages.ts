@@ -118,6 +118,15 @@ export const useFaceImages = (
           updated: Date.now(),
         };
         map.set(userId, data);
+        // XXX force update all images for debug
+        roomState.ydoc.transact(() => {
+          const twoMinAgo = Date.now() - 2 * 60 * 1000;
+          map.forEach((value, key) => {
+            if (value.updated >= twoMinAgo) {
+              map.set(key, { ...value });
+            }
+          });
+        });
       } catch (e) {
         console.error(e);
       }
