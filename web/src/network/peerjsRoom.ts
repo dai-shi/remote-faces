@@ -268,9 +268,7 @@ export const createRoom: CreateRoom = async (
 
   const initConnection = (conn: Peer.DataConnection) => {
     if (connMap.isConnected(conn.peer)) {
-      console.info("dataConnection already in map, closing", conn);
-      conn.close();
-      return;
+      console.info("dataConnection already in map, overriding", conn.peer);
     }
     connMap.addConn(conn);
     setTimeout(() => {
