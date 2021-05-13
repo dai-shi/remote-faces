@@ -128,7 +128,7 @@ export const createRoom: CreateRoom = async (
   const connectPeer = (id: string) => {
     if (disposed) return;
     if (myPeer.id === id || myPeer.disconnected) return;
-    if (connMap.hasConn(id)) return;
+    if (connMap.hasEffectiveConn(id)) return;
     console.log("connectPeer", id);
     const conn = myPeer.connect(id);
     initConnection(conn);
@@ -279,7 +279,7 @@ export const createRoom: CreateRoom = async (
           conn.open
         );
       }
-    }, 150 * 1000);
+    }, 30 * 1000);
     if (conn.open) {
       console.warn(
         "dataConnection is already open before adding handler, this can cause a bug"

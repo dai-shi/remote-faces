@@ -22,6 +22,7 @@ export const getPeerIndexFromConn = (conn: Peer.DataConnection) =>
 export const createConnectionMap = () => {
   type Value = {
     conn: Peer.DataConnection;
+    createdAt: number;
     connected?: boolean;
     userId?: string;
     acceptingMediaTypes: string[];
@@ -52,6 +53,7 @@ export const createConnectionMap = () => {
     }
     map.set(conn.peer, {
       conn,
+      createdAt: Date.now(),
       acceptingMediaTypes: [],
       remoteMediaTypes: {},
     });
@@ -81,7 +83,12 @@ export const createConnectionMap = () => {
     return value && value.userId;
   };
 
-  const hasConn = (peerId: string) => map.has(peerId);
+  const hasEffectiveConn = (peerId: string) => {
+    const value = map.get(peerId);
+    if (!value) return false;
+    if (value.connected) return true;
+    return value.createdAt > Date.now() - 60 * 1000;
+  };
 
   const getConn = (peerId: string) => {
     const value = map.get(peerId);
@@ -178,7 +185,7 @@ export const createConnectionMap = () => {
     isConnected,
     setUserId,
     getUserId,
-    hasConn,
+    hasEffectiveConn,
     getConn,
     delConn,
     getConnectedPeerIds,
