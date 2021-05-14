@@ -1,5 +1,44 @@
 import { RegionData } from "../hooks/useGatherArea";
 
+const createMeeting = (
+  i: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) => ({
+  [`meeting${i}`]: {
+    type: "meeting",
+    position: [x, y],
+    size: [w, h],
+    zIndex: 0,
+    background: "",
+    border: "",
+    iframe: "",
+  },
+});
+
+const createGoBoard = (i: number, x: number, y: number) => ({
+  [`gomeeting${i}`]: {
+    type: "meeting",
+    position: [x, y],
+    size: [250, 150],
+    zIndex: 0,
+    background: "",
+    border: "",
+    iframe: "",
+  },
+  [`gobard${i}`]: {
+    type: "goboard",
+    position: [x, y],
+    size: [250, 150],
+    zIndex: 0,
+    background: "rgba(140, 140, 140, 0.2)",
+    border: "",
+    iframe: "",
+  },
+});
+
 const intro: Record<string, RegionData> = {
   background: {
     type: "background",
@@ -20,24 +59,8 @@ const intro: Record<string, RegionData> = {
     border: "",
     iframe: "",
   },
-  meeting1: {
-    type: "meeting",
-    position: [382, 82],
-    size: [180, 115],
-    zIndex: 0,
-    background: "",
-    border: "",
-    iframe: "",
-  },
-  meeting2: {
-    type: "meeting",
-    position: [614, 82],
-    size: [180, 115],
-    zIndex: 0,
-    background: "",
-    border: "",
-    iframe: "",
-  },
+  ...createMeeting(1, 382, 82, 180, 115),
+  ...createMeeting(2, 614, 82, 180, 115),
   share: {
     type: "media",
     position: [69, 343],
@@ -50,15 +73,7 @@ const intro: Record<string, RegionData> = {
 };
 
 const phone: Record<string, RegionData> = {
-  meeting: {
-    type: "meeting",
-    position: [45, 40],
-    size: [45, 500],
-    zIndex: 0,
-    background: "",
-    border: "",
-    iframe: "",
-  },
+  ...createMeeting(0, 45, 40, 45, 500),
   share: {
     type: "media",
     position: [100, 40],
@@ -69,27 +84,6 @@ const phone: Record<string, RegionData> = {
     iframe: "",
   },
 };
-
-const createGoBoard = (i: number, x: number, y: number) => ({
-  [`meeting${i}`]: {
-    type: "meeting",
-    position: [x, y],
-    size: [250, 150],
-    zIndex: 0,
-    background: "",
-    border: "",
-    iframe: "",
-  },
-  [`gobard${i}`]: {
-    type: "goboard",
-    position: [x, y],
-    size: [250, 150],
-    zIndex: 0,
-    background: "rgba(140, 140, 140, 0.2)",
-    border: "",
-    iframe: "",
-  },
-});
 
 const igo: Record<string, RegionData> = {
   chat: {
@@ -132,33 +126,9 @@ const office1: Record<string, RegionData> = {
     border: "skyblue solid 3px",
     iframe: "",
   },
-  sofa: {
-    type: "meeting",
-    position: [77, 244],
-    size: [273, 230],
-    zIndex: 0,
-    background: "",
-    border: "",
-    iframe: "",
-  },
-  garden: {
-    type: "meeting",
-    position: [297, 41],
-    size: [135, 125],
-    zIndex: 0,
-    background: "",
-    border: "",
-    iframe: "",
-  },
-  couch: {
-    type: "meeting",
-    position: [385, 321],
-    size: [113, 75],
-    zIndex: 0,
-    background: "",
-    border: "",
-    iframe: "",
-  },
+  ...createMeeting(1, 77, 244, 273, 230),
+  ...createMeeting(2, 297, 41, 135, 125),
+  ...createMeeting(3, 385, 321, 113, 75),
   share: {
     type: "media",
     position: [540, 405],
@@ -188,9 +158,60 @@ const office1: Record<string, RegionData> = {
   },
 };
 
+const office2: Record<string, RegionData> = {
+  background: {
+    type: "background",
+    position: [0, 0],
+    size: [1120, 740],
+    zIndex: -99,
+    background:
+      "url(https://user-images.githubusercontent.com/17561803/118205142-ab7d2200-b49a-11eb-863a-3a9a5560d7df.png) left top / contain",
+    border: "",
+    iframe: "",
+  },
+  chat: {
+    type: "chat",
+    position: [80, 540],
+    size: [380, 190],
+    zIndex: 0,
+    background: "rgba(255,255,255,0.2)",
+    border: "skyblue solid 2px",
+    iframe: "",
+  },
+  ...createMeeting(1, 220, 180, 240, 180),
+  ...createMeeting(2, 863, 230, 250, 230),
+  ...createMeeting(3, 650, 47, 160, 160),
+  ...createMeeting(4, 64, 315, 100, 45),
+  ...createMeeting(5, 64, 388, 100, 45),
+  ...createMeeting(6, 64, 457, 100, 45),
+  share: {
+    type: "media",
+    position: [600, 480],
+    size: [510, 250],
+    zIndex: 0,
+    background: "rgba(0,0,0,0.2)",
+    border: "limegreen solid 2px",
+    iframe: "",
+  },
+  ...createGoBoard(10, 60 + 260 * 0, 750),
+  ...createGoBoard(11, 60 + 260 * 1, 750),
+  ...createGoBoard(12, 60 + 260 * 2, 750),
+  ...createGoBoard(13, 60 + 260 * 3, 750),
+  footer: {
+    type: "background",
+    position: [60, 900],
+    size: [10, 10],
+    zIndex: -199,
+    background: "",
+    border: "",
+    iframe: "",
+  },
+};
+
 export const roomPresets: Record<string, Record<string, RegionData>> = {
   intro,
   phone,
   igo,
   office1,
+  office2,
 };
