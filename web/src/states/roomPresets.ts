@@ -171,8 +171,8 @@ const office2: Record<string, RegionData> = {
   },
   chat: {
     type: "chat",
-    position: [80, 540],
-    size: [380, 190],
+    position: [80, 523],
+    size: [380, 210],
     zIndex: 0,
     background: "rgba(255,255,255,0.2)",
     border: "skyblue solid 2px",
@@ -193,19 +193,7 @@ const office2: Record<string, RegionData> = {
     border: "limegreen solid 2px",
     iframe: "",
   },
-  ...createGoBoard(10, 60 + 260 * 0, 750),
-  ...createGoBoard(11, 60 + 260 * 1, 750),
-  ...createGoBoard(12, 60 + 260 * 2, 750),
-  ...createGoBoard(13, 60 + 260 * 3, 750),
-  footer: {
-    type: "background",
-    position: [60, 900],
-    size: [10, 10],
-    zIndex: -199,
-    background: "",
-    border: "",
-    iframe: "",
-  },
+  ...createGoBoard(10, 865, 5),
 };
 
 export const roomPresets: Record<string, Record<string, RegionData>> = {
