@@ -271,14 +271,8 @@ export const createRoom: CreateRoom = async (
       console.info("dataConnection already in map, overriding", conn.peer);
     }
     connMap.addConn(conn);
-    setTimeout(() => {
-      if (!connMap.isConnected(conn.peer)) {
-        console.log(
-          "dataConnection is still not connected, possibly a bug",
-          conn.peer,
-          conn.open
-        );
-      }
+    const timer = setTimeout(() => {
+      console.log("dataConnection is still pending, possibly a bug", conn);
     }, 30 * 1000);
     if (conn.open) {
       console.warn(
@@ -286,6 +280,7 @@ export const createRoom: CreateRoom = async (
       );
     }
     conn.on("open", () => {
+      clearTimeout(timer);
       connMap.markConnected(conn);
       console.log("dataConnection open", conn);
       showConnectedStatus();
@@ -338,6 +333,7 @@ export const createRoom: CreateRoom = async (
       }
     });
     conn.on("close", () => {
+      clearTimeout(timer);
       connMap.delConn(conn);
       console.log("dataConnection closed", conn);
       updateNetworkStatus({
