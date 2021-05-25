@@ -77,14 +77,14 @@ export const createRoom: CreateRoom = async (
         } else if (err.type === "peer-unavailable") {
           // ignore
         } else if (err.type === "disconnected") {
-          console.log("initMyPeer disconnected error", index, err);
+          console.log("initMyPeer disconnected error", peerIndex, err);
         } else if (err.type === "network") {
-          console.log("initMyPeer network error", index, err);
+          console.log("initMyPeer network error", peerIndex, err);
         } else if (err.type === "server-error") {
-          console.log("initMyPeer server error", index, err);
+          console.log("initMyPeer server error", peerIndex, err);
           updateNetworkStatus({ type: "SERVER_ERROR" });
         } else {
-          console.error("initMyPeer unknown error", index, err.type, err);
+          console.error("initMyPeer unknown error", peerIndex, err.type, err);
           updateNetworkStatus({ type: "UNKNOWN_ERROR", err });
         }
       });
@@ -97,15 +97,14 @@ export const createRoom: CreateRoom = async (
         initConnection(conn);
       });
       peer.on("disconnected", () => {
-        console.log("initMyPeer disconnected", index);
+        console.log("initMyPeer disconnected", peerIndex);
         setTimeout(() => {
           if (!peer.destroyed) {
-            console.log("initMyPeer reconnecting", index);
-            updateNetworkStatus({ type: "RECONNECTING" });
+            updateNetworkStatus({ type: "RECONNECTING", peerIndex });
             peer.reconnect();
             setTimeout(async () => {
               if (peer.disconnected) {
-                console.log("reconnect failed, re-initializing", index);
+                console.log("reconnect failed, re-initializing", peerIndex);
                 peer.destroy();
                 myPeer = await initMyPeer();
               }
@@ -267,24 +266,16 @@ export const createRoom: CreateRoom = async (
   };
 
   const initConnection = (conn: Peer.DataConnection) => {
+    console.log("initConnection", conn);
     if (connMap.isConnected(conn.peer)) {
       console.info("dataConnection already in map, overriding", conn.peer);
     }
     connMap.addConn(conn);
-    const timer = setTimeout(() => {
-      console.log("dataConnection is still pending, possibly a bug", conn);
-    }, 30 * 1000);
-    if (conn.open) {
-      console.warn(
-        "dataConnection is already open before adding handler, this can cause a bug"
-      );
-    }
     conn.on("open", () => {
-      clearTimeout(timer);
       connMap.markConnected(conn);
-      console.log("dataConnection open", conn);
+      const peerIndex = getPeerIndexFromConn(conn);
+      console.log("dataConnection open", peerIndex);
       showConnectedStatus();
-      const peerIndex = getPeerIndexFromPeerId(conn.peer);
       notifyNewPeer(peerIndex);
     });
     conn.on("data", (buf: ArrayBuffer) => handlePayload(conn, buf));
@@ -333,13 +324,9 @@ export const createRoom: CreateRoom = async (
       }
     });
     conn.on("close", () => {
-      clearTimeout(timer);
       connMap.delConn(conn);
-      console.log("dataConnection closed", conn);
-      updateNetworkStatus({
-        type: "CONNECTION_CLOSED",
-        peerIndex: getPeerIndexFromConn(conn),
-      });
+      const peerIndex = getPeerIndexFromConn(conn);
+      updateNetworkStatus({ type: "CONNECTION_CLOSED", peerIndex });
       showConnectedStatus();
       if (connMap.getConnectedPeerIds().length === 0) {
         reInitMyPeer(true);
@@ -350,9 +337,7 @@ export const createRoom: CreateRoom = async (
       ) {
         const waitSec = 30 + Math.floor(Math.random() * 60);
         console.log(
-          `Disconnected seed peer: ${getPeerIndexFromPeerId(
-            conn.peer
-          )}, reinit in ${waitSec}sec...`
+          `Disconnected seed peer: ${peerIndex}, reinit in ${waitSec}sec...`
         );
         setTimeout(reInitMyPeer, waitSec * 1000);
       }

@@ -5,7 +5,7 @@ export type NetworkStatus =
   | { type: "NEW_CONNECTION"; peerIndex: number }
   | { type: "CONNECTION_CLOSED"; peerIndex: number }
   | { type: "INITIALIZING_PEER"; peerIndex: number }
-  | { type: "RECONNECTING" }
+  | { type: "RECONNECTING"; peerIndex: number }
   | { type: "SERVER_ERROR" }
   | { type: "UNKNOWN_ERROR"; err: Error }
   | { type: "CONNECTED_PEERS"; peerIndexList: number[] };
