@@ -100,8 +100,7 @@ export const createRoom: CreateRoom = async (
         console.log("initMyPeer disconnected", peerIndex);
         setTimeout(() => {
           if (!peer.destroyed) {
-            console.log("initMyPeer reconnecting", peerIndex);
-            updateNetworkStatus({ type: "RECONNECTING" });
+            updateNetworkStatus({ type: "RECONNECTING", peerIndex });
             peer.reconnect();
             setTimeout(async () => {
               if (peer.disconnected) {
@@ -267,15 +266,16 @@ export const createRoom: CreateRoom = async (
   };
 
   const initConnection = (conn: Peer.DataConnection) => {
+    console.log("initConnection", conn);
     if (connMap.isConnected(conn.peer)) {
       console.info("dataConnection already in map, overriding", conn.peer);
     }
     connMap.addConn(conn);
     conn.on("open", () => {
       connMap.markConnected(conn);
-      console.log("dataConnection open", conn);
+      const peerIndex = getPeerIndexFromConn(conn);
+      console.log("dataConnection open", peerIndex);
       showConnectedStatus();
-      const peerIndex = getPeerIndexFromPeerId(conn.peer);
       notifyNewPeer(peerIndex);
     });
     conn.on("data", (buf: ArrayBuffer) => handlePayload(conn, buf));
@@ -325,11 +325,8 @@ export const createRoom: CreateRoom = async (
     });
     conn.on("close", () => {
       connMap.delConn(conn);
-      console.log("dataConnection closed", conn);
-      updateNetworkStatus({
-        type: "CONNECTION_CLOSED",
-        peerIndex: getPeerIndexFromConn(conn),
-      });
+      const peerIndex = getPeerIndexFromConn(conn);
+      updateNetworkStatus({ type: "CONNECTION_CLOSED", peerIndex });
       showConnectedStatus();
       if (connMap.getConnectedPeerIds().length === 0) {
         reInitMyPeer(true);
@@ -340,9 +337,7 @@ export const createRoom: CreateRoom = async (
       ) {
         const waitSec = 30 + Math.floor(Math.random() * 60);
         console.log(
-          `Disconnected seed peer: ${getPeerIndexFromPeerId(
-            conn.peer
-          )}, reinit in ${waitSec}sec...`
+          `Disconnected seed peer: ${peerIndex}, reinit in ${waitSec}sec...`
         );
         setTimeout(reInitMyPeer, waitSec * 1000);
       }
