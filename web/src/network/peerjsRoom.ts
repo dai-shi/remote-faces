@@ -77,14 +77,14 @@ export const createRoom: CreateRoom = async (
         } else if (err.type === "peer-unavailable") {
           // ignore
         } else if (err.type === "disconnected") {
-          console.log("initMyPeer disconnected error", index, err);
+          console.log("initMyPeer disconnected error", peerIndex, err);
         } else if (err.type === "network") {
-          console.log("initMyPeer network error", index, err);
+          console.log("initMyPeer network error", peerIndex, err);
         } else if (err.type === "server-error") {
-          console.log("initMyPeer server error", index, err);
+          console.log("initMyPeer server error", peerIndex, err);
           updateNetworkStatus({ type: "SERVER_ERROR" });
         } else {
-          console.error("initMyPeer unknown error", index, err.type, err);
+          console.error("initMyPeer unknown error", peerIndex, err.type, err);
           updateNetworkStatus({ type: "UNKNOWN_ERROR", err });
         }
       });
@@ -97,15 +97,15 @@ export const createRoom: CreateRoom = async (
         initConnection(conn);
       });
       peer.on("disconnected", () => {
-        console.log("initMyPeer disconnected", index);
+        console.log("initMyPeer disconnected", peerIndex);
         setTimeout(() => {
           if (!peer.destroyed) {
-            console.log("initMyPeer reconnecting", index);
+            console.log("initMyPeer reconnecting", peerIndex);
             updateNetworkStatus({ type: "RECONNECTING" });
             peer.reconnect();
             setTimeout(async () => {
               if (peer.disconnected) {
-                console.log("reconnect failed, re-initializing", index);
+                console.log("reconnect failed, re-initializing", peerIndex);
                 peer.destroy();
                 myPeer = await initMyPeer();
               }
