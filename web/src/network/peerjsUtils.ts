@@ -48,15 +48,15 @@ export const createConnectionMap = () => {
 
   const addConn = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
-    if (value) {
-      value.conn.close();
-    }
     map.set(conn.peer, {
       conn,
       createdAt: Date.now(),
       acceptingMediaTypes: [],
       remoteMediaTypes: {},
     });
+    if (value) {
+      value.conn.close();
+    }
   };
 
   const markConnected = (conn: Peer.DataConnection) => {
@@ -100,7 +100,9 @@ export const createConnectionMap = () => {
     const value = map.get(conn.peer);
     if (value && value.conn === conn) {
       map.delete(conn.peer);
+      return true;
     }
+    return false;
   };
 
   const getConnectedPeerIds = () =>
