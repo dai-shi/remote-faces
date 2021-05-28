@@ -89,7 +89,6 @@ export const createRoom: CreateRoom = async (
         }
       });
       peer.on("connection", (conn) => {
-        console.log("new connection received", conn);
         updateNetworkStatus({
           type: "NEW_CONNECTION",
           peerIndex: getPeerIndexFromConn(conn),
