@@ -324,7 +324,7 @@ export const createRoom: CreateRoom = async (
       }
     });
     conn.on("close", () => {
-      if (!connMap.delConn(conn)) return;
+      connMap.delConn(conn);
       const peerIndex = getPeerIndexFromConn(conn);
       updateNetworkStatus({ type: "CONNECTION_CLOSED", peerIndex });
       showConnectedStatus();
