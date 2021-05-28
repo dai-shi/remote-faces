@@ -61,7 +61,7 @@ export const createConnectionMap = () => {
 
   const markConnected = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
-    if (value && value.conn === conn) {
+    if (value) {
       value.connected = true;
     }
   };
