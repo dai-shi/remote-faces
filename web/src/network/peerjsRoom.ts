@@ -126,7 +126,8 @@ export const createRoom: CreateRoom = async (
   const connectPeer = (id: string) => {
     if (disposed) return;
     if (myPeer.id === id || myPeer.disconnected) return;
-    if (connMap.hasEffectiveConn(id)) return;
+    if (connMap.isConnectedPeerId(id)) return;
+    if (connMap.hasFreshConn(id)) return;
     console.log("connectPeer", id);
     const conn = myPeer.connect(id);
     initConnection(conn);
@@ -267,6 +268,10 @@ export const createRoom: CreateRoom = async (
   const initConnection = (conn: Peer.DataConnection) => {
     console.log("initConnection", conn);
     if (connMap.isConnectedPeerId(conn.peer)) {
+      if (connMap.hasFreshConn(conn.peer)) {
+        conn.close();
+        return;
+      }
       console.info("dataConnection already in map, overriding", conn.peer);
     }
     connMap.addConn(conn);

@@ -88,10 +88,9 @@ export const createConnectionMap = () => {
     return value && value.userId;
   };
 
-  const hasEffectiveConn = (peerId: string) => {
+  const hasFreshConn = (peerId: string) => {
     const value = map.get(peerId);
     if (!value) return false;
-    if (value.connected) return true;
     return value.createdAt > Date.now() - 60 * 1000;
   };
 
@@ -193,7 +192,7 @@ export const createConnectionMap = () => {
     isConnected,
     setUserId,
     getUserId,
-    hasEffectiveConn,
+    hasFreshConn,
     getConn,
     delConn,
     getConnectedPeerIds,
