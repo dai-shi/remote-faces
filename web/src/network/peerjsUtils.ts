@@ -66,9 +66,14 @@ export const createConnectionMap = () => {
     }
   };
 
-  const isConnected = (peerId: string) => {
+  const isConnectedPeerId = (peerId: string) => {
     const value = map.get(peerId);
     return (value && value.connected) || false;
+  };
+
+  const isConnected = (conn: Peer.DataConnection) => {
+    const value = map.get(conn.peer);
+    return (value && value.conn === conn && value.connected) || false;
   };
 
   const setUserId = (conn: Peer.DataConnection, userId: string) => {
@@ -184,6 +189,7 @@ export const createConnectionMap = () => {
     getAcceptingMediaTypes,
     addConn,
     markConnected,
+    isConnectedPeerId,
     isConnected,
     setUserId,
     getUserId,

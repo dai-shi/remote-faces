@@ -266,7 +266,7 @@ export const createRoom: CreateRoom = async (
 
   const initConnection = (conn: Peer.DataConnection) => {
     console.log("initConnection", conn);
-    if (connMap.isConnected(conn.peer)) {
+    if (connMap.isConnectedPeerId(conn.peer)) {
       console.info("dataConnection already in map, overriding", conn.peer);
     }
     connMap.addConn(conn);
@@ -290,7 +290,7 @@ export const createRoom: CreateRoom = async (
       negotiationScheduled = true;
       await sleep(5000);
       negotiationScheduled = false;
-      if (!connMap.isConnected(conn.peer)) return;
+      if (!connMap.isConnected(conn)) return;
       if (!conn.peerConnection) return;
       if (conn.peerConnection.signalingState === "closed") return;
       const offer = await conn.peerConnection.createOffer();
@@ -298,7 +298,7 @@ export const createRoom: CreateRoom = async (
       sendSDP(conn, { offer });
     });
     conn.peerConnection.addEventListener("track", (event: RTCTrackEvent) => {
-      if (!connMap.isConnected(conn.peer)) {
+      if (!connMap.isConnected(conn)) {
         console.warn("received track from non-connected peer, ignoring");
         return;
       }
@@ -350,7 +350,7 @@ export const createRoom: CreateRoom = async (
       let existsAllSeeds = true;
       for (let i = MIN_SEED_PEER_INDEX; i <= MAX_SEED_PEER_INDEX; i += 1) {
         const id = generatePeerId(roomId, i);
-        if (!connMap.isConnected(id)) {
+        if (!connMap.isConnectedPeerId(id)) {
           existsAllSeeds = false;
           break;
         }
