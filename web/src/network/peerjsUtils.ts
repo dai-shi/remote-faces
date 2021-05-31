@@ -48,27 +48,32 @@ export const createConnectionMap = () => {
 
   const addConn = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
-    if (value) {
-      value.conn.close();
-    }
     map.set(conn.peer, {
       conn,
       createdAt: Date.now(),
       acceptingMediaTypes: [],
       remoteMediaTypes: {},
     });
+    if (value) {
+      value.conn.close();
+    }
   };
 
   const markConnected = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
-    if (value) {
+    if (value && value.conn === conn) {
       value.connected = true;
     }
   };
 
-  const isConnected = (peerId: string) => {
+  const isConnectedPeerId = (peerId: string) => {
     const value = map.get(peerId);
     return (value && value.connected) || false;
+  };
+
+  const isConnected = (conn: Peer.DataConnection) => {
+    const value = map.get(conn.peer);
+    return (value && value.conn === conn && value.connected) || false;
   };
 
   const setUserId = (conn: Peer.DataConnection, userId: string) => {
@@ -83,11 +88,10 @@ export const createConnectionMap = () => {
     return value && value.userId;
   };
 
-  const hasEffectiveConn = (peerId: string) => {
+  const hasFreshConn = (peerId: string) => {
     const value = map.get(peerId);
     if (!value) return false;
-    if (value.connected) return true;
-    return value.createdAt > Date.now() - 60 * 1000;
+    return value.createdAt > Date.now() - 5 * 60 * 1000;
   };
 
   const getConn = (peerId: string) => {
@@ -100,7 +104,9 @@ export const createConnectionMap = () => {
     const value = map.get(conn.peer);
     if (value && value.conn === conn) {
       map.delete(conn.peer);
+      return true;
     }
+    return false;
   };
 
   const getConnectedPeerIds = () =>
@@ -182,10 +188,11 @@ export const createConnectionMap = () => {
     getAcceptingMediaTypes,
     addConn,
     markConnected,
+    isConnectedPeerId,
     isConnected,
     setUserId,
     getUserId,
-    hasEffectiveConn,
+    hasFreshConn,
     getConn,
     delConn,
     getConnectedPeerIds,
