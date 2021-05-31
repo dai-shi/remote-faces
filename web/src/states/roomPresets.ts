@@ -196,10 +196,57 @@ const office2: Record<string, RegionData> = {
   ...createGoBoard(10, 865, 5),
 };
 
+const office3: Record<string, RegionData> = {
+  background: {
+    type: "background",
+    position: [0, 0],
+    size: [1120, 740],
+    zIndex: -99,
+    background:
+      "url(https://user-images.githubusercontent.com/17561803/120201967-fc459680-c260-11eb-8b1f-6bb108476f2f.png) left top / contain",
+    border: "",
+    iframe: "",
+  },
+  chat: {
+    type: "chat",
+    position: [90, 341],
+    size: [250, 394],
+    zIndex: 0,
+    background: "rgba(206,206,206,0.8)",
+    border: "#2C2F33 solid 2px",
+    iframe: "",
+  },
+  ...createMeeting(1, 575, 295, 200, 130),
+  ...createMeeting(2, 516, 555, 200, 180),
+  ...createMeeting(3, 441, 373, 100, 100),
+  ...createMeeting(4, 684, 17, 100, 45),
+  ...createMeeting(5, 684, 83, 100, 45),
+  ...createMeeting(6, 684, 149, 100, 45),
+  share: {
+    type: "media",
+    position: [765, 645],
+    size: [350, 90],
+    zIndex: 0,
+    background: "rgba(0,0,0,0.2)",
+    border: "limegreen solid 2px",
+    iframe: "",
+  },
+  go: {
+    type: "goboard",
+    position: [345, 633],
+    size: [170, 105],
+    zIndex: 0,
+    background: "rgba(140, 140, 140, 0.6)",
+    border: "",
+    iframe: "",
+  },
+};
+
 export const roomPresets: Record<string, Record<string, RegionData>> = {
   intro,
   phone,
   igo,
   office1,
   office2,
+  office3,
 };
