@@ -66,7 +66,7 @@ export const createRoom: CreateRoom = async (
         setTimeout(() => {
           for (let i = MIN_SEED_PEER_INDEX; i <= MAX_SEED_PEER_INDEX; i += 1) {
             const seedId = generatePeerId(roomId, i);
-            connectPeer(seedId);
+            connectPeer(seedId, true);
           }
         }, 10);
       });
@@ -123,14 +123,19 @@ export const createRoom: CreateRoom = async (
     console.log("myPeer index", myPeer.id && getPeerIndexFromPeerId(myPeer.id));
   };
 
-  const connectPeer = (id: string) => {
+  const connectPeer = (id: string, force?: boolean) => {
     if (disposed) return;
     if (myPeer.id === id || myPeer.disconnected) return;
     if (connMap.isConnectedPeerId(id)) return;
     if (connMap.hasFreshConn(id)) return;
-    console.log("connectPeer", id);
-    const conn = myPeer.connect(id);
-    initConnection(conn);
+    if (
+      force ||
+      getPeerIndexFromPeerId(id) < getPeerIndexFromPeerId(myPeer.id)
+    ) {
+      console.log("connectPeer", id);
+      const conn = myPeer.connect(id);
+      initConnection(conn);
+    }
   };
 
   const broadcastData = (data: unknown) => {
@@ -268,10 +273,6 @@ export const createRoom: CreateRoom = async (
   const initConnection = (conn: Peer.DataConnection) => {
     console.log("initConnection", conn);
     if (connMap.isConnectedPeerId(conn.peer)) {
-      if (connMap.hasFreshConn(conn.peer)) {
-        conn.close();
-        return;
-      }
       console.info("dataConnection already in map, overriding", conn.peer);
     }
     connMap.addConn(conn);
@@ -339,7 +340,7 @@ export const createRoom: CreateRoom = async (
         !myPeer.disconnected &&
         !guessSeed(myPeer.id)
       ) {
-        const waitSec = 30 + Math.floor(Math.random() * 60);
+        const waitSec = 5 * 60 + Math.floor(Math.random() * 5 * 60);
         console.log(
           `Disconnected seed peer: ${peerIndex}, reinit in ${waitSec}sec...`
         );
