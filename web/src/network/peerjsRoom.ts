@@ -55,7 +55,6 @@ export const createRoom: CreateRoom = async (
       const peerIndex = isSeed ? index : rand4();
       updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex });
       const id = generatePeerId(roomId, peerIndex);
-      console.log("initMyPeer start", index, id);
       const peer = new Peer(id, getPeerJsConfigFromUrl());
       peer.on("open", () => {
         resolve(peer);
@@ -120,7 +119,12 @@ export const createRoom: CreateRoom = async (
       .getConnectedPeerIds()
       .map(getPeerIndexFromPeerId);
     updateNetworkStatus({ type: "CONNECTED_PEERS", peerIndexList });
-    console.log("myPeer index", myPeer.id && getPeerIndexFromPeerId(myPeer.id));
+    console.log(
+      "myPeer index:",
+      myPeer.id && getPeerIndexFromPeerId(myPeer.id),
+      ", connnecting:",
+      connMap.getNotConnectedPeerIds().map(getPeerIndexFromPeerId)
+    );
   };
 
   const connectPeer = (id: string, force?: boolean) => {
@@ -271,7 +275,6 @@ export const createRoom: CreateRoom = async (
   };
 
   const initConnection = (conn: Peer.DataConnection) => {
-    console.log("initConnection", conn);
     if (connMap.isConnectedPeerId(conn.peer)) {
       console.info("dataConnection already in map, overriding", conn.peer);
     }

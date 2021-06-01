@@ -112,6 +112,9 @@ export const createConnectionMap = () => {
   const getConnectedPeerIds = () =>
     Array.from(map.keys()).filter((k) => map.get(k)?.connected);
 
+  const getNotConnectedPeerIds = () =>
+    Array.from(map.keys()).filter((k) => !map.get(k)?.connected);
+
   const forEachConnectedConns = (
     callback: (conn: Peer.DataConnection) => void
   ) => {
@@ -135,7 +138,15 @@ export const createConnectionMap = () => {
 
   const clearAll = () => {
     if (map.size) {
-      console.log("connectionMap garbage:", map);
+      console.log(
+        "connectionMap garbage:",
+        [...map.entries()].map(([k, v]) => ({
+          id: k,
+          createdAt: v.createdAt,
+          connected: v.connected,
+          userId: v.userId,
+        }))
+      );
     }
     map.clear();
   };
@@ -196,6 +207,7 @@ export const createConnectionMap = () => {
     getConn,
     delConn,
     getConnectedPeerIds,
+    getNotConnectedPeerIds,
     forEachConnectedConns,
     forEachConnsAcceptingMedia,
     clearAll,
