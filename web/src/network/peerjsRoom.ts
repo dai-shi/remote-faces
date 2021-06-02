@@ -338,7 +338,7 @@ export const createRoom: CreateRoom = async (
         !myPeer.disconnected &&
         !guessSeed(myPeer.id)
       ) {
-        const waitSec = 5 * 60 + Math.floor(Math.random() * 5 * 60);
+        const waitSec = 10 * 60 + Math.floor(Math.random() * 10 * 60);
         console.log(
           `Disconnected seed peer: ${peerIndex}, reinit in ${waitSec}sec...`
         );
