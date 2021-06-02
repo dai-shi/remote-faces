@@ -299,7 +299,7 @@ export const createRoom: CreateRoom = async (
       negotiationScheduled = true;
       await sleep(5000);
       negotiationScheduled = false;
-      if (!connMap.isConnected(conn)) return;
+      if (!connMap.isConnectedConn(conn)) return;
       if (!conn.peerConnection) return;
       if (conn.peerConnection.signalingState === "closed") return;
       const offer = await conn.peerConnection.createOffer();
@@ -307,7 +307,7 @@ export const createRoom: CreateRoom = async (
       sendSDP(conn, { offer });
     });
     conn.peerConnection.addEventListener("track", (event: RTCTrackEvent) => {
-      if (!connMap.isConnected(conn)) {
+      if (!connMap.isConnectedConn(conn)) {
         console.warn("received track from non-connected peer, ignoring");
         return;
       }
