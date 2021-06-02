@@ -65,7 +65,7 @@ export const createRoom: CreateRoom = async (
         setTimeout(() => {
           for (let i = MIN_SEED_PEER_INDEX; i <= MAX_SEED_PEER_INDEX; i += 1) {
             const seedId = generatePeerId(roomId, i);
-            connectPeer(seedId, true);
+            connectPeer(seedId);
           }
         }, 10);
       });
@@ -127,19 +127,14 @@ export const createRoom: CreateRoom = async (
     );
   };
 
-  const connectPeer = (id: string, force?: boolean) => {
+  const connectPeer = (id: string) => {
     if (disposed) return;
     if (myPeer.id === id || myPeer.disconnected) return;
     if (connMap.isConnectedPeerId(id)) return;
     if (connMap.hasFreshConn(id)) return;
-    if (
-      force ||
-      getPeerIndexFromPeerId(id) < getPeerIndexFromPeerId(myPeer.id)
-    ) {
-      console.log("connectPeer", id);
-      const conn = myPeer.connect(id);
-      initConnection(conn);
-    }
+    console.log("connectPeer", id);
+    const conn = myPeer.connect(id);
+    initConnection(conn);
   };
 
   const broadcastData = (data: unknown) => {
