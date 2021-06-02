@@ -37,39 +37,30 @@ export const singleRoomState = proxy<SingleRoomState>({
   },
 });
 
-export const setConfig = ({
-  avatar,
-  nickname,
-  takePhoto,
-  videoDeviceId,
-  audioDeviceId,
-}: {
-  avatar?: string;
-  nickname?: string;
-  takePhoto?: boolean;
-  videoDeviceId?: string;
-  audioDeviceId?: string;
-}) => {
-  if (avatar) {
-    singleRoomState.config.avatar = avatar;
-    setStringItem("avatar_img", avatar);
-  }
-  if (nickname) {
-    singleRoomState.config.nickname = nickname;
-    setStringItem("nickname", nickname);
-  }
-  if (takePhoto) {
-    singleRoomState.config.takePhoto = takePhoto;
-    setStringItem("take_photo", takePhoto ? "yes" : "");
-  }
-  if (videoDeviceId) {
-    singleRoomState.config.videoDeviceId = videoDeviceId;
-    setStringItem("faceimage_video_device_id", videoDeviceId);
-  }
-  if (audioDeviceId) {
-    singleRoomState.config.audioDeviceId = audioDeviceId;
-    setStringItem("faceimage_audio_device_id", audioDeviceId);
-  }
+export const setConfig = (
+  avatar: string,
+  nickname: string,
+  takePhoto: boolean,
+  videoDeviceId: string,
+  audioDeviceId: string
+) => {
+  singleRoomState.config = {
+    avatar,
+    nickname,
+    takePhoto,
+    videoDeviceId,
+    audioDeviceId,
+  };
+  setStringItem("avatar_img", avatar);
+  setStringItem("nickname", nickname);
+  setStringItem("take_photo", takePhoto ? "yes" : "");
+  setStringItem("faceimage_video_device_id", videoDeviceId);
+  setStringItem("faceimage_video_device_id", videoDeviceId);
+};
+
+export const setConfigAvatar = (avatar: string) => {
+  singleRoomState.config.avatar = avatar;
+  setStringItem("avatar_img", avatar);
 };
 
 export const toggleConfigTakePhoto = () => {

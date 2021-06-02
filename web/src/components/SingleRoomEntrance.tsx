@@ -51,13 +51,7 @@ export const SingleRoomEntrance = React.memo(() => {
       singleRoomState.roomId =
         secureRandomId(ROOM_ID_PREFIX_LEN / 2) + (await generateCryptoKey());
     }
-    setConfig({
-      avatar,
-      nickname: name,
-      takePhoto,
-      videoDeviceId,
-      audioDeviceId,
-    });
+    setConfig(avatar, name, takePhoto, videoDeviceId, audioDeviceId);
     singleRoomState.roomEntered = true;
   };
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { setConfig } from "../states/singleRoom";
+import { setConfigAvatar } from "../states/singleRoom";
 
 export const MySetting = React.memo<{
   statusMesg: string;
@@ -78,7 +78,7 @@ export const MySetting = React.memo<{
             toggleSuspended();
           }
           if (suspended) {
-            setConfig({ avatar });
+            setConfigAvatar(avatar);
           }
         }}
       >
