@@ -59,8 +59,6 @@ export const FaceList = React.memo<{
             muted
             micOn={false}
             speakerOn={false}
-            toggleSuspended={toggleSuspended}
-            suspended={suspended}
           />
         </div>
         {roomImages.map((item) => (

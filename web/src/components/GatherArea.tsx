@@ -12,6 +12,7 @@ import {
 import { useFaceImages } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { RegionEditor } from "./RegionEditor";
+import { MySetting } from "./MySetting";
 import { LinkOpener } from "./LinkOpener";
 import { FaceList } from "./FaceList";
 import { FaceCard } from "./FaceCard";
@@ -185,8 +186,6 @@ const Avatar = React.memo<{
           muted={!!muted}
           micOn={!!micOn}
           speakerOn={liveMode}
-          toggleSuspended={toggleSuspended}
-          suspended={suspended}
         />
       </div>
     );
@@ -258,7 +257,7 @@ export const GatherArea = React.memo<{
     );
 
     const [showModal, setShowModal] = useState<
-      null | "region-editor" | "link-opener"
+      null | "region-editor" | "link-opener" | "setting"
     >(null);
 
     const twoMinAgo = Date.now() - 2 * 60 * 1000;
@@ -346,6 +345,26 @@ export const GatherArea = React.memo<{
           />
         </div>
         <div className="GatherArea-toolbar">
+          <div>
+            <button
+              type="button"
+              onClick={() =>
+                setShowModal(showModal === "setting" ? null : "setting")
+              }
+            >
+              {showModal === "setting" ? "Close Setting" : "Open Setting"}
+            </button>
+            {showModal === "setting" && (
+              <div className="GatherArea-setting">
+                <MySetting
+                  statusMesg={statusMesg}
+                  suspended={suspended}
+                  toggleSuspended={toggleSuspended}
+                  setStatusMesg={setStatusMesg}
+                />
+              </div>
+            )}
+          </div>
           <div>
             <button
               type="button"
