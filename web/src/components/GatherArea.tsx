@@ -125,8 +125,6 @@ const Avatar = React.memo<{
   liveMode: boolean;
   muted?: boolean;
   micOn?: boolean;
-  toggleSuspended?: () => void;
-  suspended?: boolean;
 }>(
   ({
     nickname,
@@ -141,8 +139,6 @@ const Avatar = React.memo<{
     liveMode,
     muted,
     micOn,
-    toggleSuspended,
-    suspended,
   }) => {
     const isMyself = !!setPosition;
     return (
@@ -327,8 +323,6 @@ export const GatherArea = React.memo<{
             liveMode={!!activeMeetingRegionId}
             muted
             micOn={activeMeetingMicOn}
-            toggleSuspended={toggleSuspended}
-            suspended={suspended}
           />
         </div>
         <div className="GatherArea-facelist">
@@ -340,7 +334,6 @@ export const GatherArea = React.memo<{
             statusMesg={statusMesg}
             setStatusMesg={setStatusMesg}
             videoDeviceId={videoDeviceId}
-            toggleSuspended={toggleSuspended}
             suspended={suspended}
           />
         </div>

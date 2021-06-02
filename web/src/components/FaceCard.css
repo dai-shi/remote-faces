@@ -22,28 +22,6 @@
   text-shadow: 1px 1px 0 #4848487a;
 }
 
-.FaceCard-mesg {
-  position: absolute;
-  bottom: 2px;
-  left: 1px;
-  color: white;
-  font-size: 0.5rem;
-  line-height: 0.5rem;
-  font-family: sans-serif;
-  cursor: help;
-}
-
-button.FaceCard-mesg {
-  cursor: pointer;
-  border: none;
-  background: transparent;
-  padding: 0;
-}
-
-button.FaceCard-mesg:focus {
-  outline:0;
-}
-
 .FaceCard-live-indicator {
   position: absolute;
   top: 1px;
@@ -69,29 +47,4 @@ button.FaceCard-mesg:focus {
   font-size: 0.5rem;
   line-height: 0.5rem;
   cursor: default;
-}
-
-.FaceCard-camera {
-  position: absolute;
-  top: 1px;
-  right: 3px;
-  color: red;
-  font-size: 0.5rem;
-  line-height: 0.5rem;
-  font-family: sans-serif;
-  border: none;
-  padding: 0;
-  background-color: transparent;
-  cursor: pointer;
-}
-
-.FaceCard-camera:focus {
-  outline:0;
-}
-
-.FaceCard-camera-disabled {
-  position: absolute;
-  top: 1px;
-  right: 1px;
-  opacity: 0.5;
 }
