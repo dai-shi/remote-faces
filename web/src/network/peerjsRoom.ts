@@ -65,7 +65,7 @@ export const createRoom: CreateRoom = async (
         setTimeout(() => {
           for (let i = MIN_SEED_PEER_INDEX; i <= MAX_SEED_PEER_INDEX; i += 1) {
             const seedId = generatePeerId(roomId, i);
-            connectPeer(seedId, true);
+            connectPeer(seedId);
           }
         }, 10);
       });
@@ -127,19 +127,14 @@ export const createRoom: CreateRoom = async (
     );
   };
 
-  const connectPeer = (id: string, force?: boolean) => {
+  const connectPeer = (id: string) => {
     if (disposed) return;
     if (myPeer.id === id || myPeer.disconnected) return;
     if (connMap.isConnectedPeerId(id)) return;
     if (connMap.hasFreshConn(id)) return;
-    if (
-      force ||
-      getPeerIndexFromPeerId(id) < getPeerIndexFromPeerId(myPeer.id)
-    ) {
-      console.log("connectPeer", id);
-      const conn = myPeer.connect(id);
-      initConnection(conn);
-    }
+    console.log("connectPeer", id);
+    const conn = myPeer.connect(id);
+    initConnection(conn);
   };
 
   const broadcastData = (data: unknown) => {
@@ -299,7 +294,7 @@ export const createRoom: CreateRoom = async (
       negotiationScheduled = true;
       await sleep(5000);
       negotiationScheduled = false;
-      if (!connMap.isConnected(conn)) return;
+      if (!connMap.isConnectedConn(conn)) return;
       if (!conn.peerConnection) return;
       if (conn.peerConnection.signalingState === "closed") return;
       const offer = await conn.peerConnection.createOffer();
@@ -307,7 +302,7 @@ export const createRoom: CreateRoom = async (
       sendSDP(conn, { offer });
     });
     conn.peerConnection.addEventListener("track", (event: RTCTrackEvent) => {
-      if (!connMap.isConnected(conn)) {
+      if (!connMap.isConnectedConn(conn)) {
         console.warn("received track from non-connected peer, ignoring");
         return;
       }
@@ -343,7 +338,7 @@ export const createRoom: CreateRoom = async (
         !myPeer.disconnected &&
         !guessSeed(myPeer.id)
       ) {
-        const waitSec = 5 * 60 + Math.floor(Math.random() * 5 * 60);
+        const waitSec = 10 * 60 + Math.floor(Math.random() * 10 * 60);
         console.log(
           `Disconnected seed peer: ${peerIndex}, reinit in ${waitSec}sec...`
         );

@@ -66,14 +66,17 @@ export const createConnectionMap = () => {
     }
   };
 
-  const isConnectedPeerId = (peerId: string) => {
-    const value = map.get(peerId);
-    return (value && value.connected) || false;
-  };
+  const isConnected = (value?: Value) =>
+    !!(value && value.connected && value.conn.open);
 
-  const isConnected = (conn: Peer.DataConnection) => {
+  const isConnectedPeerId = (peerId: string) => isConnected(map.get(peerId));
+
+  const isConnectedConn = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
-    return (value && value.conn === conn && value.connected) || false;
+    if (value && value.conn === conn) {
+      return isConnected(value);
+    }
+    return false;
   };
 
   const setUserId = (conn: Peer.DataConnection, userId: string) => {
@@ -91,7 +94,7 @@ export const createConnectionMap = () => {
   const hasFreshConn = (peerId: string) => {
     const value = map.get(peerId);
     if (!value) return false;
-    return value.createdAt > Date.now() - 5 * 60 * 1000;
+    return value.createdAt > Date.now() - 60 * 1000;
   };
 
   const getConn = (peerId: string) => {
@@ -110,16 +113,16 @@ export const createConnectionMap = () => {
   };
 
   const getConnectedPeerIds = () =>
-    Array.from(map.keys()).filter((k) => map.get(k)?.connected);
+    Array.from(map.keys()).filter((k) => isConnected(map.get(k)));
 
   const getNotConnectedPeerIds = () =>
-    Array.from(map.keys()).filter((k) => !map.get(k)?.connected);
+    Array.from(map.keys()).filter((k) => !isConnected(map.get(k)));
 
   const forEachConnectedConns = (
     callback: (conn: Peer.DataConnection) => void
   ) => {
     Array.from(map.values()).forEach((value) => {
-      if (value.connected) {
+      if (isConnected(value)) {
         callback(value.conn);
       }
     });
@@ -130,7 +133,7 @@ export const createConnectionMap = () => {
     callback: (conn: Peer.DataConnection) => void
   ) => {
     Array.from(map.values()).forEach((value) => {
-      if (value.connected && value.acceptingMediaTypes.includes(mediaType)) {
+      if (isConnected(value) && value.acceptingMediaTypes.includes(mediaType)) {
         callback(value.conn);
       }
     });
@@ -144,6 +147,7 @@ export const createConnectionMap = () => {
           id: k,
           createdAt: v.createdAt,
           connected: v.connected,
+          open: v.conn.open,
           userId: v.userId,
         }))
       );
@@ -200,7 +204,7 @@ export const createConnectionMap = () => {
     addConn,
     markConnected,
     isConnectedPeerId,
-    isConnected,
+    isConnectedConn,
     setUserId,
     getUserId,
     hasFreshConn,
