@@ -72,11 +72,6 @@ export const FaceCard = React.memo<{
           />
         )}
         <div className="FaceCard-name">{nickname}</div>
-        {liveMode && stream && (
-          <div className="FaceCard-live-indicator" title="Live Mode On">
-            &#9673;
-          </div>
-        )}
         {setStatusMesg ? (
           <button
             type="button"
