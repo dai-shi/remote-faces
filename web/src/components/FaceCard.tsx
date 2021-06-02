@@ -77,6 +77,23 @@ export const FaceCard = React.memo<{
             &#9673;
           </div>
         )}
+        {setStatusMesg ? (
+          <button
+            type="button"
+            className="FaceCard-mesg"
+            title={statusMesg || "(No status message)"}
+            onClick={editStatusMesg}
+          >
+            {emoji}
+          </button>
+        ) : (
+          <div
+            className="FaceCard-mesg"
+            title={statusMesg || "(No status message)"}
+          >
+            {emoji}
+          </div>
+        )}
         {liveMode && stream && (
           <div className="FaceCard-mic-speaker-icons">
             {micOn && <span title="Mic On">&#x1F3A4;</span>}

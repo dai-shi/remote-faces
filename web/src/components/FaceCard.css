@@ -22,6 +22,28 @@
   text-shadow: 1px 1px 0 #4848487a;
 }
 
+.FaceCard-mesg {
+  position: absolute;
+  bottom: 2px;
+  left: 1px;
+  color: white;
+  font-size: 0.5rem;
+  line-height: 0.5rem;
+  font-family: sans-serif;
+  cursor: help;
+}
+
+button.FaceCard-mesg {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+button.FaceCard-mesg:focus {
+  outline:0;
+}
+
 .FaceCard-live-indicator {
   position: absolute;
   top: 1px;
