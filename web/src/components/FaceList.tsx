@@ -18,7 +18,6 @@ export const FaceList = React.memo<{
   statusMesg: string;
   setStatusMesg: (mesg: string) => void;
   videoDeviceId?: string;
-  toggleSuspended: () => void;
   suspended: boolean;
 }>(
   ({
@@ -29,7 +28,6 @@ export const FaceList = React.memo<{
     statusMesg,
     setStatusMesg,
     videoDeviceId,
-    toggleSuspended,
     suspended,
   }) => {
     const userIdMap = useSnapshot(getRoomState(roomId, userId).userIdMap);
@@ -59,8 +57,6 @@ export const FaceList = React.memo<{
             muted
             micOn={false}
             speakerOn={false}
-            toggleSuspended={toggleSuspended}
-            suspended={suspended}
           />
         </div>
         {roomImages.map((item) => (

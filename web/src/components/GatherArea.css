@@ -64,6 +64,15 @@
   border-radius: 8px;
 }
 
+.GatherArea-setting {
+  -webkit-app-region: no-drag;
+  margin: 5px;
+  padding: 10px;
+  background: rgb(224, 255, 228);
+  border: 3px solid gray;
+  border-radius: 8px;
+}
+
 .GatherArea-link-opener {
   -webkit-app-region: no-drag;
   margin: 5px;

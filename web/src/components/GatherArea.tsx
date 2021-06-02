@@ -12,6 +12,7 @@ import {
 import { useFaceImages } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { RegionEditor } from "./RegionEditor";
+import { MySetting } from "./MySetting";
 import { LinkOpener } from "./LinkOpener";
 import { FaceList } from "./FaceList";
 import { FaceCard } from "./FaceCard";
@@ -124,8 +125,6 @@ const Avatar = React.memo<{
   liveMode: boolean;
   muted?: boolean;
   micOn?: boolean;
-  toggleSuspended?: () => void;
-  suspended?: boolean;
 }>(
   ({
     nickname,
@@ -140,8 +139,6 @@ const Avatar = React.memo<{
     liveMode,
     muted,
     micOn,
-    toggleSuspended,
-    suspended,
   }) => {
     const isMyself = !!setPosition;
     return (
@@ -185,8 +182,6 @@ const Avatar = React.memo<{
           muted={!!muted}
           micOn={!!micOn}
           speakerOn={liveMode}
-          toggleSuspended={toggleSuspended}
-          suspended={suspended}
         />
       </div>
     );
@@ -258,7 +253,7 @@ export const GatherArea = React.memo<{
     );
 
     const [showModal, setShowModal] = useState<
-      null | "region-editor" | "link-opener"
+      null | "region-editor" | "link-opener" | "setting"
     >(null);
 
     const twoMinAgo = Date.now() - 2 * 60 * 1000;
@@ -328,8 +323,6 @@ export const GatherArea = React.memo<{
             liveMode={!!activeMeetingRegionId}
             muted
             micOn={activeMeetingMicOn}
-            toggleSuspended={toggleSuspended}
-            suspended={suspended}
           />
         </div>
         <div className="GatherArea-facelist">
@@ -341,11 +334,30 @@ export const GatherArea = React.memo<{
             statusMesg={statusMesg}
             setStatusMesg={setStatusMesg}
             videoDeviceId={videoDeviceId}
-            toggleSuspended={toggleSuspended}
             suspended={suspended}
           />
         </div>
         <div className="GatherArea-toolbar">
+          <div>
+            <button
+              type="button"
+              onClick={() =>
+                setShowModal(showModal === "setting" ? null : "setting")
+              }
+            >
+              {showModal === "setting" ? "Close Setting" : "Open Setting"}
+            </button>
+            {showModal === "setting" && (
+              <div className="GatherArea-setting">
+                <MySetting
+                  statusMesg={statusMesg}
+                  suspended={suspended}
+                  toggleSuspended={toggleSuspended}
+                  setStatusMesg={setStatusMesg}
+                />
+              </div>
+            )}
+          </div>
           <div>
             <button
               type="button"

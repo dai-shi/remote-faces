@@ -58,6 +58,11 @@ export const setConfig = (
   setStringItem("faceimage_video_device_id", videoDeviceId);
 };
 
+export const setConfigAvatar = (avatar: string) => {
+  singleRoomState.config.avatar = avatar;
+  setStringItem("avatar_img", avatar);
+};
+
 export const toggleConfigTakePhoto = () => {
   const takePhoto = !singleRoomState.config.takePhoto;
   singleRoomState.config.takePhoto = takePhoto;
