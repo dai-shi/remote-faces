@@ -186,11 +186,15 @@ export const useGatherArea = (roomId: string, userId: string) => {
     };
   }, [roomId, userId]);
 
+  const timerMap = useRef<{ [id: string]: NodeJS.Timeout }>({});
   const updateRegion = useCallback(
     (id: string, data: RegionData) => {
-      const roomState = getRoomState(roomId, userId);
-      const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
-      map.set(id, data);
+      clearTimeout(timerMap.current[id]);
+      timerMap.current[id] = setTimeout(() => {
+        const roomState = getRoomState(roomId, userId);
+        const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
+        map.set(id, data);
+      }, 100);
     },
     [roomId, userId]
   );

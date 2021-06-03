@@ -163,7 +163,7 @@ const office2: Record<string, RegionData> = {
     type: "background",
     position: [0, 0],
     size: [1120, 740],
-    zIndex: -99,
+    zIndex: -100,
     background:
       "url(https://user-images.githubusercontent.com/17561803/118205142-ab7d2200-b49a-11eb-863a-3a9a5560d7df.png) left top / contain",
     border: "",
@@ -201,7 +201,7 @@ const office3: Record<string, RegionData> = {
     type: "background",
     position: [0, 0],
     size: [1120, 740],
-    zIndex: -99,
+    zIndex: -100,
     background:
       "url(https://user-images.githubusercontent.com/17561803/120201967-fc459680-c260-11eb-8b1f-6bb108476f2f.png) left top / contain",
     border: "",
