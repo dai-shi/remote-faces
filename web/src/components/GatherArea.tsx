@@ -59,58 +59,91 @@ const Region = React.memo<{
   id: string;
   data: RegionData;
   highlight?: "meeting" | "active-meeting" | "micon-meeting";
-}>(({ roomId, userId, nickname, id, data, highlight }) => {
-  let boxShadow: string | undefined;
-  if (highlight === "micon-meeting") {
-    boxShadow = "0 0 0 5px rgba(255, 0, 0, 0.6)";
-  } else if (highlight === "active-meeting") {
-    boxShadow = "0 0 0 3px rgba(255, 0, 0, 0.3)";
-  } else if (highlight === "meeting") {
-    boxShadow = "0 0 0 1px rgba(255, 0, 0, 0.3)";
+  setPosition?: (nextPosition: [number, number]) => void;
+  registerOnMouseDrag: (onMouseMove?: OnMouseMove) => void;
+}>(
+  ({
+    roomId,
+    userId,
+    nickname,
+    id,
+    data,
+    highlight,
+    setPosition,
+    registerOnMouseDrag,
+  }) => {
+    let boxShadow: string | undefined;
+    if (highlight === "micon-meeting") {
+      boxShadow = "0 0 0 5px rgba(255, 0, 0, 0.6)";
+    } else if (highlight === "active-meeting") {
+      boxShadow = "0 0 0 3px rgba(255, 0, 0, 0.3)";
+    } else if (highlight === "meeting") {
+      boxShadow = "0 0 0 1px rgba(255, 0, 0, 0.3)";
+    }
+    return (
+      <div
+        className="GatherArea-region"
+        style={{
+          left: `${data.position[0]}px`,
+          top: `${data.position[1]}px`,
+          width: `${data.size[0]}px`,
+          height: `${data.size[1]}px`,
+          boxShadow,
+          zIndex: data.type !== "chat" ? data.zIndex : undefined,
+          background: data.background,
+          border: data.border,
+        }}
+        onMouseDown={(e) => {
+          if (data.type !== "background") {
+            return;
+          }
+          e.preventDefault();
+          if (setPosition) {
+            const target = e.currentTarget;
+            const offset = [
+              e.clientX - data.position[0],
+              e.clientY - data.position[1],
+            ];
+            registerOnMouseDrag((e) => {
+              const left = e.clientX - offset[0];
+              const top = e.clientY - offset[1];
+              target.style.left = `${left}px`;
+              target.style.top = `${top}px`;
+              setPosition([left, top]);
+            });
+          }
+        }}
+      >
+        {data.iframe && <iframe title={id} src={data.iframe} frameBorder="0" />}
+        {data.type === "chat" && (
+          <Suspense fallback={<SuspenseFallback />}>
+            <MomentaryChat
+              roomId={roomId}
+              userId={userId}
+              nickname={nickname}
+              uniqueId={id}
+            />
+          </Suspense>
+        )}
+        {data.type === "media" && (
+          <Suspense fallback={<SuspenseFallback />}>
+            <MediaShare
+              roomId={roomId}
+              userId={userId}
+              nickname={nickname}
+              uniqueId={id}
+            />
+          </Suspense>
+        )}
+        {data.type === "goboard" && (
+          <Suspense fallback={<SuspenseFallback />}>
+            <GoBoard roomId={roomId} userId={userId} uniqueId={id} />
+          </Suspense>
+        )}
+      </div>
+    );
   }
-  return (
-    <div
-      className="GatherArea-region"
-      style={{
-        left: `${data.position[0]}px`,
-        top: `${data.position[1]}px`,
-        width: `${data.size[0]}px`,
-        height: `${data.size[1]}px`,
-        boxShadow,
-        zIndex: data.type !== "chat" ? data.zIndex : undefined,
-        background: data.background,
-        border: data.border,
-      }}
-    >
-      {data.iframe && <iframe title={id} src={data.iframe} frameBorder="0" />}
-      {data.type === "chat" && (
-        <Suspense fallback={<SuspenseFallback />}>
-          <MomentaryChat
-            roomId={roomId}
-            userId={userId}
-            nickname={nickname}
-            uniqueId={id}
-          />
-        </Suspense>
-      )}
-      {data.type === "media" && (
-        <Suspense fallback={<SuspenseFallback />}>
-          <MediaShare
-            roomId={roomId}
-            userId={userId}
-            nickname={nickname}
-            uniqueId={id}
-          />
-        </Suspense>
-      )}
-      {data.type === "goboard" && (
-        <Suspense fallback={<SuspenseFallback />}>
-          <GoBoard roomId={roomId} userId={userId} uniqueId={id} />
-        </Suspense>
-      )}
-    </div>
-  );
-});
+);
 
 const Avatar = React.memo<{
   nickname: string;
@@ -139,53 +172,50 @@ const Avatar = React.memo<{
     liveMode,
     muted,
     micOn,
-  }) => {
-    const isMyself = !!setPosition;
-    return (
-      <div
-        className="GatherArea-avatar"
-        style={{
-          left: `${position[0]}px`,
-          top: `${position[1]}px`,
-        }}
-        onMouseDown={(e) => {
-          e.preventDefault();
-          if (isMyself) {
-            const target = e.currentTarget;
-            const offset = [e.clientX - position[0], e.clientY - position[1]];
-            registerOnMouseDrag((e) => {
-              const left = e.clientX - offset[0];
-              const top = e.clientY - offset[1];
-              target.style.left = `${left}px`;
-              target.style.top = `${top}px`;
-              setPosition?.([left, top]);
-            });
-          }
-        }}
-      >
-        {statusMesg && (
-          <div
-            className="GatherArea-avatar-balloon"
-            style={{ opacity: obsoleted ? 0.2 : 1 }}
-          >
-            {statusMesg}
-          </div>
-        )}
-        <FaceCard
-          image={image}
-          nickname={nickname}
-          statusMesg={statusMesg}
-          setStatusMesg={setStatusMesg}
-          obsoleted={!!obsoleted}
-          liveMode={liveMode}
-          stream={stream}
-          muted={!!muted}
-          micOn={!!micOn}
-          speakerOn={liveMode}
-        />
-      </div>
-    );
-  }
+  }) => (
+    <div
+      className="GatherArea-avatar"
+      style={{
+        left: `${position[0]}px`,
+        top: `${position[1]}px`,
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        if (setPosition) {
+          const target = e.currentTarget;
+          const offset = [e.clientX - position[0], e.clientY - position[1]];
+          registerOnMouseDrag((e) => {
+            const left = e.clientX - offset[0];
+            const top = e.clientY - offset[1];
+            target.style.left = `${left}px`;
+            target.style.top = `${top}px`;
+            setPosition([left, top]);
+          });
+        }
+      }}
+    >
+      {statusMesg && (
+        <div
+          className="GatherArea-avatar-balloon"
+          style={{ opacity: obsoleted ? 0.2 : 1 }}
+        >
+          {statusMesg}
+        </div>
+      )}
+      <FaceCard
+        image={image}
+        nickname={nickname}
+        statusMesg={statusMesg}
+        setStatusMesg={setStatusMesg}
+        obsoleted={!!obsoleted}
+        liveMode={liveMode}
+        stream={stream}
+        muted={!!muted}
+        micOn={!!micOn}
+        speakerOn={liveMode}
+      />
+    </div>
+  )
 );
 
 export const GatherArea = React.memo<{
@@ -224,10 +254,13 @@ export const GatherArea = React.memo<{
       false,
       videoDeviceId
     );
-    const { avatarMap, myAvatar, setMyAvatar, regionMap } = useGatherArea(
-      roomId,
-      userId
-    );
+    const {
+      avatarMap,
+      myAvatar,
+      setMyAvatar,
+      regionMap,
+      updateRegion,
+    } = useGatherArea(roomId, userId);
 
     const onMouseDragRef = useRef<OnMouseMove>();
     const registerOnMouseDrag = useCallback((onMouseMove?: OnMouseMove) => {
@@ -284,6 +317,10 @@ export const GatherArea = React.memo<{
                   (activeMeetingMicOn ? "micon-meeting" : "active-meeting")) ||
                 (regionData.type === "meeting" ? "meeting" : undefined)
               }
+              setPosition={(position) =>
+                updateRegion(regionId, { ...regionData, position })
+              }
+              registerOnMouseDrag={registerOnMouseDrag}
             />
           ))}
           {Object.entries(avatarMap).map(([uid, avatarData]) => {
