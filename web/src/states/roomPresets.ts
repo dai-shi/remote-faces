@@ -240,6 +240,16 @@ const office3: Record<string, RegionData> = {
     border: "#2C2F33 solid 3px",
     iframe: "",
   },
+  movable1: {
+    type: "background",
+    position: [244, 109],
+    size: [36, 36],
+    zIndex: 0,
+    background:
+      "url(https://user-images.githubusercontent.com/17561803/120613305-12d23480-c491-11eb-91ba-d338c3ba631e.png) left top / contain",
+    border: "",
+    iframe: "",
+  },
 };
 
 export const roomPresets: Record<string, Record<string, RegionData>> = {
