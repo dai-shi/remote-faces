@@ -194,7 +194,7 @@ export const useGatherArea = (roomId: string, userId: string) => {
         const roomState = getRoomState(roomId, userId);
         const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
         map.set(id, data);
-      }, 100);
+      }, 500);
     },
     [roomId, userId]
   );
