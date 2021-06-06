@@ -43,8 +43,6 @@ export const FaceList = React.memo<{
       false,
       videoDeviceId
     );
-    const twoMinAgo = Date.now() - 2 * 60 * 1000;
-
     return (
       <div className="FaceList-list">
         <div className="FaceList-item">
@@ -53,7 +51,7 @@ export const FaceList = React.memo<{
             nickname={nickname}
             statusMesg={statusMesg}
             setStatusMesg={setStatusMesg}
-            liveMode={false}
+            inFaceList
             muted
             micOn={false}
             speakerOn={false}
@@ -69,8 +67,8 @@ export const FaceList = React.memo<{
               }
               nickname={item.info.nickname}
               statusMesg={item.info.message}
-              obsoleted={item.updated < twoMinAgo}
-              liveMode={false}
+              updated={item.updated}
+              inFaceList
               muted
               micOn={false}
               speakerOn={false}
