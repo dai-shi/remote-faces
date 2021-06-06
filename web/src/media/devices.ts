@@ -4,8 +4,14 @@ type DeviceInfo = {
 };
 
 export const getVideoDeviceInfoList = async () => {
+  const constraints = {
+    video: {
+      width: 1280,
+      height: 720,
+    },
+  };
   try {
-    await navigator.mediaDevices.getUserMedia({ video: true });
+    await navigator.mediaDevices.getUserMedia(constraints);
     const devices = await navigator.mediaDevices.enumerateDevices();
     const list: DeviceInfo[] = devices
       .filter(({ kind }) => kind === "videoinput")

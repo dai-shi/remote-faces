@@ -9,8 +9,9 @@ export const FaceCard = React.memo<{
   nickname: string;
   statusMesg: string;
   setStatusMesg?: (mesg: string) => void;
-  obsoleted?: boolean;
-  liveMode: boolean;
+  updated?: number; // in milliseconds
+  inFaceList?: boolean;
+  liveMode?: boolean;
   stream?: MediaStream;
   muted: boolean;
   micOn: boolean;
@@ -21,13 +22,17 @@ export const FaceCard = React.memo<{
     nickname,
     statusMesg,
     setStatusMesg,
-    obsoleted,
+    updated,
+    inFaceList,
     liveMode,
     stream,
     muted,
     micOn,
     speakerOn,
   }) => {
+    const twoMinAgo = Date.now() - 2 * 60 * 1000;
+    const obsoleted = updated && updated < twoMinAgo;
+    const updatedDate = updated && new Date(updated);
     const firstStatusMesgChar: string | undefined = [...statusMesg][0];
     let emoji = setStatusMesg ? String.fromCodePoint(0x1f4dd) : "";
     if (firstStatusMesgChar) {
@@ -72,7 +77,7 @@ export const FaceCard = React.memo<{
           />
         )}
         <div className="FaceCard-name">{nickname}</div>
-        {setStatusMesg ? (
+        {inFaceList && setStatusMesg && (
           <button
             type="button"
             className="FaceCard-mesg"
@@ -81,7 +86,8 @@ export const FaceCard = React.memo<{
           >
             {emoji}
           </button>
-        ) : (
+        )}
+        {inFaceList && !setStatusMesg && (
           <div
             className="FaceCard-mesg"
             title={statusMesg || "(No status message)"}
@@ -89,7 +95,16 @@ export const FaceCard = React.memo<{
             {emoji}
           </div>
         )}
-        {liveMode && stream && (
+        {inFaceList && updatedDate && (
+          <div className="FaceCard-updated">
+            <span title={updatedDate.toLocaleString()}>
+              {`${`0${updatedDate.getHours()}`.slice(
+                -2
+              )}:${`0${updatedDate.getMinutes()}`.slice(-2)}`}
+            </span>
+          </div>
+        )}
+        {!inFaceList && liveMode && stream && (
           <div className="FaceCard-mic-speaker-icons">
             {micOn && <span title="Mic On">&#x1F3A4;</span>}
             {speakerOn && <span title="Speaker On">&#x1F508;</span>}

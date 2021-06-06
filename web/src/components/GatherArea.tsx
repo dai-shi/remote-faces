@@ -150,7 +150,7 @@ const Avatar = React.memo<{
   statusMesg: string;
   setStatusMesg?: (mesg: string) => void;
   image?: string;
-  obsoleted?: boolean;
+  updated?: number; // in milliseconds
   position: [left: number, top: number];
   setPosition?: (nextPosition: [number, number]) => void;
   registerOnMouseDrag: (onMouseMove?: OnMouseMove) => void;
@@ -164,7 +164,7 @@ const Avatar = React.memo<{
     statusMesg,
     setStatusMesg,
     image,
-    obsoleted,
+    updated,
     position,
     setPosition,
     registerOnMouseDrag,
@@ -172,50 +172,54 @@ const Avatar = React.memo<{
     liveMode,
     muted,
     micOn,
-  }) => (
-    <div
-      className="GatherArea-avatar"
-      style={{
-        left: `${position[0]}px`,
-        top: `${position[1]}px`,
-      }}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        if (setPosition) {
-          const target = e.currentTarget;
-          const offset = [e.clientX - position[0], e.clientY - position[1]];
-          registerOnMouseDrag((e) => {
-            const left = e.clientX - offset[0];
-            const top = e.clientY - offset[1];
-            target.style.left = `${left}px`;
-            target.style.top = `${top}px`;
-            setPosition([left, top]);
-          });
-        }
-      }}
-    >
-      {statusMesg && (
-        <div
-          className="GatherArea-avatar-balloon"
-          style={{ opacity: obsoleted ? 0.2 : 1 }}
-        >
-          {statusMesg}
-        </div>
-      )}
-      <FaceCard
-        image={image}
-        nickname={nickname}
-        statusMesg={statusMesg}
-        setStatusMesg={setStatusMesg}
-        obsoleted={!!obsoleted}
-        liveMode={liveMode}
-        stream={stream}
-        muted={!!muted}
-        micOn={!!micOn}
-        speakerOn={liveMode}
-      />
-    </div>
-  )
+  }) => {
+    const twoMinAgo = Date.now() - 2 * 60 * 1000;
+    const obsoleted = updated && updated < twoMinAgo;
+    return (
+      <div
+        className="GatherArea-avatar"
+        style={{
+          left: `${position[0]}px`,
+          top: `${position[1]}px`,
+        }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          if (setPosition) {
+            const target = e.currentTarget;
+            const offset = [e.clientX - position[0], e.clientY - position[1]];
+            registerOnMouseDrag((e) => {
+              const left = e.clientX - offset[0];
+              const top = e.clientY - offset[1];
+              target.style.left = `${left}px`;
+              target.style.top = `${top}px`;
+              setPosition([left, top]);
+            });
+          }
+        }}
+      >
+        {statusMesg && (
+          <div
+            className="GatherArea-avatar-balloon"
+            style={{ opacity: obsoleted ? 0.2 : 1 }}
+          >
+            {statusMesg}
+          </div>
+        )}
+        <FaceCard
+          image={image}
+          nickname={nickname}
+          statusMesg={statusMesg}
+          setStatusMesg={setStatusMesg}
+          updated={updated}
+          liveMode={liveMode}
+          stream={stream}
+          muted={!!muted}
+          micOn={!!micOn}
+          speakerOn={liveMode}
+        />
+      </div>
+    );
+  }
 );
 
 export const GatherArea = React.memo<{
@@ -289,8 +293,6 @@ export const GatherArea = React.memo<{
       null | "region-editor" | "link-opener" | "setting"
     >(null);
 
-    const twoMinAgo = Date.now() - 2 * 60 * 1000;
-
     return (
       <div className="GatherArea-container">
         <div
@@ -337,7 +339,7 @@ export const GatherArea = React.memo<{
                 nickname={imageData.info.nickname}
                 statusMesg={imageData.info.message}
                 image={imageData.image}
-                obsoleted={imageData.updated < twoMinAgo}
+                updated={imageData.updated}
                 position={avatarData.position}
                 registerOnMouseDrag={registerOnMouseDrag}
                 stream={faceStreamMap[uid]}
