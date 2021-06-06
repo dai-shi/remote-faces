@@ -77,7 +77,7 @@ export const MySetting = React.memo<{
           if (suspended === camera) {
             toggleSuspended();
           }
-          if (suspended) {
+          if (suspended && avatar) {
             setConfigAvatar(avatar);
           }
         }}
