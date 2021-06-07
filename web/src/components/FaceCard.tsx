@@ -1,6 +1,7 @@
 import React from "react";
 
 import "./FaceCard.css";
+import { useFaceImageObsoleted } from "../hooks/useFaceImages";
 import { BLANK_IMAGE } from "../media/imagePresets";
 import { isEmoji } from "../utils/emoji";
 
@@ -30,8 +31,7 @@ export const FaceCard = React.memo<{
     micOn,
     speakerOn,
   }) => {
-    const twoMinAgo = Date.now() - 2 * 60 * 1000;
-    const obsoleted = updated && updated < twoMinAgo;
+    const obsoleted = useFaceImageObsoleted(updated);
     const updatedDate = updated && new Date(updated);
     const firstStatusMesgChar: string | undefined = [...statusMesg][0];
     let emoji = setStatusMesg ? String.fromCodePoint(0x1f4dd) : "";

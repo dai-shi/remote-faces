@@ -155,3 +155,17 @@ export const useFaceImages = (
     roomImages,
   };
 };
+
+export const useFaceImageObsoleted = (
+  updated?: number // in milliseconds
+) => {
+  const [obsoleted, setObsoleted] = useState(false);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const twoMinAgo = Date.now() - 2 * 60 * 1000;
+      setObsoleted(!!updated && updated < twoMinAgo);
+    }, 10 * 1000);
+    return () => clearInterval(timer);
+  }, [updated]);
+  return obsoleted;
+};

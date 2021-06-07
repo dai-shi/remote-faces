@@ -9,7 +9,7 @@ import {
   RegionMap,
   AvatarData,
 } from "../hooks/useGatherArea";
-import { useFaceImages } from "../hooks/useFaceImages";
+import { useFaceImages, useFaceImageObsoleted } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { RegionEditor } from "./RegionEditor";
 import { MySetting } from "./MySetting";
@@ -173,8 +173,7 @@ const Avatar = React.memo<{
     muted,
     micOn,
   }) => {
-    const twoMinAgo = Date.now() - 2 * 60 * 1000;
-    const obsoleted = updated && updated < twoMinAgo;
+    const obsoleted = useFaceImageObsoleted(updated);
     return (
       <div
         className="GatherArea-avatar"
