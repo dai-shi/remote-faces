@@ -274,14 +274,27 @@ export const createRoom: CreateRoom = async (
       console.info("dataConnection already in map, overriding", conn.peer);
     }
     connMap.addConn(conn);
+    let timer: NodeJS.Timeout;
+    const scheduleClose = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        conn.close();
+      }, 20 * 60 * 1000); // 20 minutes
+    };
+    scheduleClose();
     conn.on("open", () => {
+      scheduleClose();
       connMap.markConnected(conn);
       const peerIndex = getPeerIndexFromConn(conn);
       console.log("dataConnection open", peerIndex);
       showConnectedStatus();
       notifyNewPeer(peerIndex);
     });
-    conn.on("data", (buf: ArrayBuffer) => handlePayload(conn, buf));
+    conn.on("data", (buf: ArrayBuffer) => {
+      scheduleClose();
+      connMap.markConnected(conn);
+      handlePayload(conn, buf);
+    });
     conn.peerConnection.addEventListener("icegatheringstatechange", () => {
       const pc = conn.peerConnection;
       if (pc.iceGatheringState === "complete") {
@@ -327,6 +340,7 @@ export const createRoom: CreateRoom = async (
       }
     });
     conn.on("close", () => {
+      clearTimeout(timer);
       if (!connMap.delConn(conn)) return;
       const peerIndex = getPeerIndexFromConn(conn);
       updateNetworkStatus({ type: "CONNECTION_CLOSED", peerIndex });
