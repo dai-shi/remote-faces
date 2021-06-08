@@ -162,10 +162,12 @@ export const useFaceImageObsoleted = (
   const [obsoleted, setObsoleted] = useState(false);
   useEffect(() => {
     if (updated) {
-      const timer = setInterval(() => {
+      const callback = () => {
         const twoMinAgo = Date.now() - 2 * 60 * 1000;
         setObsoleted(updated < twoMinAgo);
-      }, 10 * 1000);
+      };
+      const timer = setInterval(callback, 10 * 1000);
+      callback();
       return () => clearInterval(timer);
     }
     return undefined;

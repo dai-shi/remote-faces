@@ -88,6 +88,12 @@ export const createRoom: CreateRoom = async (
         }
       });
       peer.on("connection", (conn) => {
+        if (peer.id === conn.peer) {
+          // weird self connection
+          console.log("new connection from self, closing");
+          conn.close();
+          return;
+        }
         updateNetworkStatus({
           type: "NEW_CONNECTION",
           peerIndex: getPeerIndexFromConn(conn),
