@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useMemo, useEffect, useRef, useState } from "react";
 import {
   Game,
   Color,
@@ -155,10 +155,18 @@ export const GoBoard = React.memo<{
     undo: () => void;
     resize: () => void;
   }>();
-  const syncDown = useCallback((positions: PositionData[]) => {
-    if (actionsRef.current) {
-      actionsRef.current.syncDown(positions);
-    }
+  const syncDown = useMemo(() => {
+    const cb = (positions: PositionData[]) => {
+      if (!positions.length) return;
+      if (actionsRef.current) {
+        actionsRef.current.syncDown(positions);
+      } else {
+        setTimeout(() => {
+          cb(positions);
+        }, 1000);
+      }
+    };
+    return cb;
   }, []);
   const { syncUp } = useGoBoard(roomId, userId, syncDown, uniqueId);
   const [color, setColor] = useState<"black" | "white">("black");
