@@ -47,6 +47,13 @@ export const useFaceVideos = (
     return cleanup;
   }, []);
 
+  useEffect(() => {
+    if (!videoEnabled && !audioEnabled) {
+      // clear face stream map immediately
+      setFaceStreamMap({});
+    }
+  }, [videoEnabled, audioEnabled]);
+
   const onTrack = ([uid, track]: [string, MediaStreamTrack]) => {
     if (track.readyState === "ended") return;
     if (faceStreamMap[uid]?.getTracks().includes(track)) return;
