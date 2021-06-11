@@ -98,9 +98,8 @@ export const FaceCard = React.memo<{
         {inFaceList && updatedDate && (
           <div className="FaceCard-updated">
             <span title={updatedDate.toLocaleString()}>
-              {`${`0${updatedDate.getHours()}`.slice(
-                -2
-              )}:${`0${updatedDate.getMinutes()}`.slice(-2)}`}
+              {`${updatedDate.getHours()}`.padStart(2, "0")}:
+              {`${updatedDate.getMinutes()}`.padStart(2, "0")}
             </span>
           </div>
         )}
