@@ -285,7 +285,7 @@ export const createRoom: CreateRoom = async (
       clearTimeout(timer);
       timer = setTimeout(() => {
         conn.close();
-      }, 20 * 60 * 1000); // 20 minutes
+      }, 5 * 60 * 1000); // 5 minutes
     };
     scheduleClose();
     conn.on("open", () => {

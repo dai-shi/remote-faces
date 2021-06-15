@@ -94,7 +94,7 @@ export const createConnectionMap = () => {
   const hasFreshConn = (peerId: string) => {
     const value = map.get(peerId);
     if (!value) return false;
-    return value.createdAt > Date.now() - 60 * 1000;
+    return value.createdAt > Date.now() - 10 * 60 * 1000; // 10min
   };
 
   const getConn = (peerId: string) => {
