@@ -295,9 +295,6 @@ export const createRoom: CreateRoom = async (
       }, 5 * 60 * 1000); // 5 minutes
     };
     scheduleClose();
-    conn.on("disconnected", () => {
-      console.error("disconnected", conn.peer);
-    });
     conn.on("open", () => {
       scheduleClose();
       connMap.markConnected(conn);
