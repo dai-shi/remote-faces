@@ -252,6 +252,73 @@ const office3: Record<string, RegionData> = {
   },
 };
 
+const office4: Record<string, RegionData> = {
+  background: {
+    type: "background",
+    position: [0, 0],
+    size: [1120, 740],
+    zIndex: -100,
+    background:
+      "url(https://user-images.githubusercontent.com/17561803/126063504-6168d990-c144-44b7-a715-310e76e24777.png) left top / contain no-repeat",
+    border: "",
+    iframe: "",
+  },
+  chat: {
+    type: "chat",
+    position: [60, 480],
+    size: [250, 250],
+    zIndex: 0,
+    background: "rgba(167,194,211,0.9)",
+    border: "#2C2F33 solid 3px",
+    iframe: "",
+  },
+  ...createMeeting(1, 160, 310, 270, 160),
+  ...createMeeting(2, 350, 160, 210, 105),
+  ...createMeeting(3, 820, 180, 160, 80),
+  ...createMeeting(4, 990, 310, 100, 45),
+  movie: {
+    type: "background",
+    position: [762, 290],
+    size: [105, 58],
+    zIndex: 0,
+    background: "",
+    border: "",
+    iframe: "https://www.youtube.com/embed/eYsPmVUAzqE",
+  },
+  share: {
+    type: "media",
+    position: [760, 590],
+    size: [350, 140],
+    zIndex: 0,
+    background: "rgba(167,194,211,0.6)",
+    border: "#2C2F33 solid 3px",
+    iframe: "",
+  },
+  go: {
+    type: "goboard",
+    position: [320, 590],
+    size: [180, 140],
+    zIndex: 0,
+    background: "rgba(167,194,211,0.6)",
+    border: "#2C2F33 solid 3px",
+    iframe: "",
+  },
+};
+[...Array(100).keys()].forEach((i) => {
+  const x = 700 - 14 * (i % 10);
+  const y = 700 - 14 * Math.floor(i / 10);
+  office4[`block${i}`] = {
+    type: "background",
+    position: [x, y],
+    size: [36, 36],
+    zIndex: 0,
+    background:
+      "url(https://user-images.githubusercontent.com/52230939/121129812-73ce8380-c868-11eb-8e51-2c721a239df6.png) center center / contain no-repeat",
+    border: "",
+    iframe: "",
+  };
+});
+
 export const roomPresets: Record<string, Record<string, RegionData>> = {
   intro,
   phone,
@@ -259,4 +326,5 @@ export const roomPresets: Record<string, Record<string, RegionData>> = {
   office1,
   office2,
   office3,
+  office4,
 };
