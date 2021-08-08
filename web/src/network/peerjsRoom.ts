@@ -292,7 +292,10 @@ export const createRoom: CreateRoom = async (
       clearTimeout(timer);
       timer = setTimeout(() => {
         const peerIndex = getPeerIndexFromConn(conn);
-        console.log("dataConnection inactive for 5min", peerIndex);
+        console.log("dataConnection inactive for 5min", peerIndex, conn.open);
+        if (!conn.open) {
+          connMap.delConn(conn);
+        }
         conn.close();
       }, 5 * 60 * 1000); // 5 minutes
     };
