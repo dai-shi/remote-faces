@@ -1,11 +1,11 @@
-import React from "react";
+import { memo } from "react";
 
 import "./FaceCard.css";
 import { useFaceImageObsoleted } from "../hooks/useFaceImages";
 import { BLANK_IMAGE } from "../media/imagePresets";
 import { isEmoji } from "../utils/emoji";
 
-export const FaceCard = React.memo<{
+export const FaceCard = memo<{
   image?: string;
   nickname: string;
   statusMesg: string;

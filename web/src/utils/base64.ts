@@ -6,9 +6,9 @@ export const encodeBase64Sync = (data: Uint8Array) => {
 export const decodeBase64Sync = (base64: string) => {
   const binaryString = atob(base64);
   const data = new Uint8Array(
-    ([].map.call(binaryString, (c: string) =>
+    [].map.call(binaryString, (c: string) =>
       c.charCodeAt(0)
-    ) as unknown) as ArrayBufferLike
+    ) as unknown as ArrayBufferLike
   );
   return data;
 };

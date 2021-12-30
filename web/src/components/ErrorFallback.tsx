@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 
-export const ErrorFallback = React.memo<{
+export const ErrorFallback = memo<{
   err: Error;
 }>(({ err }) => {
   const [waitSec, setWaitSec] = useState(30);

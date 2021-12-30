@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { memo, useState } from "react";
 
 import "./RegionEditor.css";
 import { getRoomState } from "../states/roomMap";
 import { ROOM_STATE_KEY, RegionData } from "../hooks/useGatherArea";
 
-export const RegionEditor = React.memo<{
+export const RegionEditor = memo<{
   roomId: string;
   userId: string;
 }>(({ roomId, userId }) => {
@@ -65,16 +65,16 @@ export const RegionEditor = React.memo<{
     if (!id) return;
     const roomState = getRoomState(roomId, userId);
     const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
-    const value = map.get(id);
+    const value = map.get(id) as RegionData; // FIXME
     setType(value.type);
     setLeft(value.position[0]);
     setTop(value.position[1]);
     setWidth(value.size[0]);
     setHeight(value.size[1]);
-    setZIndex(value.zIndex);
-    setBackground(value.background);
-    setBorder(value.border);
-    setIframe(value.iframe);
+    setZIndex(value.zIndex ?? 0);
+    setBackground(value.background ?? "");
+    setBorder(value.border ?? "");
+    setIframe(value.iframe ?? "");
   };
 
   return (

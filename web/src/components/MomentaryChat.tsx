@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import { memo, useState, useRef, useEffect, useCallback } from "react";
 import DOMPurify from "dompurify";
 
 import "./MomentaryChat.css";
@@ -19,7 +19,7 @@ const sanitize = (text: string) => ({
 const getChatTime = (item: ChatItem) =>
   new Date(item.createdAt).toLocaleString().split(" ")[1].slice(0, -3);
 
-const MomentaryChatContentPart = React.memo<{
+const MomentaryChatContentPart = memo<{
   item: ChatItem;
   replyChat: ReplyChat;
 }>(({ item, replyChat }) => {
@@ -72,7 +72,7 @@ const MomentaryChatContentPart = React.memo<{
   );
 });
 
-const MomentaryChatContent = React.memo<{
+const MomentaryChatContent = memo<{
   chatList: ChatList;
   replyChat: ReplyChat;
 }>(({ chatList, replyChat }) => {
@@ -97,7 +97,7 @@ const MomentaryChatContent = React.memo<{
   );
 });
 
-export const MomentaryChat = React.memo<{
+export const MomentaryChat = memo<{
   roomId: string;
   userId: string;
   nickname: string;

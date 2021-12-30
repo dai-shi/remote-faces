@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { memo, useState } from "react";
 import { setConfigAvatar } from "../states/singleRoom";
 
-export const MySetting = React.memo<{
+export const MySetting = memo<{
   statusMesg: string;
   suspended: boolean;
   toggleSuspended: () => void;

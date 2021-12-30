@@ -1,6 +1,5 @@
 // @ts-nocheck XXX ckeditor5 doesn't come with types
 
-import React from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import CustomEditor from "@daishi/ckeditor5-build-inline-custom";
 

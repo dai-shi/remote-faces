@@ -87,10 +87,8 @@ export const useFaceVideos = (
     let cleanup: (() => void) | null | false = null;
     if (videoEnabled) {
       (async () => {
-        const {
-          stream: videoStream,
-          dispose: disposeVideo,
-        } = await getFaceVideoStream(videoDeviceId);
+        const { stream: videoStream, dispose: disposeVideo } =
+          await getFaceVideoStream(videoDeviceId);
         const [videoTrack] = videoStream.getVideoTracks();
         roomState.addMediaType(videoType);
         roomState.addTrack(videoType, videoTrack);
@@ -127,10 +125,8 @@ export const useFaceVideos = (
     let cleanup: (() => void) | null | false = null;
     if (audioEnabled) {
       (async () => {
-        const {
-          stream: audioStream,
-          dispose: disposeAudio,
-        } = await getAudioStream(audioDeviceId);
+        const { stream: audioStream, dispose: disposeAudio } =
+          await getAudioStream(audioDeviceId);
         const [audioTrack] = audioStream.getAudioTracks();
         roomState.addMediaType(audioType);
         roomState.addTrack(audioType, audioTrack);

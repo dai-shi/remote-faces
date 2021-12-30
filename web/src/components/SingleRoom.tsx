@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { useSnapshot } from "valtio";
 
 import "./SingleRoom.css";
@@ -6,7 +6,7 @@ import { singleRoomState, toggleConfigTakePhoto } from "../states/singleRoom";
 import { setRoomIdToUrl } from "../utils/url";
 import { GatherArea } from "./GatherArea";
 
-export const SingleRoom = React.memo(() => {
+export const SingleRoom = memo(() => {
   const { roomId, userId, config } = useSnapshot(singleRoomState);
   const [statusMesg, setStatusMesg] = useState("");
   useEffect(() => {

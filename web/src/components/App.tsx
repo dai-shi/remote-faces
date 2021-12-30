@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import { PureComponent, Suspense, memo } from "react";
 
 import "./App.css";
 import { ErrorFallback } from "./ErrorFallback";
@@ -6,7 +6,7 @@ import { SuspenseFallback } from "./SuspenseFallback";
 import { SingleRoomEntrance } from "./SingleRoomEntrance";
 import { GitHubCorner } from "./GitHubCorner";
 
-class ErrorBoundary extends React.PureComponent {
+class ErrorBoundary extends PureComponent {
   state: { err?: Error } = {};
 
   static getDerivedStateFromError(err: Error) {
@@ -21,7 +21,7 @@ class ErrorBoundary extends React.PureComponent {
   }
 }
 
-export const App = React.memo(() => (
+export const App = memo(() => (
   <div className="App">
     <ErrorBoundary>
       <Suspense fallback={<SuspenseFallback />}>

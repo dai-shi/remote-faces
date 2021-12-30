@@ -1,4 +1,4 @@
-import Ipfs from "ipfs";
+import { create } from "ipfs";
 import IpfsPubSubRoom from "ipfs-pubsub-room";
 
 import { sleep } from "../utils/sleep";
@@ -41,7 +41,7 @@ export const createRoom: CreateRoom = async (
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
   updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
-  const myIpfs = await Ipfs.create({
+  const myIpfs = await create({
     repo: secureRandomId(),
     config: {
       Addresses: {
@@ -195,7 +195,9 @@ export const createRoom: CreateRoom = async (
     connMap.registerRemoteMediaType(conn, sdp);
     if (hasObjectProp(sdp, "offer")) {
       try {
-        await conn.recvPc.setRemoteDescription(sdp.offer);
+        await conn.recvPc.setRemoteDescription(
+          sdp.offer as unknown as RTCSessionDescriptionInit // FIXME
+        );
         const answer = await conn.recvPc.createAnswer();
         await conn.recvPc.setLocalDescription(answer);
         sendSDP(conn, { negotiationId, answer });
@@ -207,7 +209,9 @@ export const createRoom: CreateRoom = async (
         negotiationIdMap.delete(conn);
       }
       try {
-        await conn.sendPc.setRemoteDescription(sdp.answer);
+        await conn.sendPc.setRemoteDescription(
+          sdp.answer as unknown as RTCSessionDescriptionInit // FIXME
+        );
       } catch (e) {
         console.info("handleSDP answer failed", e);
       }
@@ -405,7 +409,7 @@ export const createRoom: CreateRoom = async (
         conn.sendPc.addTrack(track, stream);
         startNegotiation(conn);
       } catch (e) {
-        if (e.name === "InvalidAccessError") {
+        if ((e as any).name === "InvalidAccessError") {
           // ignore
         } else {
           throw e;

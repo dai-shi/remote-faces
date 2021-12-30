@@ -1,8 +1,8 @@
-import React, { ReactElement } from "react";
+import { ReactElement, memo } from "react";
 
 import "./Landing.css";
 
-export const Landing = React.memo<{
+export const Landing = memo<{
   hideHowto?: boolean;
   children?: ReactElement;
 }>(({ children, hideHowto }) => (

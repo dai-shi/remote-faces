@@ -1,4 +1,4 @@
-import Ipfs from "ipfs";
+import { create } from "ipfs";
 
 import { sleep } from "../utils/sleep";
 import {
@@ -59,7 +59,7 @@ export const createRoom: CreateRoom = async (
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
   updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
-  const myIpfs = await Ipfs.create({
+  const myIpfs = await create({
     repo: secureRandomId(),
     config: {
       Addresses: {
@@ -75,8 +75,10 @@ export const createRoom: CreateRoom = async (
     },
   });
   const myPeerId = (await myIpfs.id()).id;
-  await myIpfs.pubsub.subscribe(roomTopic, (msg) => pubsubHandler(msg));
-  await myIpfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, (msg) =>
+  await myIpfs.pubsub.subscribe(roomTopic, (msg: Message) =>
+    pubsubHandler(msg)
+  );
+  await myIpfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, (msg: Message) =>
     pubsubHandler(msg)
   );
   if (process.env.NODE_ENV !== "production") {

@@ -1,11 +1,10 @@
-import React, { useMemo, useEffect, useRef, useState } from "react";
+import { memo, useMemo, useEffect, useRef, useState } from "react";
 import {
   Game,
   Color,
-  CanvasBoard,
-  themes,
-  FieldObject,
-  BoardMarkupObject,
+  SVGBoard,
+  FieldBoardObject,
+  MarkupBoardObject,
   Position,
 } from "wgo";
 
@@ -27,14 +26,13 @@ const createGoBoard = (
   syncUp: (positions: PositionData[]) => void
 ) => {
   const game = new Game(6);
-  const board = new CanvasBoard(element, {
-    theme: themes.modernTheme,
+  const board = new SVGBoard(element, {
     width: element.clientWidth,
     height: element.clientHeight,
     size: 6,
   });
-  let fieldObjects: FieldObject[] = [];
-  let markerObject: BoardMarkupObject | null | false = null;
+  let fieldObjects: FieldBoardObject[] = [];
+  let markerObject: MarkupBoardObject | null | false = null;
   const updateFieldObjects = () => {
     fieldObjects = fieldObjects.filter((obj) => {
       if (
@@ -61,11 +59,11 @@ const createGoBoard = (
               c === (obj.type === "B" ? Color.B : Color.W)
           )
         ) {
-          const obj = new FieldObject(c === Color.B ? "B" : "W", x, y);
+          const obj = new FieldBoardObject(c === Color.B ? "B" : "W", x, y);
           board.addObject(obj);
           fieldObjects.push(obj);
           if (markerObject === null) {
-            markerObject = new BoardMarkupObject("SQ", x, y, c);
+            markerObject = new MarkupBoardObject("SQ", x, y, c);
             board.addObject(markerObject);
           } else if (markerObject) {
             // we don't know what is the last move
@@ -76,7 +74,7 @@ const createGoBoard = (
       }
     }
   };
-  let hoverObject: FieldObject | null = null;
+  let hoverObject: FieldBoardObject | null = null;
   const clearHoverObject = () => {
     if (hoverObject) {
       board.removeObject(hoverObject);
@@ -90,7 +88,7 @@ const createGoBoard = (
       return;
     }
     if (!hoverObject) {
-      hoverObject = new FieldObject(game.turn === Color.B ? "B" : "W");
+      hoverObject = new FieldBoardObject(game.turn === Color.B ? "B" : "W");
     } else if (hoverObject.x === pos.x && hoverObject.y === pos.y) {
       return;
     } else {
@@ -144,7 +142,7 @@ const createGoBoard = (
   return { syncDown, pass, undo, resize };
 };
 
-export const GoBoard = React.memo<{
+export const GoBoard = memo<{
   roomId: string;
   userId: string;
   uniqueId?: string;
