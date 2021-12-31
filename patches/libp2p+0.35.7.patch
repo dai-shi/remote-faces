@@ -1,0 +1,13 @@
+diff --git a/node_modules/libp2p/package.json b/node_modules/libp2p/package.json
+index 05a69d1..259f9a2 100644
+--- a/node_modules/libp2p/package.json
++++ b/node_modules/libp2p/package.json
+@@ -66,7 +66,7 @@
+   "homepage": "https://libp2p.io",
+   "license": "MIT",
+   "engines": {
+-    "node": ">=15.0.0"
++    "node": ">=14.0.0"
+   },
+   "browser": {
+     "nat-api": false
