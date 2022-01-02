@@ -68,10 +68,8 @@ export const createRoom: CreateRoom = async (
     },
   });
   const myPeerId = (await myIpfs.id()).id;
-  await myIpfs.pubsub.subscribe(roomTopic, (msg: Message) =>
-    pubsubHandler(msg)
-  );
-  await myIpfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, (msg: Message) =>
+  await myIpfs.pubsub.subscribe(roomTopic, (msg) => pubsubHandler(msg));
+  await myIpfs.pubsub.subscribe(`${roomTopic} ${myPeerId}`, (msg) =>
     pubsubHandler(msg)
   );
   if (process.env.NODE_ENV !== "production") {
