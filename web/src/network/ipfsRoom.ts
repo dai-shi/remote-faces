@@ -1,4 +1,4 @@
-import { create } from "ipfs";
+import { create as createUntyped } from "ipfs";
 import type { create as createFn } from "ipfs-core/types/src/components/index";
 import type { Message } from "ipfs-core-types/types/src/pubsub/index";
 import IpfsPubSubRoom from "ipfs-pubsub-room";
@@ -16,7 +16,7 @@ import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./ipfsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
 
-type IPFS = ReturnType<typeof createFn> extends Promise<infer R> ? R : never;
+const create = createUntyped as typeof createFn;
 
 export const createRoom: CreateRoom = async (
   roomId,
@@ -37,7 +37,7 @@ export const createRoom: CreateRoom = async (
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
   updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
-  const myIpfs: IPFS = await create({
+  const myIpfs = await create({
     repo: secureRandomId(),
     config: {
       Addresses: {
