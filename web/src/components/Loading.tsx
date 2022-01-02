@@ -1,8 +1,8 @@
-import React from "react";
+import { memo } from "react";
 
 import "./Loading.css";
 
-export const Loading = React.memo(() => (
+export const Loading = memo(() => (
   <div className="Loading-container">
     <div className="loader">
       <div>Loading...</div>

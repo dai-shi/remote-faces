@@ -4,13 +4,22 @@
   "private": true,
   "author": "Daishi Kato",
   "workspaces": {
-    "packages": ["web", "electron", "ckeditor5"],
-    "nohoist": ["**/electron", "**/electron/**"]
+    "packages": [
+      "web",
+      "electron",
+      "ckeditor5"
+    ],
+    "nohoist": [
+      "**/electron",
+      "**/electron/**"
+    ]
   },
   "scripts": {
-    "test": "yarn workspaces run test"
+    "test": "yarn workspaces run test",
+    "postinstall": "patch-package"
   },
-  "resolutions": {
-    "libp2p-webrtc-star": "0.20.1"
+  "devDependencies": {
+    "patch-package": "^6.4.7",
+    "postinstall-postinstall": "^2.1.0"
   }
 }

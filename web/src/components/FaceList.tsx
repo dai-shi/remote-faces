@@ -1,4 +1,4 @@
-import React from "react";
+import { memo } from "react";
 import { useSnapshot } from "valtio";
 
 import "./FaceList.css";
@@ -10,7 +10,7 @@ import { NG_IMAGE } from "../media/imagePresets";
 // XXX temporary global state for debugging
 import { getRoomState } from "../states/roomMap";
 
-export const FaceList = React.memo<{
+export const FaceList = memo<{
   roomId: string;
   userId: string;
   avatar: string;

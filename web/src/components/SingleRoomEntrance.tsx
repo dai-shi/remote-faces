@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { lazy, memo, useState } from "react";
 import { useSnapshot } from "valtio";
 
 import "./SingleRoomEntrance.css";
@@ -8,10 +8,10 @@ import { ROOM_ID_PREFIX_LEN } from "../network/room";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import { setRoomPresetToUrl } from "../utils/url";
 
-const Landing = React.lazy(() => import("./Landing"));
-const SingleRoom = React.lazy(() => import("./SingleRoom"));
+const Landing = lazy(() => import("./Landing"));
+const SingleRoom = lazy(() => import("./SingleRoom"));
 
-export const SingleRoomEntrance = React.memo(() => {
+export const SingleRoomEntrance = memo(() => {
   const { roomId, roomEntered, config } = useSnapshot(singleRoomState);
   const [name, setName] = useState(config.nickname);
   const [takePhoto, setTakePhoto] = useState(config.takePhoto);

@@ -1,4 +1,6 @@
-import Ipfs from "ipfs";
+import { create as createUntyped } from "ipfs";
+import type { create as createFn } from "ipfs-core/types/src/components/index";
+import type { Message } from "ipfs-core-types/types/src/pubsub/index";
 
 import { sleep } from "../utils/sleep";
 import {
@@ -20,13 +22,7 @@ import {
   imageToVideoTrackConverter,
 } from "./trackUtils";
 
-// copied from node_modules/ipfs-core/dist/src/components/pubsub.d.ts
-type Message = {
-  from: string;
-  seqno: Uint8Array;
-  data: Uint8Array;
-  topicIDs: string[];
-};
+const create = createUntyped as typeof createFn;
 
 const topicsForMediaTypes = new Map<string, string>();
 
@@ -59,7 +55,7 @@ export const createRoom: CreateRoom = async (
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
   updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: 0 });
-  const myIpfs = await Ipfs.create({
+  const myIpfs = await create({
     repo: secureRandomId(),
     config: {
       Addresses: {
@@ -68,10 +64,7 @@ export const createRoom: CreateRoom = async (
             "/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
         ],
       },
-      Discovery: {
-        MDNS: { Enabled: true },
-        webRTCStar: { Enabled: true },
-      },
+      Bootstrap: [], // not sure why this helps
     },
   });
   const myPeerId = (await myIpfs.id()).id;

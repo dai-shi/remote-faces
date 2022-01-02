@@ -1,11 +1,11 @@
-import React, { useCallback, useState, useRef, useEffect } from "react";
+import { memo, useCallback, useState, useRef, useEffect } from "react";
 
 import "./MediaShare.css";
 import { useMediaShare } from "../hooks/useMediaShare";
 import { useVideoDevices } from "../hooks/useAvailableDevices";
 import { useNicknameMap } from "../hooks/useNicknameMap";
 
-const Video = React.memo<{
+const Video = memo<{
   nickname: string;
   stream: MediaStream;
 }>(({ nickname, stream }) => {
@@ -23,7 +23,7 @@ const Video = React.memo<{
   );
 });
 
-export const MediaShare = React.memo<{
+export const MediaShare = memo<{
   roomId: string;
   userId: string;
   nickname: string;

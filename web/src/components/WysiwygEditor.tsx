@@ -1,6 +1,7 @@
 // @ts-nocheck XXX ckeditor5 doesn't come with types
 
-import React from "react";
+import { memo } from "react";
+
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import CustomEditor from "@daishi/ckeditor5-build-inline-custom";
 
@@ -45,7 +46,7 @@ const initEditor = (editor) => {
   ]);
 };
 
-export const WysiwygEditor = React.memo<{
+export const WysiwygEditor = memo<{
   registerClear: (clear: () => void) => void;
   onChange: (data: string) => void;
   onMetaEnter: () => void;

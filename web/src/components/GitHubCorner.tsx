@@ -1,9 +1,9 @@
-import React from "react";
+import { memo } from "react";
 
 import "./GitHubCorner.css";
 
 // http://tholman.com/github-corners/
-export const GitHubCorner = React.memo<{
+export const GitHubCorner = memo<{
   size?: number;
   fill?: string;
   color?: string;

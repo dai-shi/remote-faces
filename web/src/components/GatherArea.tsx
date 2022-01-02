@@ -1,6 +1,6 @@
 /* eslint jsx-a11y/no-static-element-interactions: off */
 
-import React, { Suspense, useCallback, useRef, useState } from "react";
+import { Suspense, lazy, memo, useCallback, useRef, useState } from "react";
 
 import "./GatherArea.css";
 import {
@@ -18,9 +18,9 @@ import { FaceList } from "./FaceList";
 import { FaceCard } from "./FaceCard";
 import { SuspenseFallback } from "./SuspenseFallback";
 
-const MomentaryChat = React.lazy(() => import("./MomentaryChat"));
-const MediaShare = React.lazy(() => import("./MediaShare"));
-const GoBoard = React.lazy(() => import("./GoBoard"));
+const MomentaryChat = lazy(() => import("./MomentaryChat"));
+const MediaShare = lazy(() => import("./MediaShare"));
+const GoBoard = lazy(() => import("./GoBoard"));
 
 type OnMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 
@@ -52,7 +52,7 @@ const getMicOn = (avatar: AvatarData, regionMap: RegionMap, id?: string) => {
   return micOn;
 };
 
-const Region = React.memo<{
+const Region = memo<{
   roomId: string;
   userId: string;
   nickname: string;
@@ -145,7 +145,7 @@ const Region = React.memo<{
   }
 );
 
-const Avatar = React.memo<{
+const Avatar = memo<{
   nickname: string;
   statusMesg: string;
   setStatusMesg?: (mesg: string) => void;
@@ -221,7 +221,7 @@ const Avatar = React.memo<{
   }
 );
 
-export const GatherArea = React.memo<{
+export const GatherArea = memo<{
   roomId: string;
   userId: string;
   avatar: string;
@@ -257,13 +257,8 @@ export const GatherArea = React.memo<{
       false,
       videoDeviceId
     );
-    const {
-      avatarMap,
-      myAvatar,
-      setMyAvatar,
-      regionMap,
-      updateRegion,
-    } = useGatherArea(roomId, userId);
+    const { avatarMap, myAvatar, setMyAvatar, regionMap, updateRegion } =
+      useGatherArea(roomId, userId);
 
     const onMouseDragRef = useRef<OnMouseMove>();
     const registerOnMouseDrag = useCallback((onMouseMove?: OnMouseMove) => {

@@ -179,7 +179,9 @@ export const createRoom: CreateRoom = async (
     connMap.registerRemoteMediaType(conn, sdp);
     if (hasObjectProp(sdp, "offer")) {
       try {
-        await conn.peerConnection.setRemoteDescription(sdp.offer);
+        await conn.peerConnection.setRemoteDescription(
+          sdp.offer as unknown as RTCSessionDescriptionInit // FIXME
+        );
         syncAllTracks(conn);
         const answer = await conn.peerConnection.createAnswer();
         await conn.peerConnection.setLocalDescription(answer);
@@ -189,7 +191,9 @@ export const createRoom: CreateRoom = async (
       }
     } else if (hasObjectProp(sdp, "answer")) {
       try {
-        await conn.peerConnection.setRemoteDescription(sdp.answer);
+        await conn.peerConnection.setRemoteDescription(
+          sdp.answer as unknown as RTCSessionDescriptionInit // FIXME
+        );
       } catch (e) {
         console.info("handleSDP answer failed", e);
         await sleep(Math.random() * 30 * 1000);
@@ -470,7 +474,7 @@ export const createRoom: CreateRoom = async (
       try {
         conn.peerConnection.addTrack(track, stream);
       } catch (e) {
-        if (e.name === "InvalidAccessError") {
+        if ((e as any).name === "InvalidAccessError") {
           // ignore
         } else {
           throw e;

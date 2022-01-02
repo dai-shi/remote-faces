@@ -121,7 +121,8 @@ export const useFaceImages = (
         // XXX force update all images for debug
         roomState.ydoc.transact(() => {
           const twoMinAgo = Date.now() - 2 * 60 * 1000;
-          map.forEach((value, key) => {
+          map.forEach((unknownValue, key) => {
+            const value = unknownValue as ImageData; // FIXME
             if (value.updated >= twoMinAgo) {
               map.set(key, { ...value });
             }

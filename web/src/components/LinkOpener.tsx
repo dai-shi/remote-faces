@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 
 import "./LinkOpener.css";
 import { generateExcalidrawURL } from "../utils/excalidraw";
 
-export const LinkOpener = React.memo<{
+export const LinkOpener = memo<{
   roomId: string;
 }>(({ roomId }) => {
   const [excalidrawUrl, setExcalidrawUrl] = useState<string>();
