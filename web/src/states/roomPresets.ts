@@ -1,4 +1,4 @@
-import { RegionData, RegionList } from "../hooks/useGatherArea";
+import { RegionData } from "../hooks/useGatherArea";
 
 const createMeeting = (
   i: number,
@@ -6,20 +6,20 @@ const createMeeting = (
   y: number,
   w: number,
   h: number
-): RegionData => ({
-  id: `meeting${i}`,
-  type: "meeting",
-  position: [x, y],
-  size: [w, h],
-  zIndex: 0,
-  background: "",
-  border: "",
-  iframe: "",
+) => ({
+  [`meeting${i}`]: {
+    type: "meeting",
+    position: [x, y],
+    size: [w, h],
+    zIndex: 0,
+    background: "",
+    border: "",
+    iframe: "",
+  },
 });
 
-const createGoBoard = (i: number, x: number, y: number): RegionList => [
-  {
-    id: `gomeeting${i}`,
+const createGoBoard = (i: number, x: number, y: number) => ({
+  [`gomeeting${i}`]: {
     type: "meeting",
     position: [x, y],
     size: [250, 150],
@@ -28,8 +28,7 @@ const createGoBoard = (i: number, x: number, y: number): RegionList => [
     border: "",
     iframe: "",
   },
-  {
-    id: `gobard${i}`,
+  [`gobard${i}`]: {
     type: "goboard",
     position: [x, y],
     size: [250, 150],
@@ -38,11 +37,10 @@ const createGoBoard = (i: number, x: number, y: number): RegionList => [
     border: "",
     iframe: "",
   },
-];
+});
 
-const intro: RegionList = [
-  {
-    id: "background",
+const intro: Record<string, RegionData> = {
+  background: {
     type: "background",
     position: [36, 36],
     size: [800, 500],
@@ -52,8 +50,7 @@ const intro: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "chat",
+  chat: {
     type: "chat",
     position: [392, 313],
     size: [415, 208],
@@ -62,10 +59,9 @@ const intro: RegionList = [
     border: "",
     iframe: "",
   },
-  createMeeting(1, 382, 82, 180, 115),
-  createMeeting(2, 614, 82, 180, 115),
-  {
-    id: "share",
+  ...createMeeting(1, 382, 82, 180, 115),
+  ...createMeeting(2, 614, 82, 180, 115),
+  share: {
     type: "media",
     position: [69, 343],
     size: [272, 177],
@@ -74,12 +70,11 @@ const intro: RegionList = [
     border: "",
     iframe: "",
   },
-];
+};
 
-const phone: RegionList = [
-  createMeeting(0, 45, 40, 45, 500),
-  {
-    id: "share",
+const phone: Record<string, RegionData> = {
+  ...createMeeting(0, 45, 40, 45, 500),
+  share: {
     type: "media",
     position: [100, 40],
     size: [1000, 500],
@@ -88,11 +83,10 @@ const phone: RegionList = [
     border: "",
     iframe: "",
   },
-];
+};
 
-const igo: RegionList = [
-  {
-    id: "chat",
+const igo: Record<string, RegionData> = {
+  chat: {
     type: "chat",
     position: [45, 200],
     size: [240, 310],
@@ -110,11 +104,10 @@ const igo: RegionList = [
   ...createGoBoard(7, 820, 40),
   ...createGoBoard(8, 820, 200),
   ...createGoBoard(9, 820, 360),
-];
+};
 
-const office1: RegionList = [
-  {
-    id: "background",
+const office1: Record<string, RegionData> = {
+  background: {
     type: "background",
     position: [0, 0],
     size: [1021, 676],
@@ -124,8 +117,7 @@ const office1: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "chat",
+  chat: {
     type: "chat",
     position: [40, 480],
     size: [380, 190],
@@ -134,11 +126,10 @@ const office1: RegionList = [
     border: "skyblue solid 3px",
     iframe: "",
   },
-  createMeeting(1, 77, 244, 273, 230),
-  createMeeting(2, 297, 41, 135, 125),
-  createMeeting(3, 385, 321, 113, 75),
-  {
-    id: "share",
+  ...createMeeting(1, 77, 244, 273, 230),
+  ...createMeeting(2, 297, 41, 135, 125),
+  ...createMeeting(3, 385, 321, 113, 75),
+  share: {
     type: "media",
     position: [540, 405],
     size: [480, 270],
@@ -147,8 +138,7 @@ const office1: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "go",
+  go: {
     type: "goboard",
     position: [820, 95],
     size: [200, 120],
@@ -157,8 +147,7 @@ const office1: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "go2",
+  go2: {
     type: "goboard",
     position: [820, 220],
     size: [200, 120],
@@ -167,11 +156,10 @@ const office1: RegionList = [
     border: "",
     iframe: "",
   },
-];
+};
 
-const office2: RegionList = [
-  {
-    id: "background",
+const office2: Record<string, RegionData> = {
+  background: {
     type: "background",
     position: [0, 0],
     size: [1120, 740],
@@ -181,8 +169,7 @@ const office2: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "chat",
+  chat: {
     type: "chat",
     position: [85, 530],
     size: [375, 200],
@@ -191,14 +178,13 @@ const office2: RegionList = [
     border: "#2C2F33 solid 2px",
     iframe: "",
   },
-  createMeeting(1, 220, 180, 240, 180),
-  createMeeting(2, 863, 230, 250, 230),
-  createMeeting(3, 650, 47, 160, 160),
-  createMeeting(4, 64, 315, 100, 45),
-  createMeeting(5, 64, 388, 100, 45),
-  createMeeting(6, 64, 457, 100, 45),
-  {
-    id: "share",
+  ...createMeeting(1, 220, 180, 240, 180),
+  ...createMeeting(2, 863, 230, 250, 230),
+  ...createMeeting(3, 650, 47, 160, 160),
+  ...createMeeting(4, 64, 315, 100, 45),
+  ...createMeeting(5, 64, 388, 100, 45),
+  ...createMeeting(6, 64, 457, 100, 45),
+  share: {
     type: "media",
     position: [600, 480],
     size: [510, 250],
@@ -208,11 +194,10 @@ const office2: RegionList = [
     iframe: "",
   },
   ...createGoBoard(10, 865, 5),
-];
+};
 
-const office3: RegionList = [
-  {
-    id: "background",
+const office3: Record<string, RegionData> = {
+  background: {
     type: "background",
     position: [0, 0],
     size: [1120, 740],
@@ -222,8 +207,7 @@ const office3: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "chat",
+  chat: {
     type: "chat",
     position: [56, 340],
     size: [250, 394],
@@ -232,14 +216,13 @@ const office3: RegionList = [
     border: "#2C2F33 solid 3px",
     iframe: "",
   },
-  createMeeting(1, 575, 295, 200, 130),
-  createMeeting(2, 516, 555, 200, 180),
-  createMeeting(3, 441, 373, 100, 100),
-  createMeeting(4, 684, 17, 100, 45),
-  createMeeting(5, 684, 83, 100, 45),
-  createMeeting(6, 684, 149, 100, 45),
-  {
-    id: "share",
+  ...createMeeting(1, 575, 295, 200, 130),
+  ...createMeeting(2, 516, 555, 200, 180),
+  ...createMeeting(3, 441, 373, 100, 100),
+  ...createMeeting(4, 684, 17, 100, 45),
+  ...createMeeting(5, 684, 83, 100, 45),
+  ...createMeeting(6, 684, 149, 100, 45),
+  share: {
     type: "media",
     position: [763, 643],
     size: [350, 90],
@@ -248,8 +231,7 @@ const office3: RegionList = [
     border: "#2C2F33 solid 3px",
     iframe: "",
   },
-  {
-    id: "go",
+  go: {
     type: "goboard",
     position: [320, 594],
     size: [180, 140],
@@ -258,8 +240,7 @@ const office3: RegionList = [
     border: "#2C2F33 solid 3px",
     iframe: "",
   },
-  {
-    id: "movable1",
+  movable1: {
     type: "background",
     position: [244, 109],
     size: [36, 36],
@@ -269,11 +250,10 @@ const office3: RegionList = [
     border: "",
     iframe: "",
   },
-];
+};
 
-const office4: RegionList = [
-  {
-    id: "background",
+const office4: Record<string, RegionData> = {
+  background: {
     type: "background",
     position: [0, 0],
     size: [1120, 740],
@@ -283,8 +263,7 @@ const office4: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "chat",
+  chat: {
     type: "chat",
     position: [60, 460],
     size: [230, 270],
@@ -293,11 +272,10 @@ const office4: RegionList = [
     border: "#deca54 solid 1px",
     iframe: "",
   },
-  createMeeting(1, 480, 580, 220, 150),
-  createMeeting(2, 160, 300, 250, 140),
-  createMeeting(3, 830, 190, 140, 70),
-  {
-    id: "movie",
+  ...createMeeting(1, 480, 580, 220, 150),
+  ...createMeeting(2, 160, 300, 250, 140),
+  ...createMeeting(3, 830, 190, 140, 70),
+  movie: {
     type: "background",
     position: [763, 289],
     size: [109, 63],
@@ -306,8 +284,7 @@ const office4: RegionList = [
     border: "",
     iframe: "https://www.youtube.com/embed/ofrC1WFeoLw",
   },
-  {
-    id: "share",
+  share: {
     type: "media",
     position: [820, 590],
     size: [290, 140],
@@ -316,8 +293,7 @@ const office4: RegionList = [
     border: "#deca54 solid 1px",
     iframe: "",
   },
-  {
-    id: "go",
+  go: {
     type: "goboard",
     position: [292, 590],
     size: [160, 140],
@@ -326,8 +302,7 @@ const office4: RegionList = [
     border: "#deca54 solid 1px",
     iframe: "",
   },
-  {
-    id: "BeachChair",
+  BeachChair: {
     type: "background",
     position: [959, 422],
     size: [35, 63],
@@ -337,8 +312,7 @@ const office4: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "BeachChair2",
+  BeachChair2: {
     type: "background",
     position: [1068, 423],
     size: [35, 63],
@@ -348,8 +322,7 @@ const office4: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "ChairA",
+  ChairA: {
     type: "background",
     position: [367, 317],
     size: [35, 48],
@@ -359,8 +332,7 @@ const office4: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "ChairB",
+  ChairB: {
     type: "background",
     position: [174, 330],
     size: [35, 48],
@@ -370,8 +342,7 @@ const office4: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "ChairC",
+  ChairC: {
     type: "background",
     position: [345, 374],
     size: [35, 48],
@@ -381,8 +352,7 @@ const office4: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "Digda",
+  Digda: {
     type: "background",
     position: [119, 409],
     size: [26, 22],
@@ -392,8 +362,7 @@ const office4: RegionList = [
     border: "",
     iframe: "",
   },
-  {
-    id: "Kintone",
+  Kintone: {
     type: "background",
     position: [907, 110],
     size: [46, 28],
@@ -403,12 +372,11 @@ const office4: RegionList = [
     border: "",
     iframe: "",
   },
-];
+};
 [...Array(100).keys()].forEach((i) => {
   const x = 430 - 14 * (i % 10);
   const y = 570 - 14 * Math.floor(i / 10);
-  office4.push({
-    id: `block${i}`,
+  office4[`block${i}`] = {
     type: "background",
     position: [x, y],
     size: [22, 19],
@@ -429,10 +397,10 @@ const office4: RegionList = [
     }.png) center center / contain no-repeat`,
     border: "",
     iframe: "",
-  });
+  };
 });
 
-export const roomPresets: Record<string, RegionList> = {
+export const roomPresets: Record<string, Record<string, RegionData>> = {
   intro,
   phone,
   igo,

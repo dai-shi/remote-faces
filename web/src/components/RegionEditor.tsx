@@ -20,70 +20,53 @@ export const RegionEditor = memo<{
   const [border, setBorder] = useState("");
   const [iframe, setIframe] = useState("");
 
-  const updateRegion = () => {
-    const found = roomState.gatherRegionList.find(
-      (item): item is RegionData => isRegionData(item) && item.id === regionId
-    );
-    if (found) {
-      found.type = type;
-      found.position = [left, top];
-      found.size = [width, height];
-      found.zIndex = zIndex;
-      found.background = background;
-      found.border = border;
-      found.iframe = iframe;
-    } else {
-      roomState.gatherRegionList.push({
-        id: regionId,
-        type,
-        position: [left, top],
-        size: [width, height],
-        zIndex,
-        background,
-        border,
-        iframe,
-      });
-    }
+  const addRegion = () => {
+    const data: RegionData = {
+      type,
+      position: [left, top],
+      size: [width, height],
+      zIndex,
+      background,
+      border,
+      iframe,
+    };
+    roomState.gatherRegionMap[regionId] = data;
   };
 
   const [allRegionData, setAllRegionData] = useState<string | null>(null);
 
   const loadAllRegionData = () => {
-    setAllRegionData(JSON.stringify(roomState.gatherRegionList));
+    setAllRegionData(JSON.stringify(roomState.gatherRegionMap));
   };
 
   const saveAllRegionData = () => {
     try {
-      const newRegionList = JSON.parse(allRegionData || "");
-      if (Array.isArray(newRegionList) && newRegionList.every(isRegionData)) {
-        roomState.gatherRegionList.splice(0, -1);
-        roomState.gatherRegionList.push(...newRegionList);
-      }
+      Object.entries(JSON.parse(allRegionData || "")).forEach(
+        ([key, value]) => {
+          roomState.gatherRegionMap[key] = value;
+        }
+      );
       setAllRegionData(null);
     } catch (e) {
       console.log("failed to save all region data", e);
     }
   };
 
-  const existingRegionIds = roomState.gatherRegionList
-    .filter((item): item is RegionData => isRegionData(item))
-    .map((item) => item.id);
+  const existingRegionIds = Object.keys(roomState.gatherRegionMap);
   const loadRegionData = (id: string) => {
     setRegionId(id);
     if (!id) return;
-    const found = roomState.gatherRegionList.find(
-      (item): item is RegionData => isRegionData(item) && item.id === regionId
-    );
-    if (found) {
-      setType(found.type);
-      setLeft(found.position[0]);
-      setTop(found.position[1]);
-      setWidth(found.size[0]);
-      setHeight(found.size[1]);
-      setZIndex(found.zIndex ?? 0);
-      setBackground(found.background ?? "");
-      setBorder(found.border ?? "");
-      setIframe(found.iframe ?? "");
+    const value = roomState.gatherRegionMap[id];
+    if (isRegionData(value)) {
+      setType(value.type);
+      setLeft(value.position[0]);
+      setTop(value.position[1]);
+      setWidth(value.size[0]);
+      setHeight(value.size[1]);
+      setZIndex(value.zIndex ?? 0);
+      setBackground(value.background ?? "");
+      setBorder(value.border ?? "");
+      setIframe(value.iframe ?? "");
     }
   };
 
@@ -184,7 +167,7 @@ export const RegionEditor = memo<{
         <input value={iframe} onChange={(e) => setIframe(e.target.value)} />
       </label>
       <hr />
-      <button type="button" onClick={() => updateRegion()} disabled={!regionId}>
+      <button type="button" onClick={addRegion} disabled={!regionId}>
         Add/Update Region
       </button>
       <hr />

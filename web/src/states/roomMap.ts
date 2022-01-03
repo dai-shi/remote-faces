@@ -1,6 +1,6 @@
 import { proxy, snapshot, ref } from "valtio";
 import * as Y from "yjs";
-import { bindProxyAndYMap, bindProxyAndYArray } from "valtio-yjs";
+import { bindProxyAndYMap } from "valtio-yjs";
 
 import { PeerInfo, createRoom, NetworkStatus } from "../network/room";
 import { encodeBase64Async, decodeBase64Async } from "../utils/base64";
@@ -10,7 +10,7 @@ type RoomState = {
   userIdList: { userId: string; peerIndex: number | "closed" }[];
   faceImages: { [userId: string]: unknown };
   gatherAvatarMap: { [userId: string]: unknown };
-  gatherRegionList: unknown[];
+  gatherRegionMap: { [regionId: string]: unknown };
   extraDataListMap: { [id: string]: unknown[] };
   acceptingMediaTypes: string[];
   trackMap: {
@@ -62,7 +62,7 @@ const createRoomState = (roomId: string, userId: string) => {
     userIdList: [],
     faceImages: {},
     gatherAvatarMap: {},
-    gatherRegionList: [],
+    gatherRegionMap: {},
     extraDataListMap: {},
     acceptingMediaTypes: [],
     trackMap: {},
@@ -75,7 +75,7 @@ const createRoomState = (roomId: string, userId: string) => {
   const ydoc = new Y.Doc();
   bindProxyAndYMap(state.faceImages, ydoc.getMap("faceImages"));
   bindProxyAndYMap(state.gatherAvatarMap, ydoc.getMap("gatherAvatarMap"));
-  bindProxyAndYArray(state.gatherRegionList, ydoc.getArray("gatherRegionList"));
+  bindProxyAndYMap(state.gatherRegionMap, ydoc.getMap("gatherRegionMap"));
   bindProxyAndYMap(state.extraDataListMap, ydoc.getMap("extraDataListMap"));
   const updateNetworkStatus = (status: NetworkStatus) => {
     console.log(new Date().toLocaleString(), "[network status]", status);

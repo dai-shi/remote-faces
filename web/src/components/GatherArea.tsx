@@ -6,7 +6,7 @@ import "./GatherArea.css";
 import {
   useGatherArea,
   RegionData,
-  RegionList,
+  RegionMap,
   AvatarData,
 } from "../hooks/useGatherArea";
 import { useFaceImages, useFaceImageObsoleted } from "../hooks/useFaceImages";
@@ -24,33 +24,26 @@ const GoBoard = lazy(() => import("./GoBoard"));
 
 type OnMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 
-type MeetingRegionData = RegionData & { type: "meeting" };
-
-const getActiveMeetingRegion = (
-  avatar: AvatarData,
-  regionList: RegionList
-): MeetingRegionData | undefined => {
-  const activeMeetingRegion = [...regionList]
-    .sort((a, b) => (b.zIndex ?? 0) - (a.zIndex ?? 0))
-    .find((item): item is MeetingRegionData => {
-      const { type, position, size } = item;
-      return (
-        type === "meeting" &&
-        position[0] <= avatar.position[0] + 36 &&
-        position[1] <= avatar.position[1] + 36 &&
-        avatar.position[0] <= position[0] + size[0] &&
-        avatar.position[1] <= position[1] + size[1]
-      );
-    });
-  return activeMeetingRegion;
+const getActiveMeetingRegionId = (avatar: AvatarData, regionMap: RegionMap) => {
+  const regionIdList = Object.keys(regionMap).sort(
+    (a, b) => (regionMap[b].zIndex ?? 0) - (regionMap[a].zIndex ?? 0)
+  );
+  const activeId = regionIdList.find((id) => {
+    const { type, position, size } = regionMap[id] as RegionData;
+    return (
+      type === "meeting" &&
+      position[0] <= avatar.position[0] + 36 &&
+      position[1] <= avatar.position[1] + 36 &&
+      avatar.position[0] <= position[0] + size[0] &&
+      avatar.position[1] <= position[1] + size[1]
+    );
+  });
+  return activeId;
 };
 
-const getMicOn = (
-  avatar: AvatarData,
-  meetingRegionData?: MeetingRegionData
-) => {
-  if (!meetingRegionData) return undefined;
-  const { position, size } = meetingRegionData;
+const getMicOn = (avatar: AvatarData, regionMap: RegionMap, id?: string) => {
+  if (!id) return undefined;
+  const { position, size } = regionMap[id];
   const micOn =
     position[0] <= avatar.position[0] &&
     position[1] <= avatar.position[1] &&
@@ -261,7 +254,7 @@ export const GatherArea = memo<{
       false,
       videoDeviceId
     );
-    const { avatarMap, myAvatar, setMyAvatar, regionList, updateRegion } =
+    const { avatarMap, myAvatar, setMyAvatar, regionMap, updateRegion } =
       useGatherArea(roomId, userId);
 
     const onMouseDragRef = useRef<OnMouseMove>();
@@ -269,18 +262,22 @@ export const GatherArea = memo<{
       onMouseDragRef.current = onMouseMove;
     }, []);
 
-    const activeMeetingRegion = getActiveMeetingRegion(myAvatar, regionList);
-    const activeMeetingMicOn = getMicOn(myAvatar, activeMeetingRegion);
+    const activeMeetingRegionId = getActiveMeetingRegionId(myAvatar, regionMap);
+    const activeMeetingMicOn = getMicOn(
+      myAvatar,
+      regionMap,
+      activeMeetingRegionId
+    );
 
     const { faceStream, faceStreamMap } = useFaceVideos(
       roomId,
       userId,
-      !!activeMeetingRegion,
-      !!activeMeetingRegion,
+      !!activeMeetingRegionId,
+      !!activeMeetingRegionId,
       !!activeMeetingMicOn,
       videoDeviceId,
       audioDeviceId,
-      `gatherArea/meeting/${activeMeetingRegion?.id}/`
+      `gatherArea/meeting/${activeMeetingRegionId}/`
     );
 
     const [showModal, setShowModal] = useState<
@@ -300,21 +297,21 @@ export const GatherArea = memo<{
             registerOnMouseDrag();
           }}
         >
-          {regionList.map((regionData) => (
+          {Object.entries(regionMap).map(([regionId, regionData]) => (
             <Region
-              key={regionData.id}
+              key={regionId}
               roomId={roomId}
               userId={userId}
               nickname={nickname}
-              id={regionData.id}
+              id={regionId}
               data={regionData}
               highlight={
-                (regionData.id === activeMeetingRegion?.id &&
+                (regionId === activeMeetingRegionId &&
                   (activeMeetingMicOn ? "micon-meeting" : "active-meeting")) ||
                 (regionData.type === "meeting" ? "meeting" : undefined)
               }
               setPosition={(position) =>
-                updateRegion({ ...regionData, position })
+                updateRegion(regionId, { ...regionData, position })
               }
               registerOnMouseDrag={registerOnMouseDrag}
             />
@@ -337,8 +334,8 @@ export const GatherArea = memo<{
                 position={avatarData.position}
                 registerOnMouseDrag={registerOnMouseDrag}
                 stream={faceStreamMap[uid]}
-                liveMode={!!activeMeetingRegion}
-                micOn={getMicOn(avatarData, activeMeetingRegion)}
+                liveMode={!!activeMeetingRegionId}
+                micOn={getMicOn(avatarData, regionMap, activeMeetingRegionId)}
               />
             );
           })}
@@ -352,7 +349,7 @@ export const GatherArea = memo<{
             }
             registerOnMouseDrag={registerOnMouseDrag}
             stream={faceStream || undefined}
-            liveMode={!!activeMeetingRegion}
+            liveMode={!!activeMeetingRegionId}
             muted
             micOn={activeMeetingMicOn}
           />
