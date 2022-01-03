@@ -30,7 +30,6 @@ const isAvatarData = (x: unknown): x is AvatarData => {
 };
 
 export type RegionData = {
-  id: string;
   type: "background" | "meeting" | "chat" | "media" | "goboard";
   position: [left: number, top: number];
   size: [width: number, height: number];
@@ -69,11 +68,13 @@ export type AvatarMap = {
   [userId: string]: AvatarData;
 };
 
-export type RegionList = RegionData[];
+export type RegionMap = {
+  [regionId: string]: RegionData;
+};
 
 export const useGatherArea = (roomId: string, userId: string) => {
   const roomState = getRoomState(roomId, userId);
-  const { userIdList, gatherAvatarMap, gatherRegionList } =
+  const { userIdList, gatherAvatarMap, gatherRegionMap } =
     useSnapshot(roomState);
 
   const avatarMap: AvatarMap = {};
@@ -101,15 +102,22 @@ export const useGatherArea = (roomId: string, userId: string) => {
     }
   }, [roomState, userId, myAvatar]);
 
-  const regionList: RegionList = gatherRegionList.filter(isRegionData);
+  const regionMap: RegionMap = {};
+  Object.entries(gatherRegionMap).forEach(([id, data]) => {
+    if (isRegionData(data)) {
+      regionMap[id] = data;
+    }
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
       const roomPreset = getRoomPresetFromUrl() || "";
       const preset = roomPresets[roomPreset];
       if (!preset) return;
-      if (roomState.gatherRegionList.length > 0) return;
-      roomState.gatherRegionList.push(...preset);
+      if (Object.keys(roomState.gatherRegionMap).length > 0) return;
+      Object.entries(preset).forEach(([id, data]) => {
+        roomState.gatherRegionMap[id] = data;
+      });
     }, 10 * 1000);
     return () => {
       clearTimeout(timer);
@@ -118,20 +126,17 @@ export const useGatherArea = (roomId: string, userId: string) => {
 
   const timerMap = useRef<{ [id: string]: NodeJS.Timeout }>({});
   const updateRegion = useCallback(
-    (data: RegionData) => {
-      clearTimeout(timerMap.current[data.id]);
-      timerMap.current[data.id] = setTimeout(() => {
-        const found = roomState.gatherRegionList.find(
-          (item): item is RegionData =>
-            isRegionData(item) && item.id === data.id
-        );
-        if (found) {
+    (id: string, data: RegionData) => {
+      clearTimeout(timerMap.current[id]);
+      timerMap.current[id] = setTimeout(() => {
+        const found = roomState.gatherRegionMap[id];
+        if (found && isRegionData(found)) {
           Object.keys(data).forEach((key) => {
             (found as any)[key as keyof RegionData] =
               data[key as keyof RegionData];
           });
         } else {
-          roomState.gatherRegionList.push(data);
+          roomState.gatherRegionMap[id] = data;
         }
       }, 500);
     },
@@ -142,7 +147,7 @@ export const useGatherArea = (roomId: string, userId: string) => {
     avatarMap,
     myAvatar,
     setMyAvatar,
-    regionList,
+    regionMap,
     updateRegion,
   };
 };
