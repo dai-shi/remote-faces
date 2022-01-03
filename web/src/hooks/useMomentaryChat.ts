@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from "react";
+import { useCallback } from "react";
+import { useSnapshot } from "valtio";
 
 import { secureRandomId } from "../utils/crypto";
 import { isObject } from "../utils/types";
@@ -47,26 +48,17 @@ export const useMomentaryChat = (
   nickname: string,
   uniqueChatId?: string
 ) => {
+  const roomState = getRoomState(roomId, userId);
   const chatType = `${uniqueChatId || "momentray"}Chat`;
-  const [chatList, setChatList] = useState<ChatItem[]>([]);
-
-  useEffect(() => {
-    const roomState = getRoomState(roomId, userId);
-    const list = roomState.ydoc.getArray(chatType);
-    const listener = () => {
-      setChatList(list.toArray().filter(isChatItem));
-    };
-    list.observe(listener);
-    listener();
-    return () => {
-      list.unobserve(listener);
-    };
-  }, [roomId, userId, chatType]);
+  if (!roomState.extraDataListMap[chatType]) {
+    roomState.extraDataListMap[chatType] = [];
+  }
+  const chatListState = roomState.extraDataListMap[chatType];
+  const chatListSnap = useSnapshot(chatListState);
+  const chatList = chatListSnap.filter(isChatItem);
 
   const sendChat = useCallback(
     (text: string) => {
-      const roomState = getRoomState(roomId, userId);
-      const list = roomState.ydoc.getArray(chatType);
       const chatItem: ChatItem = {
         nickname,
         messageId: secureRandomId(),
@@ -74,33 +66,28 @@ export const useMomentaryChat = (
         text,
         replies: [],
       };
-      list.unshift([chatItem]);
-      if (list.length > MAX_CHAT_LIST_SIZE) {
-        list.delete(list.length - 1, 1);
+      chatListState.unshift(chatItem);
+      if (chatListState.length > MAX_CHAT_LIST_SIZE) {
+        chatListState.pop();
       }
-      setChatList(list.toArray().filter(isChatItem));
     },
-    [roomId, userId, nickname, chatType]
+    [chatListState, nickname]
   );
 
   const replyChat = useCallback(
     (text: string, inReplyTo: string) => {
-      const roomState = getRoomState(roomId, userId);
-      const list = roomState.ydoc.getArray(chatType);
-      list.forEach((item, index) => {
+      chatListState.forEach((item) => {
         if (!isChatItem(item)) return;
         if (item.messageId === inReplyTo) {
           const replyMap = new Map(item.replies);
           replyMap.set(text, (replyMap.get(text) || 0) + 1);
           const replies = [...replyMap.entries()];
           replies.sort(compareReply);
-          list.delete(index, 1);
-          list.insert(index, [{ ...item, replies }]);
+          item.replies = replies;
         }
       });
-      setChatList(list.toArray().filter(isChatItem));
     },
-    [roomId, userId, chatType]
+    [chatListState]
   );
 
   return {

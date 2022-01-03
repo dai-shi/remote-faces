@@ -14144,10 +14144,10 @@ proxy-addr@~2.0.7:
     forwarded "0.2.0"
     ipaddr.js "1.9.1"
 
-proxy-compare@1.1.6:
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/proxy-compare/-/proxy-compare-1.1.6.tgz#dd7737be611a9d7142fae10dbc6d0ceb74ad6da0"
-  integrity sha512-V65euKrKgKjVyEh5+4nVlAf4dHJ6Q0cF77MCeZiJaOldAl9lndy/u270SJneHiz3UkVcSIhxfOKY7aFkrMyo5g==
+proxy-compare@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/proxy-compare/-/proxy-compare-2.0.2.tgz#343e624d0ec399dfbe575f1d365d4fa042c9fc69"
+  integrity sha512-3qUXJBariEj3eO90M3Rgqq3+/P5Efl0t/dl9g/1uVzIQmO3M+ql4hvNH3mYdu8H+1zcKv07YvL55tsY74jmH1A==
 
 prr@~1.0.1:
   version "1.0.1"
@@ -16864,11 +16864,19 @@ validate-npm-package-license@^3.0.1:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
 
-"valtio@https://pkg.csb.dev/pmndrs/valtio/commit/52c3c148/valtio":
-  version "1.0.0"
-  resolved "https://pkg.csb.dev/pmndrs/valtio/commit/52c3c148/valtio#738b78fc9ef2855bc58bb18211892a1231f1e4d7"
+valtio-yjs@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/valtio-yjs/-/valtio-yjs-0.2.0.tgz#8cbbdf78d36a446373e2c6a403e8cd3b62012e1e"
+  integrity sha512-RdQ37hEWeTEEUEKemfFQPd9NlIwl4yLdNHHLL6ayjanN+UWe9YoQYS5L1FR7LAd7XnL7T+E3uJ8eTHeZ5mY0SA==
   dependencies:
-    proxy-compare "1.1.6"
+    fast-deep-equal "^3.1.3"
+
+valtio@^1.2.7:
+  version "1.2.7"
+  resolved "https://registry.yarnpkg.com/valtio/-/valtio-1.2.7.tgz#0274491a8919afce5f1a2fee2f08f9bdad90d5f8"
+  integrity sha512-vm9XwsndXVt+XTFwmb2Myo2p319Ssu/SDVRjBhDGQcNi6Epc8g0Pf/QaWAr67A3P1x4b1NApjK7qHjdL1WpuaQ==
+  dependencies:
+    proxy-compare "2.0.2"
 
 varint-decoder@^1.0.0:
   version "1.0.0"

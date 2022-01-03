@@ -1,5 +1,5 @@
 import { useCallback, useState, useRef, useEffect } from "react";
-import { subscribe } from "valtio";
+import { useSnapshot } from "valtio";
 
 import { getRoomState } from "../states/roomMap";
 import { roomPresets } from "../states/roomPresets";
@@ -29,10 +29,8 @@ const isAvatarData = (x: unknown): x is AvatarData => {
   }
 };
 
-const isEqualAvatarData = (a: AvatarData, b: AvatarData) =>
-  a.position[0] === b.position[0] && a.position[1] === b.position[1];
-
 export type RegionData = {
+  id: string;
   type: "background" | "meeting" | "chat" | "media" | "goboard";
   position: [left: number, top: number];
   size: [width: number, height: number];
@@ -42,7 +40,7 @@ export type RegionData = {
   iframe?: string;
 };
 
-const isRegionData = (x: unknown): x is RegionData => {
+export const isRegionData = (x: unknown): x is RegionData => {
   try {
     const obj = x as RegionData;
     if (
@@ -67,74 +65,29 @@ const isRegionData = (x: unknown): x is RegionData => {
   }
 };
 
-const isEqualRegionData = (a: RegionData, b: RegionData) =>
-  a.type === b.type &&
-  a.position[0] === b.position[0] &&
-  a.position[1] === b.position[1] &&
-  a.size[0] === b.size[0] &&
-  a.size[1] === b.size[1] &&
-  a.zIndex === b.zIndex &&
-  a.background === b.background &&
-  a.border === b.border &&
-  a.iframe === b.iframe;
-
 export type AvatarMap = {
   [userId: string]: AvatarData;
 };
 
-export type RegionMap = {
-  [regionId: string]: RegionData;
-};
-
-export const ROOM_STATE_KEY = "gatherRegionMap";
+export type RegionList = RegionData[];
 
 export const useGatherArea = (roomId: string, userId: string) => {
-  const [avatarMap, setAvatarMap] = useState<AvatarMap>({});
+  const roomState = getRoomState(roomId, userId);
+  const { userIdList, gatherAvatarMap, gatherRegionList } =
+    useSnapshot(roomState);
+
+  const avatarMap: AvatarMap = {};
+  userIdList.forEach(({ userId }) => {
+    const data = gatherAvatarMap[userId];
+    if (!isAvatarData(data)) return;
+    avatarMap[userId] = data;
+  });
+
   const [myAvatar, setMyAvatar] = useState<AvatarData>({
     position: getInitialPosition(userId),
   });
-
-  useEffect(() => {
-    const roomState = getRoomState(roomId, userId);
-    const map = roomState.ydoc.getMap("gatherAvatarMap");
-    const listener = () => {
-      setAvatarMap((prev) => {
-        const copied = { ...prev };
-        let changed = false;
-        map.forEach((data, uid) => {
-          if (uid === userId) return;
-          if (!roomState.userIdMap[uid]) return;
-          if (!isAvatarData(data)) return;
-          if (!copied[uid]) {
-            copied[uid] = data;
-            changed = true;
-          } else if (!isEqualAvatarData(data, copied[uid])) {
-            copied[uid] = data;
-            changed = true;
-          }
-        });
-        Object.keys(copied).forEach((uid) => {
-          if (!roomState.userIdMap[uid]) {
-            delete copied[uid];
-            changed = true;
-          }
-        });
-        if (changed) {
-          return copied;
-        }
-        return prev;
-      });
-    };
-    map.observe(listener);
-    const unsub = subscribe(roomState.userIdMap, listener);
-    listener();
-    return () => {
-      unsub();
-      map.unobserve(listener);
-    };
-  }, [roomId, userId]);
-
   const dataToBroadcast = useRef<AvatarData>();
+
   useEffect(() => {
     if (!myAvatar) return;
     if (dataToBroadcast.current) {
@@ -142,68 +95,54 @@ export const useGatherArea = (roomId: string, userId: string) => {
     } else {
       dataToBroadcast.current = myAvatar;
       setTimeout(() => {
-        const roomState = getRoomState(roomId, userId);
-        const map = roomState.ydoc.getMap("gatherAvatarMap");
-        map.set(userId, dataToBroadcast.current);
+        roomState.gatherAvatarMap[userId] = dataToBroadcast.current;
         dataToBroadcast.current = undefined;
       }, 500);
     }
-  }, [roomId, userId, myAvatar]);
+  }, [roomState, userId, myAvatar]);
 
-  const [regionMap, setRegionMap] = useState<RegionMap>({});
+  const regionList: RegionList = gatherRegionList.filter(isRegionData);
 
   useEffect(() => {
-    const roomState = getRoomState(roomId, userId);
-    const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
-    const listener = () => {
-      setRegionMap((prev) => {
-        const next: RegionMap = {};
-        map.forEach((data, id) => {
-          if (!isRegionData(data)) return;
-          if (prev[id] && isEqualRegionData(prev[id], data)) {
-            next[id] = prev[id];
-          } else {
-            next[id] = data;
-          }
-        });
-        return next;
-      });
-    };
-    map.observe(listener);
-    listener();
     const timer = setTimeout(() => {
       const roomPreset = getRoomPresetFromUrl() || "";
       const preset = roomPresets[roomPreset];
       if (!preset) return;
-      if (map.size > 0) return;
-      Object.entries(preset).forEach(([key, value]) => {
-        map.set(key, value);
-      });
+      if (roomState.gatherRegionList.length > 0) return;
+      roomState.gatherRegionList.push(...preset);
     }, 10 * 1000);
     return () => {
       clearTimeout(timer);
-      map.unobserve(listener);
     };
-  }, [roomId, userId]);
+  }, [roomState]);
 
   const timerMap = useRef<{ [id: string]: NodeJS.Timeout }>({});
   const updateRegion = useCallback(
-    (id: string, data: RegionData) => {
-      clearTimeout(timerMap.current[id]);
-      timerMap.current[id] = setTimeout(() => {
-        const roomState = getRoomState(roomId, userId);
-        const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
-        map.set(id, data);
+    (data: RegionData) => {
+      clearTimeout(timerMap.current[data.id]);
+      timerMap.current[data.id] = setTimeout(() => {
+        const found = roomState.gatherRegionList.find(
+          (item): item is RegionData =>
+            isRegionData(item) && item.id === data.id
+        );
+        if (found) {
+          Object.keys(data).forEach((key) => {
+            (found as any)[key as keyof RegionData] =
+              data[key as keyof RegionData];
+          });
+        } else {
+          roomState.gatherRegionList.push(data);
+        }
       }, 500);
     },
-    [roomId, userId]
+    [roomState]
   );
 
   return {
     avatarMap,
     myAvatar,
     setMyAvatar,
-    regionMap,
+    regionList,
     updateRegion,
   };
 };

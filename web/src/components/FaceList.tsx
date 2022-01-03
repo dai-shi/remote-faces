@@ -30,7 +30,8 @@ export const FaceList = memo<{
     videoDeviceId,
     suspended,
   }) => {
-    const userIdMap = useSnapshot(getRoomState(roomId, userId).userIdMap);
+    const roomState = getRoomState(roomId, userId);
+    const { userIdList } = useSnapshot(roomState);
     const { myImage, roomImages } = useFaceImages(
       roomId,
       userId,
@@ -61,7 +62,9 @@ export const FaceList = memo<{
           <div key={item.userId} className="FaceList-item">
             <FaceCard
               image={
-                typeof userIdMap[item.userId] === "number"
+                userIdList.some(
+                  (x) => x.userId === item.userId && x.peerIndex !== "closed"
+                )
                   ? item.image
                   : NG_IMAGE
               }

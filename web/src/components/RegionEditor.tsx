@@ -2,12 +2,13 @@ import { memo, useState } from "react";
 
 import "./RegionEditor.css";
 import { getRoomState } from "../states/roomMap";
-import { ROOM_STATE_KEY, RegionData } from "../hooks/useGatherArea";
+import { RegionData, isRegionData } from "../hooks/useGatherArea";
 
 export const RegionEditor = memo<{
   roomId: string;
   userId: string;
 }>(({ roomId, userId }) => {
+  const roomState = getRoomState(roomId, userId);
   const [regionId, setRegionId] = useState("");
   const [type, setType] = useState<RegionData["type"]>("background");
   const [left, setLeft] = useState(100);
@@ -19,62 +20,71 @@ export const RegionEditor = memo<{
   const [border, setBorder] = useState("");
   const [iframe, setIframe] = useState("");
 
-  const addRegion = () => {
-    const data: RegionData = {
-      type,
-      position: [left, top],
-      size: [width, height],
-      zIndex,
-      background,
-      border,
-      iframe,
-    };
-    const roomState = getRoomState(roomId, userId);
-    const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
-    map.set(regionId, data);
+  const updateRegion = () => {
+    const found = roomState.gatherRegionList.find(
+      (item): item is RegionData => isRegionData(item) && item.id === regionId
+    );
+    if (found) {
+      found.type = type;
+      found.position = [left, top];
+      found.size = [width, height];
+      found.zIndex = zIndex;
+      found.background = background;
+      found.border = border;
+      found.iframe = iframe;
+    } else {
+      roomState.gatherRegionList.push({
+        id: regionId,
+        type,
+        position: [left, top],
+        size: [width, height],
+        zIndex,
+        background,
+        border,
+        iframe,
+      });
+    }
   };
 
   const [allRegionData, setAllRegionData] = useState<string | null>(null);
 
   const loadAllRegionData = () => {
-    const roomState = getRoomState(roomId, userId);
-    const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
-    setAllRegionData(JSON.stringify(map.toJSON()));
+    setAllRegionData(JSON.stringify(roomState.gatherRegionList));
   };
 
   const saveAllRegionData = () => {
-    const roomState = getRoomState(roomId, userId);
-    const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
     try {
-      Object.entries(JSON.parse(allRegionData || "")).forEach(
-        ([key, value]) => {
-          map.set(key, value);
-        }
-      );
+      const newRegionList = JSON.parse(allRegionData || "");
+      if (Array.isArray(newRegionList) && newRegionList.every(isRegionData)) {
+        roomState.gatherRegionList.splice(0, -1);
+        roomState.gatherRegionList.push(...newRegionList);
+      }
       setAllRegionData(null);
     } catch (e) {
       console.log("failed to save all region data", e);
     }
   };
 
-  const existingRegionIds = [
-    ...getRoomState(roomId, userId).ydoc.getMap(ROOM_STATE_KEY).keys(),
-  ];
+  const existingRegionIds = roomState.gatherRegionList
+    .filter((item): item is RegionData => isRegionData(item))
+    .map((item) => item.id);
   const loadRegionData = (id: string) => {
     setRegionId(id);
     if (!id) return;
-    const roomState = getRoomState(roomId, userId);
-    const map = roomState.ydoc.getMap(ROOM_STATE_KEY);
-    const value = map.get(id) as RegionData; // FIXME
-    setType(value.type);
-    setLeft(value.position[0]);
-    setTop(value.position[1]);
-    setWidth(value.size[0]);
-    setHeight(value.size[1]);
-    setZIndex(value.zIndex ?? 0);
-    setBackground(value.background ?? "");
-    setBorder(value.border ?? "");
-    setIframe(value.iframe ?? "");
+    const found = roomState.gatherRegionList.find(
+      (item): item is RegionData => isRegionData(item) && item.id === regionId
+    );
+    if (found) {
+      setType(found.type);
+      setLeft(found.position[0]);
+      setTop(found.position[1]);
+      setWidth(found.size[0]);
+      setHeight(found.size[1]);
+      setZIndex(found.zIndex ?? 0);
+      setBackground(found.background ?? "");
+      setBorder(found.border ?? "");
+      setIframe(found.iframe ?? "");
+    }
   };
 
   return (
@@ -174,7 +184,7 @@ export const RegionEditor = memo<{
         <input value={iframe} onChange={(e) => setIframe(e.target.value)} />
       </label>
       <hr />
-      <button type="button" onClick={() => addRegion()} disabled={!regionId}>
+      <button type="button" onClick={() => updateRegion()} disabled={!regionId}>
         Add/Update Region
       </button>
       <hr />

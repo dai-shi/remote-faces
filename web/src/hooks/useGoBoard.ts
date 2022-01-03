@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { Color } from "wgo";
+import { subscribe } from "valtio";
 
 import { getRoomState } from "../states/roomMap";
 
@@ -50,13 +51,17 @@ export const useGoBoard = (
   syncDown: (positions: PositionData[]) => void,
   uniqueBoardId?: string
 ) => {
+  const roomState = getRoomState(roomId, userId);
   const boardType = `${uniqueBoardId || "go"}Board`;
+  if (!roomState.extraDataListMap[boardType]) {
+    roomState.extraDataListMap[boardType] = [];
+  }
+  const boardListState = roomState.extraDataListMap[boardType];
+
   useEffect(() => {
-    const roomState = getRoomState(roomId, userId);
-    const list = roomState.ydoc.getArray(boardType);
     const listener = () => {
       syncDown(
-        list.toArray().flatMap((item) => {
+        boardListState.flatMap((item) => {
           try {
             const data = JSON.parse(item as string);
             if (isPositionData(data)) {
@@ -69,24 +74,27 @@ export const useGoBoard = (
         })
       );
     };
-    list.observe(listener);
+    const unsub = subscribe(boardListState, listener);
     listener();
-    return () => {
-      list.unobserve(listener);
-    };
-  }, [roomId, userId, syncDown, boardType]);
+    return unsub;
+  }, [boardListState, syncDown]);
 
   const syncUp = useCallback(
     (positions: PositionData[]) => {
-      const roomState = getRoomState(roomId, userId);
-      const list = roomState.ydoc.getArray(boardType);
-      if (list.length < positions.length) {
-        list.push(positions.slice(list.length).map((x) => JSON.stringify(x)));
-      } else if (list.length > positions.length) {
-        list.delete(positions.length, list.length - positions.length);
+      if (boardListState.length < positions.length) {
+        boardListState.push(
+          ...positions
+            .slice(boardListState.length)
+            .map((x) => JSON.stringify(x))
+        );
+      } else if (boardListState.length > positions.length) {
+        boardListState.splice(
+          positions.length,
+          boardListState.length - positions.length
+        );
       }
     },
-    [roomId, userId, boardType]
+    [boardListState]
   );
 
   return { syncUp };
