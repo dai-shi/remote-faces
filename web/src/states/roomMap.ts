@@ -1,14 +1,17 @@
 import { proxy, snapshot, ref } from "valtio";
 import * as Y from "yjs";
+import { bindProxyAndYMap, bindProxyAndYArray } from "valtio-yjs";
 
 import { PeerInfo, createRoom, NetworkStatus } from "../network/room";
 import { encodeBase64Async, decodeBase64Async } from "../utils/base64";
 
 type RoomState = {
   networkStatusList: NetworkStatus[];
-  // userIdMap: number is peerIndex
-  userIdMap: { [userId: string]: number | "closed" };
-  ydoc: Y.Doc;
+  userIdList: { userId: string; peerIndex: number | "closed" }[];
+  faceImages: { [userId: string]: unknown };
+  gatherAvatarMap: { [userId: string]: unknown };
+  gatherRegionList: unknown[];
+  extraDataListMap: { [id: string]: unknown[] };
   acceptingMediaTypes: string[];
   trackMap: {
     [mediaType: string]: {
@@ -56,8 +59,11 @@ const createRoomState = (roomId: string, userId: string) => {
   };
   const state = proxy<RoomState>({
     networkStatusList: [],
-    userIdMap: {},
-    ydoc: ref(new Y.Doc()),
+    userIdList: [],
+    faceImages: {},
+    gatherAvatarMap: {},
+    gatherRegionList: [],
+    extraDataListMap: {},
     acceptingMediaTypes: [],
     trackMap: {},
     addMediaType,
@@ -66,6 +72,11 @@ const createRoomState = (roomId: string, userId: string) => {
     removeTrack,
     dispose,
   });
+  const ydoc = new Y.Doc();
+  bindProxyAndYMap(state.faceImages, ydoc.getMap("faceImages"));
+  bindProxyAndYMap(state.gatherAvatarMap, ydoc.getMap("gatherAvatarMap"));
+  bindProxyAndYArray(state.gatherRegionList, ydoc.getArray("gatherRegionList"));
+  bindProxyAndYMap(state.extraDataListMap, ydoc.getMap("extraDataListMap"));
   const updateNetworkStatus = (status: NetworkStatus) => {
     console.log(new Date().toLocaleString(), "[network status]", status);
     state.networkStatusList.unshift(status);
@@ -73,17 +84,17 @@ const createRoomState = (roomId: string, userId: string) => {
       state.networkStatusList.pop();
     }
     if (status?.type === "CONNECTION_CLOSED") {
-      Object.entries(state.userIdMap).forEach(([uid, idx]) => {
-        if (idx === status.peerIndex) {
-          state.userIdMap[uid] = "closed";
+      state.userIdList.forEach((item) => {
+        if (item.peerIndex === status.peerIndex) {
+          item.peerIndex = "closed";
           // FIXME somehow this might be causing fatal behavior
-          // delete state.userIdMap[uid];
+          // state.userIdMap.splice(index, index);
         }
       });
     }
   };
   const notifyNewPeer = async (peerIndex: number) => {
-    const update = Y.encodeStateAsUpdate(state.ydoc);
+    const update = Y.encodeStateAsUpdate(ydoc);
     const base64 = await encodeBase64Async(update);
     const data = { ydocUpdate: base64 };
     roomPromise.then((room) => {
@@ -92,13 +103,21 @@ const createRoomState = (roomId: string, userId: string) => {
     });
   };
   const receiveData = async (data: any, info: PeerInfo) => {
-    state.userIdMap[info.userId] = info.peerIndex;
+    const found = state.userIdList.find((item) => item.userId === info.userId);
+    if (found) {
+      found.peerIndex = info.peerIndex;
+    } else {
+      state.userIdList.push({
+        userId: info.userId,
+        peerIndex: info.peerIndex,
+      });
+    }
     if (data?.ydocUpdate) {
       const update = await decodeBase64Async(data.ydocUpdate);
-      Y.applyUpdate(state.ydoc, update);
+      Y.applyUpdate(ydoc, update);
     }
   };
-  state.ydoc.on("update", async (update: Uint8Array) => {
+  ydoc.on("update", async (update: Uint8Array) => {
     const base64 = await encodeBase64Async(update);
     roomPromise.then((room) => {
       room.broadcastData({ ydocUpdate: base64 });

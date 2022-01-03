@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { subscribe } from "valtio";
+import { useSnapshot } from "valtio";
 
 import { isObject } from "../utils/types";
 import { takePhoto } from "../media/capture";
@@ -48,54 +48,22 @@ export const useFaceImages = (
   speakerOn: boolean,
   deviceId?: string
 ) => {
+  const roomState = getRoomState(roomId, userId);
+  const { userIdList, faceImages } = useSnapshot(roomState);
+
+  const tenMinAgo = Date.now() - 10 * 60 * 1000;
+  const roomImages: ImageData[] = [];
+  userIdList.forEach(({ userId }) => {
+    const data = faceImages[userId];
+    if (!isImageData(data)) return;
+    if (data.updated >= tenMinAgo) {
+      roomImages.push(data);
+    }
+  });
+
   const [myImage, setMyImage] = useState<ImageUrl>();
-  const [roomImages, setRoomImages] = useState<ImageData[]>([]);
 
   useEffect(() => {
-    const roomState = getRoomState(roomId, userId);
-    const map = roomState.ydoc.getMap("faceImages");
-    const listener = () => {
-      setRoomImages((prev) => {
-        const copied = [...prev];
-        let changed = false;
-        map.forEach((data, uid) => {
-          if (uid === userId) return;
-          // FIXME for now we don't delete unknown/not-connected user
-          // if (!roomState.userIdMap[uid]) return;
-          if (!isImageData(data)) return;
-          const index = copied.findIndex((item) => item.userId === uid);
-          if (index === -1) {
-            copied.push(data);
-            changed = true;
-          } else if (data.updated > copied[index].updated) {
-            copied[index] = data;
-            changed = true;
-          }
-        });
-        const tenMinAgo = Date.now() - 10 * 60 * 1000;
-        const filtered = copied.filter(
-          (item) =>
-            item.updated >= tenMinAgo && roomState.userIdMap[item.userId]
-        );
-        changed = changed || copied.length !== filtered.length;
-        if (changed) {
-          return filtered;
-        }
-        return prev;
-      });
-    };
-    map.observe(listener);
-    const unsub = subscribe(roomState.userIdMap, listener);
-    listener();
-    return () => {
-      unsub();
-      map.unobserve(listener);
-    };
-  }, [roomId, userId]);
-
-  useEffect(() => {
-    const roomState = getRoomState(roomId, userId);
-    const map = roomState.ydoc.getMap("faceImages");
     let didCleanup = false;
     let timer: NodeJS.Timeout;
     const loop = async () => {
@@ -117,17 +85,7 @@ export const useFaceImages = (
           info,
           updated: Date.now(),
         };
-        map.set(userId, data);
-        // XXX force update all images for debug
-        roomState.ydoc.transact(() => {
-          const twoMinAgo = Date.now() - 2 * 60 * 1000;
-          map.forEach((unknownValue, key) => {
-            const value = unknownValue as ImageData; // FIXME
-            if (value.updated >= twoMinAgo) {
-              map.set(key, { ...value });
-            }
-          });
-        });
+        roomState.faceImages[userId] = data;
       } catch (e) {
         console.error(e);
       }
@@ -139,8 +97,7 @@ export const useFaceImages = (
       clearTimeout(timer);
     };
   }, [
-    roomId,
-    userId,
+    roomState,
     deviceId,
     avatar,
     nickname,

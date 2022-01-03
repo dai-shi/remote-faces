@@ -27,7 +27,6 @@ const createGoBoard = (
 ) => {
   const game = new Game(6);
   const board = new SVGBoard(element, {
-    width: element.clientWidth,
     height: element.clientHeight,
     size: 6,
   });

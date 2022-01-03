@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { subscribe } from "valtio";
 
 import { isObject } from "../utils/types";
 import { getRoomState } from "../states/roomMap";
@@ -17,12 +18,11 @@ export const useNicknameMap = (roomId: string, userId: string) => {
 
   useEffect(() => {
     const roomState = getRoomState(roomId, userId);
-    const map = roomState.ydoc.getMap("faceImages");
-    const listener = () => {
+    return subscribe(roomState.faceImages, () => {
       setNicknameMap((prev) => {
         const copied = { ...prev };
         let changed = false;
-        map.forEach((data, uid) => {
+        Object.entries(roomState.faceImages).forEach(([uid, data]) => {
           if (uid === userId) return;
           if (!hasInfoNickname(data)) return;
           if (!copied[uid]) {
@@ -38,12 +38,7 @@ export const useNicknameMap = (roomId: string, userId: string) => {
         }
         return prev;
       });
-    };
-    map.observe(listener);
-    listener();
-    return () => {
-      map.unobserve(listener);
-    };
+    });
   }, [roomId, userId]);
 
   return nicknameMap;
