@@ -148,7 +148,6 @@ const Region = memo<{
 const Avatar = memo<{
   nickname: string;
   statusMesg: string;
-  setStatusMesg?: (mesg: string) => void;
   image?: string;
   updated?: number; // in milliseconds
   position: [left: number, top: number];
@@ -162,7 +161,6 @@ const Avatar = memo<{
   ({
     nickname,
     statusMesg,
-    setStatusMesg,
     image,
     updated,
     position,
@@ -208,7 +206,6 @@ const Avatar = memo<{
           image={image}
           nickname={nickname}
           statusMesg={statusMesg}
-          setStatusMesg={setStatusMesg}
           updated={updated}
           liveMode={liveMode}
           stream={stream}
@@ -345,7 +342,6 @@ export const GatherArea = memo<{
           <Avatar
             nickname={nickname}
             statusMesg={statusMesg}
-            setStatusMesg={setStatusMesg}
             image={myImage}
             position={myAvatar.position}
             setPosition={(position) =>

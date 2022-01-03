@@ -8,7 +8,7 @@ export const Landing = memo<{
 }>(({ children, hideHowto }) => (
   <div className="Landing-container">
     <img
-      src="https://github.com/dai-shi/remote-faces/raw/master/images/logo.png"
+      src="https://github.com/dai-shi/remote-faces/raw/main/images/logo.png"
       alt="logo"
     />
     {children}
