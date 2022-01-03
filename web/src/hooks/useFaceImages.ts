@@ -98,6 +98,7 @@ export const useFaceImages = (
     };
   }, [
     roomState,
+    userId,
     deviceId,
     avatar,
     nickname,

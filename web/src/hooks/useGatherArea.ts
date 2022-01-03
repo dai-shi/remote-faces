@@ -99,7 +99,7 @@ export const useGatherArea = (roomId: string, userId: string) => {
         dataToBroadcast.current = undefined;
       }, 500);
     }
-  }, [roomState, myAvatar]);
+  }, [roomState, userId, myAvatar]);
 
   const regionList: RegionList = gatherRegionList.filter(isRegionData);
 
