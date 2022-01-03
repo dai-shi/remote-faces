@@ -54,7 +54,13 @@ export const FaceCard = memo<{
     return (
       <div
         className="FaceCard-container"
-        style={{ opacity: obsoleted ? 0.2 : 1 }}
+        style={{
+          opacity: obsoleted ? 0.2 : 1,
+          cursor: inFaceList && setStatusMesg ? "pointer" : "inherit",
+        }}
+        title={inFaceList ? statusMesg || "(No status message)" : undefined}
+        onClick={inFaceList && setStatusMesg ? editStatusMesg : undefined}
+        aria-hidden="true"
       >
         {liveMode && stream ? (
           <video
@@ -77,24 +83,7 @@ export const FaceCard = memo<{
           />
         )}
         <div className="FaceCard-name">{nickname}</div>
-        {inFaceList && setStatusMesg && (
-          <button
-            type="button"
-            className="FaceCard-mesg"
-            title={statusMesg || "(No status message)"}
-            onClick={editStatusMesg}
-          >
-            {emoji}
-          </button>
-        )}
-        {inFaceList && !setStatusMesg && (
-          <div
-            className="FaceCard-mesg"
-            title={statusMesg || "(No status message)"}
-          >
-            {emoji}
-          </div>
-        )}
+        {inFaceList && <div className="FaceCard-mesg">{emoji}</div>}
         {inFaceList && updatedDate && (
           <div className="FaceCard-updated">
             <span title={updatedDate.toLocaleString()}>
