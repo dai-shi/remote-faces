@@ -1,6 +1,14 @@
 /* eslint jsx-a11y/no-static-element-interactions: off */
 
-import { Suspense, lazy, memo, useCallback, useRef, useState } from "react";
+import {
+  DragEvent,
+  Suspense,
+  lazy,
+  memo,
+  useCallback,
+  useRef,
+  useState,
+} from "react";
 
 import "./GatherArea.css";
 import {
@@ -17,6 +25,7 @@ import { LinkOpener } from "./LinkOpener";
 import { FaceList } from "./FaceList";
 import { FaceCard } from "./FaceCard";
 import { SuspenseFallback } from "./SuspenseFallback";
+import { rand4 } from "../utils/crypto";
 
 const MomentaryChat = lazy(() => import("./MomentaryChat"));
 const MediaShare = lazy(() => import("./MediaShare"));
@@ -384,10 +393,40 @@ export const GatherArea = memo<{
       null | "region-editor" | "link-opener" | "setting"
     >(null);
 
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      const dropText = e.dataTransfer.getData("text");
+      if (/^http.*\.(png|jpg|jpeg|gif|svg)/.test(dropText)) {
+        const width = 50;
+        const height = 50;
+        updateRegion(`img${rand4()}`, {
+          type: "background",
+          position: [e.clientX - width / 2, e.clientY - height / 2],
+          size: [width, height],
+          background: `url(${dropText}) center center / contain no-repeat`,
+        });
+      } else if (/^https:\/\/www.youtube.com\/embed\/\w+$/.test(dropText)) {
+        const width = 100;
+        const height = 100;
+        updateRegion(`mov${rand4()}`, {
+          type: "background",
+          position: [e.clientX - width / 2, e.clientY - height / 2],
+          size: [width, height],
+          iframe: dropText,
+        });
+      } else {
+        window.alert(`Unsupported text dropped: ${dropText}`);
+      }
+    };
+
     return (
       <div className="GatherArea-container">
         <div
           className="GatherArea-body"
+          onDragOver={(e) => {
+            e.preventDefault();
+          }}
+          onDrop={handleDrop}
           onMouseDown={() => {
             setSelectedRegionId(undefined);
           }}

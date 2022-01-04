@@ -66,7 +66,6 @@ export const FaceCard = memo<{
             className="FaceCard-photo"
             ref={(videoEle) => {
               if (videoEle && videoEle.srcObject !== stream) {
-                // eslint-disable-next-line no-param-reassign
                 videoEle.srcObject = stream;
               }
             }}
