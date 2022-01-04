@@ -23,6 +23,18 @@
   height: 100%;
 }
 
+.GatherArea-region-delete {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.5rem;
+  line-height: 0.5rem;
+  cursor: pointer;
+  font-weight: 800;
+  background-color: rgba(128, 128, 128, 0.9);
+  padding: 2px;
+}
+
 .GatherArea-region-move {
   position: absolute;
   top: 0;

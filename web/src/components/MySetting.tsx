@@ -16,7 +16,6 @@ export const MySetting = memo<{
       return;
     }
     if (file.size > 16 * 1024) {
-      // eslint-disable-next-line no-alert
       window.alert(`Too large: ${file.size}`);
       return;
     }

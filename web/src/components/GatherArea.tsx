@@ -61,7 +61,7 @@ const Region = memo<{
   id: string;
   data: RegionData;
   highlight?: "meeting" | "active-meeting" | "micon-meeting";
-  updateRegion: (regionId: string, data: RegionData) => void;
+  updateRegion: (regionId: string, data: RegionData | null) => void;
   registerOnMouseDrag: (onMouseMove?: OnMouseMove) => void;
   isSelected: boolean;
   setSelectedRegionId: (regionId: string) => void;
@@ -160,7 +160,24 @@ const Region = memo<{
         )}
         {isSelected && (
           <div
+            className="GatherArea-region-delete"
+            title="Delete"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const ok = window.confirm("Are you sure to delete it?");
+              if (ok) {
+                updateRegion(id, null);
+              }
+            }}
+          >
+            &#x274C;
+          </div>
+        )}
+        {isSelected && (
+          <div
             className="GatherArea-region-move"
+            title="Move"
             onMouseDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -187,6 +204,7 @@ const Region = memo<{
         {isSelected && (
           <div
             className="GatherArea-region-resize"
+            title="Resize"
             onMouseDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -201,6 +219,9 @@ const Region = memo<{
                 }
                 const width = e.clientX - offset[0];
                 const height = e.clientY - offset[1];
+                if (width < 1 || height < 1) {
+                  return;
+                }
                 target.style.width = `${width}px`;
                 target.style.height = `${height}px`;
                 updateRegion(id, { ...data, size: [width, height] });
