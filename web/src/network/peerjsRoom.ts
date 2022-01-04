@@ -1,12 +1,7 @@
 import Peer from "peerjs";
 
 import { sleep } from "../utils/sleep";
-import {
-  rand4,
-  importCryptoKey,
-  encryptString,
-  decryptString,
-} from "../utils/crypto";
+import { importCryptoKey, encryptString, decryptString } from "../utils/crypto";
 import { getPeerJsConfigFromUrl } from "../utils/url";
 import { isObject, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
@@ -19,12 +14,8 @@ import {
 } from "./peerjsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
 
-const MIN_SEED_PEER_INDEX = 10; // config
-const MAX_SEED_PEER_INDEX = 14; // config
-const guessSeed = (id: string) => {
-  const peerIndex = getPeerIndexFromPeerId(id);
-  return MIN_SEED_PEER_INDEX <= peerIndex && peerIndex <= MAX_SEED_PEER_INDEX;
-};
+const MIN_PEER_INDEX = 1;
+const MAX_PEER_INDEX = 50;
 
 export const createRoom: CreateRoom = async (
   roomId,
@@ -36,39 +27,37 @@ export const createRoom: CreateRoom = async (
 ) => {
   let disposed = false;
   const connMap = createConnectionMap();
-  if (process.env.NODE_ENV !== "production") {
-    (window as any).myConnMap = connMap;
-  }
+  // if (process.env.NODE_ENV !== "production") {
+  (window as any).myConnMap = connMap;
+  // }
   let mediaTypes: string[] = [];
 
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
   let myPeer: Peer | null = null;
-  if (process.env.NODE_ENV !== "production") {
-    (window as any).getMyPeer = () => myPeer;
-  }
-  const initMyPeer = (index = MIN_SEED_PEER_INDEX) => {
+  // if (process.env.NODE_ENV !== "production") {
+  (window as any).getMyPeer = () => myPeer;
+  // }
+  const initMyPeer = (peerIndex = MIN_PEER_INDEX) => {
     if (disposed) return;
     connMap.clearAll();
-    const isSeed = MIN_SEED_PEER_INDEX <= index && index <= MAX_SEED_PEER_INDEX;
-    const peerIndex = isSeed ? index : rand4();
     updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex });
     const id = generatePeerId(roomId, peerIndex);
     const peer = new Peer(id, getPeerJsConfigFromUrl());
     peer.on("open", () => {
       myPeer = peer;
       updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
-      setTimeout(() => {
-        for (let i = MIN_SEED_PEER_INDEX; i <= MAX_SEED_PEER_INDEX; i += 1) {
-          const seedId = generatePeerId(roomId, i);
-          connectPeer(seedId);
-        }
-      }, 10);
+      setTimeout(connectSeedPeers, 10);
     });
     peer.on("error", (err) => {
       if (err.type === "unavailable-id") {
         peer.destroy();
-        initMyPeer(index + 1);
+        if (peerIndex === MAX_PEER_INDEX) {
+          throw new Error("max peer index reached");
+        }
+        setTimeout(() => {
+          initMyPeer(peerIndex + 1);
+        }, 100);
       } else if (err.type === "peer-unavailable") {
         // ignore
       } else if (err.type === "disconnected") {
@@ -138,6 +127,28 @@ export const createRoom: CreateRoom = async (
       ", connecting:",
       connMap.getNotConnectedPeerIds().map(getPeerIndexFromPeerId)
     );
+  };
+
+  const connectSeedPeers = () => {
+    if (!myPeer) return;
+    const myPeerIndex = getPeerIndexFromPeerId(myPeer.id);
+    if (myPeerIndex > MIN_PEER_INDEX) {
+      for (let i = MIN_PEER_INDEX; i < myPeerIndex; i += 1) {
+        const seedId = generatePeerId(roomId, i);
+        connectPeer(seedId);
+      }
+    } else {
+      const loop = (index: number) => {
+        if (index > MAX_PEER_INDEX) return;
+        if (connMap.getConnectedPeerIds().length > 0) return;
+        const seedId = generatePeerId(roomId, index);
+        connectPeer(seedId);
+        setTimeout(() => {
+          loop(index + 1);
+        }, 1000);
+      };
+      loop(myPeerIndex + 1);
+    }
   };
 
   const connectPeer = (id: string) => {
@@ -368,39 +379,13 @@ export const createRoom: CreateRoom = async (
       updateNetworkStatus({ type: "CONNECTION_CLOSED", peerIndex });
       showConnectedStatus();
       if (connMap.getConnectedPeerIds().length === 0) {
-        reInitMyPeer(true);
-      } else if (
-        myPeer &&
-        guessSeed(conn.peer) &&
-        !myPeer.disconnected &&
-        !guessSeed(myPeer.id)
-      ) {
-        const waitSec = 10 * 60 + Math.floor(Math.random() * 10 * 60);
-        console.log(
-          `Disconnected seed peer: ${peerIndex}, reinit in ${waitSec}sec...`
-        );
-        setTimeout(reInitMyPeer, waitSec * 1000);
+        reInitMyPeer();
       }
     });
   };
 
-  const reInitMyPeer = (force?: boolean) => {
+  const reInitMyPeer = () => {
     if (!myPeer || myPeer.disconnected) return; // should already be handled
-    if (!force) {
-      if (guessSeed(myPeer.id)) return;
-      let existsAllSeeds = true;
-      for (let i = MIN_SEED_PEER_INDEX; i <= MAX_SEED_PEER_INDEX; i += 1) {
-        const id = generatePeerId(roomId, i);
-        if (!connMap.isConnectedPeerId(id)) {
-          existsAllSeeds = false;
-          break;
-        }
-      }
-      if (existsAllSeeds) {
-        showConnectedStatus();
-        return;
-      }
-    }
     myPeer.destroy();
     myPeer = null;
     initMyPeer();
