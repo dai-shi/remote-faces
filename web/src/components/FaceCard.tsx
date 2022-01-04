@@ -44,7 +44,6 @@ export const FaceCard = memo<{
     }
     const editStatusMesg = () => {
       if (setStatusMesg) {
-        // eslint-disable-next-line no-alert
         const mesg = window.prompt("Enter status message");
         if (mesg !== null) {
           setStatusMesg(mesg);

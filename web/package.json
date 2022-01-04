@@ -97,7 +97,8 @@
       "no-undef": "off",
       "no-shadow": "off",
       "react/react-in-jsx-scope": "off",
-      "no-param-reassign": "off"
+      "no-param-reassign": "off",
+      "no-alert": "off"
     },
     "overrides": [
       {

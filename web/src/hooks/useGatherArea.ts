@@ -126,9 +126,13 @@ export const useGatherArea = (roomId: string, userId: string) => {
 
   const timerMap = useRef<{ [id: string]: NodeJS.Timeout }>({});
   const updateRegion = useCallback(
-    (id: string, data: RegionData) => {
+    (id: string, data: RegionData | null) => {
       clearTimeout(timerMap.current[id]);
       timerMap.current[id] = setTimeout(() => {
+        if (data === null) {
+          delete roomState.gatherRegionMap[id];
+          return;
+        }
         const found = roomState.gatherRegionMap[id];
         if (found && isRegionData(found)) {
           Object.keys(data).forEach((key) => {
