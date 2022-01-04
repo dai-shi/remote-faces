@@ -103,16 +103,18 @@ const Region = memo<{
           border: data.border,
         }}
         onMouseDown={(e) => {
+          if (e.metaKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            setSelectedRegionId(id);
+            return;
+          }
           // TODO more explicit movable flag
           if (data.type !== "background") {
             return;
           }
           e.preventDefault();
           e.stopPropagation();
-          if (e.metaKey) {
-            setSelectedRegionId(id);
-            return;
-          }
           const target = e.currentTarget;
           const offset = [
             e.clientX - parseInt(target.style.left, 10),
@@ -155,6 +157,32 @@ const Region = memo<{
           <Suspense fallback={<SuspenseFallback />}>
             <GoBoard roomId={roomId} userId={userId} uniqueId={id} />
           </Suspense>
+        )}
+        {isSelected && (
+          <div
+            className="GatherArea-region-move"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const target = e.currentTarget.parentNode as HTMLDivElement;
+              const offset = [
+                e.clientX - parseInt(target.style.left, 10),
+                e.clientY - parseInt(target.style.top, 10),
+              ];
+              registerOnMouseDrag((e) => {
+                if (e === "ended") {
+                  return;
+                }
+                const left = e.clientX - offset[0];
+                const top = e.clientY - offset[1];
+                target.style.left = `${left}px`;
+                target.style.top = `${top}px`;
+                updateRegion(id, { ...data, position: [left, top] });
+              });
+            }}
+          >
+            &#x271B;
+          </div>
         )}
         {isSelected && (
           <div
@@ -403,7 +431,7 @@ export const GatherArea = memo<{
             position={myAvatar.position}
             setPosition={useCallback(
               (position) => setMyAvatar((prev) => ({ ...prev, position })),
-              []
+              [setMyAvatar]
             )}
             registerOnMouseDrag={registerOnMouseDrag}
             stream={faceStream || undefined}
