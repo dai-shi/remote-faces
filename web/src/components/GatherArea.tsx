@@ -185,6 +185,25 @@ const Region = memo<{
         )}
         {isSelected && (
           <div
+            className="GatherArea-region-copy"
+            title="Copy"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const target = (e.target as any).parentNode.parentNode;
+              const left = target.scrollLeft + e.clientX - data.size[0] / 2;
+              const top = target.scrollTop + e.clientY - data.size[1] / 2;
+              updateRegion(`${id}_${rand4()}`, {
+                ...data,
+                position: [left, top],
+              });
+            }}
+          >
+            &#x267B;
+          </div>
+        )}
+        {isSelected && (
+          <div
             className="GatherArea-region-move"
             title="Move"
             onMouseDown={(e) => {
@@ -399,18 +418,26 @@ export const GatherArea = memo<{
       if (/^http.*\.(png|jpg|jpeg|gif|svg)/.test(dropText)) {
         const width = 50;
         const height = 50;
+        const target = e.currentTarget;
         updateRegion(`img${rand4()}`, {
           type: "background",
-          position: [e.clientX - width / 2, e.clientY - height / 2],
+          position: [
+            target.scrollLeft + e.clientX - width / 2,
+            target.scrollTop + e.clientY - height / 2,
+          ],
           size: [width, height],
           background: `url(${dropText}) center center / contain no-repeat`,
         });
       } else if (/^https:\/\/www.youtube.com\/embed\/\w+$/.test(dropText)) {
         const width = 100;
         const height = 100;
+        const target = e.currentTarget;
         updateRegion(`mov${rand4()}`, {
           type: "background",
-          position: [e.clientX - width / 2, e.clientY - height / 2],
+          position: [
+            target.scrollLeft + e.clientX - width / 2,
+            target.scrollTop + e.clientY - height / 2,
+          ],
           size: [width, height],
           iframe: dropText,
         });

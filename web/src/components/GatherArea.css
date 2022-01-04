@@ -35,24 +35,36 @@
   padding: 2px;
 }
 
+.GatherArea-region-copy {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  font-size: 0.8rem;
+  line-height: 0.8rem;
+  cursor: pointer;
+  font-weight: 800;
+  background-color: rgba(128, 128, 128, 0.9);
+  padding: 0px 2px;
+}
+
 .GatherArea-region-move {
   position: absolute;
   top: 0;
   left: 0;
-  font-size: 0.5rem;
-  line-height: 0.5rem;
+  font-size: 0.6rem;
+  line-height: 0.6rem;
   cursor: move;
   font-weight: 800;
   background-color: rgba(128, 128, 128, 0.9);
-  padding: 2px;
+  padding: 2px 3px;
 }
 
 .GatherArea-region-resize {
   position: absolute;
   bottom: 0;
   right: 0;
-  font-size: 0.5rem;
-  line-height: 0.5rem;
+  font-size: 0.6rem;
+  line-height: 0.6rem;
   cursor: nwse-resize;
   font-weight: 800;
   background-color: rgba(128, 128, 128, 0.9);

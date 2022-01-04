@@ -372,33 +372,47 @@ const office4: Record<string, RegionData> = {
     border: "",
     iframe: "",
   },
-};
-[...Array(100).keys()].forEach((i) => {
-  const x = 430 - 14 * (i % 10);
-  const y = 570 - 14 * Math.floor(i / 10);
-  office4[`block${i}`] = {
+  BlockA: {
     type: "background",
-    position: [x, y],
+    position: [400, 500],
     size: [22, 19],
     zIndex: 0,
-    background: `url(https://user-images.githubusercontent.com/52230939/${
-      [
-        "126926610-244ca224-89b8-4418-b457-5d23ca34d69e",
-        "126926610-244ca224-89b8-4418-b457-5d23ca34d69e",
-        "126926610-244ca224-89b8-4418-b457-5d23ca34d69e",
-        "126926610-244ca224-89b8-4418-b457-5d23ca34d69e",
-        "126926292-dd184ddb-2a78-4720-8b69-2daa6e911f08",
-        "126926292-dd184ddb-2a78-4720-8b69-2daa6e911f08",
-        "126926292-dd184ddb-2a78-4720-8b69-2daa6e911f08",
-        "126926292-dd184ddb-2a78-4720-8b69-2daa6e911f08",
-        "126919530-aeff42a1-a033-4eb1-a395-bc3700b9a54d",
-        "126919529-b82d5f24-71ae-482b-987d-55d68829a490",
-      ][i % 10]
-    }.png) center center / contain no-repeat`,
+    background:
+      "url(https://user-images.githubusercontent.com/52230939/126926610-244ca224-89b8-4418-b457-5d23ca34d69e.png) center center / contain no-repeat",
     border: "",
     iframe: "",
-  };
-});
+  },
+  BlockB: {
+    type: "background",
+    position: [430, 500],
+    size: [22, 19],
+    zIndex: 0,
+    background:
+      "url(https://user-images.githubusercontent.com/52230939/126926292-dd184ddb-2a78-4720-8b69-2daa6e911f08.png) center center / contain no-repeat",
+    border: "",
+    iframe: "",
+  },
+  BlockC: {
+    type: "background",
+    position: [460, 500],
+    size: [22, 19],
+    zIndex: 0,
+    background:
+      "url(https://user-images.githubusercontent.com/52230939/126919530-aeff42a1-a033-4eb1-a395-bc3700b9a54d.png) center center / contain no-repeat",
+    border: "",
+    iframe: "",
+  },
+  BlockD: {
+    type: "background",
+    position: [490, 500],
+    size: [22, 19],
+    zIndex: 0,
+    background:
+      "url(https://user-images.githubusercontent.com/52230939/126919529-b82d5f24-71ae-482b-987d-55d68829a490.png) center center / contain no-repeat",
+    border: "",
+    iframe: "",
+  },
+};
 
 export const roomPresets: Record<string, Record<string, RegionData>> = {
   intro,
