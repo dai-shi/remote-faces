@@ -22,7 +22,9 @@ const MomentaryChat = lazy(() => import("./MomentaryChat"));
 const MediaShare = lazy(() => import("./MediaShare"));
 const GoBoard = lazy(() => import("./GoBoard"));
 
-type OnMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+type OnMouseMove = (
+  e: React.MouseEvent<HTMLDivElement, MouseEvent> | "ended"
+) => void;
 
 const getActiveMeetingRegionId = (avatar: AvatarData, regionMap: RegionMap) => {
   const regionIdList = Object.keys(regionMap).sort(
@@ -59,8 +61,10 @@ const Region = memo<{
   id: string;
   data: RegionData;
   highlight?: "meeting" | "active-meeting" | "micon-meeting";
-  setPosition?: (nextPosition: [number, number]) => void;
+  updateRegion: (regionId: string, data: RegionData) => void;
   registerOnMouseDrag: (onMouseMove?: OnMouseMove) => void;
+  isSelected: boolean;
+  setSelectedRegionId: (regionId: string) => void;
 }>(
   ({
     roomId,
@@ -69,10 +73,15 @@ const Region = memo<{
     id,
     data,
     highlight,
-    setPosition,
+    updateRegion,
     registerOnMouseDrag,
+    isSelected,
+    setSelectedRegionId,
   }) => {
     let boxShadow: string | undefined;
+    if (isSelected) {
+      boxShadow = "0 0 0 2px rgb(128, 128, 128, 0.9)";
+    }
     if (highlight === "micon-meeting") {
       boxShadow = "0 0 0 5px rgba(255, 0, 0, 0.6)";
     } else if (highlight === "active-meeting") {
@@ -94,24 +103,31 @@ const Region = memo<{
           border: data.border,
         }}
         onMouseDown={(e) => {
+          // TODO more explicit movable flag
           if (data.type !== "background") {
             return;
           }
           e.preventDefault();
-          if (setPosition) {
-            const target = e.currentTarget;
-            const offset = [
-              e.clientX - data.position[0],
-              e.clientY - data.position[1],
-            ];
-            registerOnMouseDrag((e) => {
-              const left = e.clientX - offset[0];
-              const top = e.clientY - offset[1];
-              target.style.left = `${left}px`;
-              target.style.top = `${top}px`;
-              setPosition([left, top]);
-            });
+          e.stopPropagation();
+          if (e.metaKey) {
+            setSelectedRegionId(id);
+            return;
           }
+          const target = e.currentTarget;
+          const offset = [
+            e.clientX - parseInt(target.style.left, 10),
+            e.clientY - parseInt(target.style.top, 10),
+          ];
+          registerOnMouseDrag((e) => {
+            if (e === "ended") {
+              return;
+            }
+            const left = e.clientX - offset[0];
+            const top = e.clientY - offset[1];
+            target.style.left = `${left}px`;
+            target.style.top = `${top}px`;
+            updateRegion(id, { ...data, position: [left, top] });
+          });
         }}
       >
         {data.iframe && <iframe title={id} src={data.iframe} frameBorder="0" />}
@@ -139,6 +155,32 @@ const Region = memo<{
           <Suspense fallback={<SuspenseFallback />}>
             <GoBoard roomId={roomId} userId={userId} uniqueId={id} />
           </Suspense>
+        )}
+        {isSelected && (
+          <div
+            className="GatherArea-region-resize"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const target = e.currentTarget.parentNode as HTMLDivElement;
+              const offset = [
+                e.clientX - parseInt(target.style.width, 10),
+                e.clientY - parseInt(target.style.height, 10),
+              ];
+              registerOnMouseDrag((e) => {
+                if (e === "ended") {
+                  return;
+                }
+                const width = e.clientX - offset[0];
+                const height = e.clientY - offset[1];
+                target.style.width = `${width}px`;
+                target.style.height = `${height}px`;
+                updateRegion(id, { ...data, size: [width, height] });
+              });
+            }}
+          >
+            &#x2198;
+          </div>
         )}
       </div>
     );
@@ -181,10 +223,17 @@ const Avatar = memo<{
         }}
         onMouseDown={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           if (setPosition) {
             const target = e.currentTarget;
-            const offset = [e.clientX - position[0], e.clientY - position[1]];
+            const offset = [
+              e.clientX - parseInt(target.style.left, 10),
+              e.clientY - parseInt(target.style.top, 10),
+            ];
             registerOnMouseDrag((e) => {
+              if (e === "ended") {
+                return;
+              }
               const left = e.clientX - offset[0];
               const top = e.clientY - offset[1];
               target.style.left = `${left}px`;
@@ -257,6 +306,8 @@ export const GatherArea = memo<{
     const { avatarMap, myAvatar, setMyAvatar, regionMap, updateRegion } =
       useGatherArea(roomId, userId);
 
+    const [selectedRegionId, setSelectedRegionId] = useState<string>();
+
     const onMouseDragRef = useRef<OnMouseMove>();
     const registerOnMouseDrag = useCallback((onMouseMove?: OnMouseMove) => {
       onMouseDragRef.current = onMouseMove;
@@ -288,12 +339,18 @@ export const GatherArea = memo<{
       <div className="GatherArea-container">
         <div
           className="GatherArea-body"
+          onMouseDown={() => {
+            setSelectedRegionId(undefined);
+          }}
           onMouseMove={(e) => {
             if (onMouseDragRef.current) {
               onMouseDragRef.current(e);
             }
           }}
           onMouseUp={() => {
+            if (onMouseDragRef.current) {
+              onMouseDragRef.current("ended");
+            }
             registerOnMouseDrag();
           }}
         >
@@ -310,10 +367,10 @@ export const GatherArea = memo<{
                   (activeMeetingMicOn ? "micon-meeting" : "active-meeting")) ||
                 (regionData.type === "meeting" ? "meeting" : undefined)
               }
-              setPosition={(position) =>
-                updateRegion(regionId, { ...regionData, position })
-              }
+              updateRegion={updateRegion}
               registerOnMouseDrag={registerOnMouseDrag}
+              isSelected={selectedRegionId === regionId}
+              setSelectedRegionId={setSelectedRegionId}
             />
           ))}
           {Object.entries(avatarMap).map(([uid, avatarData]) => {
@@ -344,9 +401,10 @@ export const GatherArea = memo<{
             statusMesg={statusMesg}
             image={myImage}
             position={myAvatar.position}
-            setPosition={(position) =>
-              setMyAvatar((prev) => ({ ...prev, position }))
-            }
+            setPosition={useCallback(
+              (position) => setMyAvatar((prev) => ({ ...prev, position })),
+              []
+            )}
             registerOnMouseDrag={registerOnMouseDrag}
             stream={faceStream || undefined}
             liveMode={!!activeMeetingRegionId}
