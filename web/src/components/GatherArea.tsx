@@ -428,7 +428,12 @@ export const GatherArea = memo<{
           size: [width, height],
           background: `url(${dropText}) center center / contain no-repeat`,
         });
-      } else if (/^https:\/\/www.youtube.com\/embed\/\w+$/.test(dropText)) {
+      } else if (/^https:\/\/www.youtube.com\//.test(dropText)) {
+        const match = /(\w+)$/.exec(dropText);
+        if (!match) {
+          window.alert(`Invalid YouTube URL: ${dropText}`);
+          return;
+        }
         const width = 100;
         const height = 100;
         const target = e.currentTarget;
@@ -439,7 +444,8 @@ export const GatherArea = memo<{
             target.scrollTop + e.clientY - height / 2,
           ],
           size: [width, height],
-          iframe: dropText,
+          iframe: `https://www.youtube.com/embed/${match[1]}`,
+          border: "5px solid #F0F0F020",
         });
       } else {
         window.alert(`Unsupported text dropped: ${dropText}`);
