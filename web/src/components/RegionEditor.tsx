@@ -2,7 +2,7 @@ import { memo, useState } from "react";
 
 import "./RegionEditor.css";
 import { getRoomState } from "../states/roomMap";
-import { RegionData, isRegionData } from "../hooks/useGatherArea";
+import { RegionData } from "../hooks/useGatherArea";
 
 export const RegionEditor = memo<{
   roomId: string;
@@ -10,25 +10,17 @@ export const RegionEditor = memo<{
 }>(({ roomId, userId }) => {
   const roomState = getRoomState(roomId, userId);
   const [regionId, setRegionId] = useState("");
-  const [type, setType] = useState<RegionData["type"]>("background");
+  const [type, setType] = useState<RegionData["type"]>("meeting");
   const [left, setLeft] = useState(100);
   const [top, setTop] = useState(100);
   const [width, setWidth] = useState(100);
   const [height, setHeight] = useState(100);
-  const [zIndex, setZIndex] = useState(0);
-  const [background, setBackground] = useState("");
-  const [border, setBorder] = useState("");
-  const [iframe, setIframe] = useState("");
 
   const addRegion = () => {
     const data: RegionData = {
       type,
       position: [left, top],
       size: [width, height],
-      zIndex,
-      background,
-      border,
-      iframe,
     };
     roomState.gatherRegionMap[regionId] = data;
   };
@@ -36,7 +28,7 @@ export const RegionEditor = memo<{
   const [allRegionData, setAllRegionData] = useState<string | null>(null);
 
   const loadAllRegionData = () => {
-    setAllRegionData(JSON.stringify(roomState.gatherRegionMap));
+    setAllRegionData(JSON.stringify(roomState.gatherRegionMap, null, 2));
   };
 
   const saveAllRegionData = () => {
@@ -52,58 +44,25 @@ export const RegionEditor = memo<{
     }
   };
 
-  const existingRegionIds = Object.keys(roomState.gatherRegionMap);
-  const loadRegionData = (id: string) => {
-    setRegionId(id);
-    if (!id) return;
-    const value = roomState.gatherRegionMap[id];
-    if (isRegionData(value)) {
-      setType(value.type);
-      setLeft(value.position[0]);
-      setTop(value.position[1]);
-      setWidth(value.size[0]);
-      setHeight(value.size[1]);
-      setZIndex(value.zIndex ?? 0);
-      setBackground(value.background ?? "");
-      setBorder(value.border ?? "");
-      setIframe(value.iframe ?? "");
-    }
-  };
-
   return (
     <div className="RegionEditor-container">
-      <h3>Region Editor</h3>
       <label>
         Region ID:{" "}
         <input value={regionId} onChange={(e) => setRegionId(e.target.value)} />
       </label>
-      <select
-        onChange={(e) => {
-          loadRegionData(e.target.value);
-        }}
-      >
-        <option value="">(Select to load existing region)</option>
-        {existingRegionIds.map((id) => (
-          <option key={id} value={id}>
-            {id}
-          </option>
-        ))}
-      </select>
-      <hr />
       <label>
         Type:{" "}
         <select
           value={type}
           onChange={(e) => setType(e.target.value as RegionData["type"])}
         >
-          <option value="background">Background</option>
           <option value="meeting">Meeting</option>
           <option value="chat">Chat</option>
           <option value="media">Media</option>
           <option value="goboard">Go Board</option>
         </select>
       </label>
-      <hr />
+      <br />
       <label>
         Left:{" "}
         <input
@@ -120,7 +79,6 @@ export const RegionEditor = memo<{
           onChange={(e) => setTop(Number(e.target.value))}
         />
       </label>
-      <hr />
       <label>
         Width:{" "}
         <input
@@ -137,38 +95,9 @@ export const RegionEditor = memo<{
           onChange={(e) => setHeight(Number(e.target.value))}
         />
       </label>
-      <hr />
-      {type !== "chat" && (
-        <label>
-          zIndex:{" "}
-          <input
-            type="number"
-            value={zIndex}
-            max={0}
-            onChange={(e) => setZIndex(Number(e.target.value))}
-          />
-        </label>
-      )}
-      <hr />
-      <label>
-        Background:{" "}
-        <input
-          value={background}
-          onChange={(e) => setBackground(e.target.value)}
-        />
-      </label>
-      <label>
-        Border:{" "}
-        <input value={border} onChange={(e) => setBorder(e.target.value)} />
-      </label>
-      <hr />
-      <label>
-        Iframe:{" "}
-        <input value={iframe} onChange={(e) => setIframe(e.target.value)} />
-      </label>
-      <hr />
+      <br />
       <button type="button" onClick={addRegion} disabled={!regionId}>
-        Add/Update Region
+        Add Region (Or overwrite)
       </button>
       <hr />
       <button
@@ -187,12 +116,12 @@ export const RegionEditor = memo<{
       {!!allRegionData && (
         <div>
           <label>
-            All Region Data:{" "}
             <textarea
               value={allRegionData}
               onChange={(e) => setAllRegionData(e.target.value)}
             />
           </label>
+          <br />
           <button type="button" onClick={saveAllRegionData}>
             Replace (Be careful)
           </button>

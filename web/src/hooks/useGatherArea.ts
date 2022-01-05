@@ -30,7 +30,7 @@ const isAvatarData = (x: unknown): x is AvatarData => {
 };
 
 export type RegionData = {
-  type: "background" | "meeting" | "chat" | "media" | "goboard";
+  type: "default" | "meeting" | "chat" | "media" | "goboard";
   position: [left: number, top: number];
   size: [width: number, height: number];
   zIndex?: number;
@@ -44,9 +44,7 @@ export const isRegionData = (x: unknown): x is RegionData => {
   try {
     const obj = x as RegionData;
     if (
-      ["background", "meeting", "chat", "media", "goboard"].includes(
-        obj.type
-      ) &&
+      ["default", "meeting", "chat", "media", "goboard"].includes(obj.type) &&
       typeof obj.position[0] === "number" &&
       typeof obj.position[1] === "number" &&
       typeof obj.size[0] === "number" &&

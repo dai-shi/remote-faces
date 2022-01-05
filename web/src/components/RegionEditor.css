@@ -1,3 +1,7 @@
+.RegionEditor-container input {
+  width: 40px;
+}
+
 .RegionEditor-toggle {
   text-align: left;
   cursor: pointer;
