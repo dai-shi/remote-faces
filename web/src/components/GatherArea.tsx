@@ -26,6 +26,7 @@ import { FaceList } from "./FaceList";
 import { FaceCard } from "./FaceCard";
 import { SuspenseFallback } from "./SuspenseFallback";
 import { rand4 } from "../utils/crypto";
+import { encodeBase64Async } from "../utils/base64";
 
 const MomentaryChat = lazy(() => import("./MomentaryChat"));
 const MediaShare = lazy(() => import("./MediaShare"));
@@ -411,7 +412,7 @@ export const GatherArea = memo<{
       null | "region-editor" | "link-opener" | "setting"
     >(null);
 
-    const handleDrop = (e: DragEvent) => {
+    const handleDrop = async (e: DragEvent) => {
       e.preventDefault();
       const dropText = e.dataTransfer.getData("text");
       if (/^http.*\.(png|jpg|jpeg|gif|svg)/.test(dropText)) {
@@ -447,7 +448,24 @@ export const GatherArea = memo<{
           border: "5px solid #F0F0F020",
         });
       } else {
-        window.alert(`Unsupported text dropped: ${dropText}`);
+        const style = "margin:0;padding:0;";
+        const html = await encodeBase64Async(
+          new TextEncoder().encode(`<body style='${style}'>${dropText}</body>`)
+        );
+        const width = 100;
+        const height = 20;
+        const target = e.target as HTMLDivElement;
+        updateRegion(`text${rand4()}`, {
+          type: "background",
+          position: [
+            target.scrollLeft + e.clientX - width / 2,
+            target.scrollTop + e.clientY - height / 2,
+          ],
+          size: [width, height],
+          iframe: `data:text/html;base64,${html}`,
+          border: "5px solid #F0F0F040",
+          movable: true,
+        });
       }
     };
 

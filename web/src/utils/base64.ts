@@ -14,7 +14,7 @@ export const decodeBase64Sync = (base64: string) => {
 };
 
 export const encodeBase64Async = (data: Uint8Array) =>
-  new Promise((resolve) => {
+  new Promise<string>((resolve) => {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
