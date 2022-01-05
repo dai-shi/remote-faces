@@ -26,6 +26,7 @@ import { FaceList } from "./FaceList";
 import { FaceCard } from "./FaceCard";
 import { SuspenseFallback } from "./SuspenseFallback";
 import { rand4 } from "../utils/crypto";
+import { encodeBase64Async } from "../utils/base64";
 
 const MomentaryChat = lazy(() => import("./MomentaryChat"));
 const MediaShare = lazy(() => import("./MediaShare"));
@@ -118,8 +119,7 @@ const Region = memo<{
             setSelectedRegionId(id);
             return;
           }
-          // TODO more explicit movable flag
-          if (data.type !== "background") {
+          if (!data.movable) {
             return;
           }
           e.preventDefault();
@@ -181,6 +181,25 @@ const Region = memo<{
             }}
           >
             &#x274C;
+          </div>
+        )}
+        {isSelected && (
+          <div
+            className="GatherArea-region-copy"
+            title="Copy"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const target = (e.target as any).parentNode.parentNode;
+              const left = target.scrollLeft + e.clientX - data.size[0] / 2;
+              const top = target.scrollTop + e.clientY - data.size[1] / 2;
+              updateRegion(`${id}_${rand4()}`, {
+                ...data,
+                position: [left, top],
+              });
+            }}
+          >
+            &#x267B;
           </div>
         )}
         {isSelected && (
@@ -393,29 +412,60 @@ export const GatherArea = memo<{
       null | "region-editor" | "link-opener" | "setting"
     >(null);
 
-    const handleDrop = (e: DragEvent) => {
+    const handleDrop = async (e: DragEvent) => {
       e.preventDefault();
       const dropText = e.dataTransfer.getData("text");
       if (/^http.*\.(png|jpg|jpeg|gif|svg)/.test(dropText)) {
         const width = 50;
         const height = 50;
+        const target = e.currentTarget;
         updateRegion(`img${rand4()}`, {
           type: "background",
-          position: [e.clientX - width / 2, e.clientY - height / 2],
+          position: [
+            target.scrollLeft + e.clientX - width / 2,
+            target.scrollTop + e.clientY - height / 2,
+          ],
           size: [width, height],
           background: `url(${dropText}) center center / contain no-repeat`,
         });
-      } else if (/^https:\/\/www.youtube.com\/embed\/\w+$/.test(dropText)) {
+      } else if (/^https:\/\/www.youtube.com\//.test(dropText)) {
+        const match = /(\w+)$/.exec(dropText);
+        if (!match) {
+          window.alert(`Invalid YouTube URL: ${dropText}`);
+          return;
+        }
         const width = 100;
         const height = 100;
+        const target = e.currentTarget;
         updateRegion(`mov${rand4()}`, {
           type: "background",
-          position: [e.clientX - width / 2, e.clientY - height / 2],
+          position: [
+            target.scrollLeft + e.clientX - width / 2,
+            target.scrollTop + e.clientY - height / 2,
+          ],
           size: [width, height],
-          iframe: dropText,
+          iframe: `https://www.youtube.com/embed/${match[1]}`,
+          border: "5px solid #F0F0F020",
         });
       } else {
-        window.alert(`Unsupported text dropped: ${dropText}`);
+        const style = "margin:0;padding:0;";
+        const html = await encodeBase64Async(
+          new TextEncoder().encode(`<body style='${style}'>${dropText}</body>`)
+        );
+        const width = 100;
+        const height = 20;
+        const target = e.target as HTMLDivElement;
+        updateRegion(`text${rand4()}`, {
+          type: "background",
+          position: [
+            target.scrollLeft + e.clientX - width / 2,
+            target.scrollTop + e.clientY - height / 2,
+          ],
+          size: [width, height],
+          iframe: `data:text/html;base64,${html}`,
+          border: "5px solid #F0F0F040",
+          movable: true,
+        });
       }
     };
 

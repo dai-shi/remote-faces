@@ -240,7 +240,7 @@ const office3: Record<string, RegionData> = {
     border: "#2C2F33 solid 3px",
     iframe: "",
   },
-  movable1: {
+  movable: {
     type: "background",
     position: [244, 109],
     size: [36, 36],
@@ -249,6 +249,7 @@ const office3: Record<string, RegionData> = {
       "url(https://user-images.githubusercontent.com/17561803/120613305-12d23480-c491-11eb-91ba-d338c3ba631e.png) center center / contain no-repeat",
     border: "",
     iframe: "",
+    movable: true,
   },
 };
 
@@ -311,6 +312,7 @@ const office4: Record<string, RegionData> = {
       "url(https://user-images.githubusercontent.com/52230939/126919528-eac984b0-ce64-4ab1-8973-c429e9a10052.png) center center / contain no-repeat",
     border: "",
     iframe: "",
+    movable: true,
   },
   BeachChair2: {
     type: "background",
@@ -321,6 +323,7 @@ const office4: Record<string, RegionData> = {
       "url(https://user-images.githubusercontent.com/52230939/126919528-eac984b0-ce64-4ab1-8973-c429e9a10052.png) center center / contain no-repeat",
     border: "",
     iframe: "",
+    movable: true,
   },
   ChairA: {
     type: "background",
@@ -331,6 +334,7 @@ const office4: Record<string, RegionData> = {
       "url(https://user-images.githubusercontent.com/52230939/126919531-82d14682-c684-4da7-bc83-8ae17861150e.png) center center / contain no-repeat",
     border: "",
     iframe: "",
+    movable: true,
   },
   ChairB: {
     type: "background",
@@ -341,6 +345,7 @@ const office4: Record<string, RegionData> = {
       "url(https://user-images.githubusercontent.com/52230939/126919533-6a09f353-16c2-465d-b09f-ff64b0357418.png) center center / contain no-repeat",
     border: "",
     iframe: "",
+    movable: true,
   },
   ChairC: {
     type: "background",
@@ -351,6 +356,7 @@ const office4: Record<string, RegionData> = {
       "url(https://user-images.githubusercontent.com/52230939/126919534-d4a669f9-c228-4a55-9b2a-df04bd2dd0d1.png) center center / contain no-repeat",
     border: "",
     iframe: "",
+    movable: true,
   },
   Digda: {
     type: "background",
@@ -361,6 +367,7 @@ const office4: Record<string, RegionData> = {
       "url(https://user-images.githubusercontent.com/52230939/126919535-97212807-b151-4937-8e08-b4fdd1f497e7.png) center center / contain no-repeat",
     border: "",
     iframe: "",
+    movable: true,
   },
   Kintone: {
     type: "background",
@@ -371,34 +378,53 @@ const office4: Record<string, RegionData> = {
       "url(https://user-images.githubusercontent.com/52230939/126919536-99b58589-238f-44e9-b2a2-f20a615e730c.png) center center / contain no-repeat",
     border: "",
     iframe: "",
+    movable: true,
   },
-};
-[...Array(100).keys()].forEach((i) => {
-  const x = 430 - 14 * (i % 10);
-  const y = 570 - 14 * Math.floor(i / 10);
-  office4[`block${i}`] = {
+  BlockA: {
     type: "background",
-    position: [x, y],
+    position: [400, 500],
     size: [22, 19],
     zIndex: 0,
-    background: `url(https://user-images.githubusercontent.com/52230939/${
-      [
-        "126926610-244ca224-89b8-4418-b457-5d23ca34d69e",
-        "126926610-244ca224-89b8-4418-b457-5d23ca34d69e",
-        "126926610-244ca224-89b8-4418-b457-5d23ca34d69e",
-        "126926610-244ca224-89b8-4418-b457-5d23ca34d69e",
-        "126926292-dd184ddb-2a78-4720-8b69-2daa6e911f08",
-        "126926292-dd184ddb-2a78-4720-8b69-2daa6e911f08",
-        "126926292-dd184ddb-2a78-4720-8b69-2daa6e911f08",
-        "126926292-dd184ddb-2a78-4720-8b69-2daa6e911f08",
-        "126919530-aeff42a1-a033-4eb1-a395-bc3700b9a54d",
-        "126919529-b82d5f24-71ae-482b-987d-55d68829a490",
-      ][i % 10]
-    }.png) center center / contain no-repeat`,
+    background:
+      "url(https://user-images.githubusercontent.com/52230939/126926610-244ca224-89b8-4418-b457-5d23ca34d69e.png) center center / contain no-repeat",
     border: "",
     iframe: "",
-  };
-});
+    movable: true,
+  },
+  BlockB: {
+    type: "background",
+    position: [430, 500],
+    size: [22, 19],
+    zIndex: 0,
+    background:
+      "url(https://user-images.githubusercontent.com/52230939/126926292-dd184ddb-2a78-4720-8b69-2daa6e911f08.png) center center / contain no-repeat",
+    border: "",
+    iframe: "",
+    movable: true,
+  },
+  BlockC: {
+    type: "background",
+    position: [460, 500],
+    size: [22, 19],
+    zIndex: 0,
+    background:
+      "url(https://user-images.githubusercontent.com/52230939/126919530-aeff42a1-a033-4eb1-a395-bc3700b9a54d.png) center center / contain no-repeat",
+    border: "",
+    iframe: "",
+    movable: true,
+  },
+  BlockD: {
+    type: "background",
+    position: [490, 500],
+    size: [22, 19],
+    zIndex: 0,
+    background:
+      "url(https://user-images.githubusercontent.com/52230939/126919529-b82d5f24-71ae-482b-987d-55d68829a490.png) center center / contain no-repeat",
+    border: "",
+    iframe: "",
+    movable: true,
+  },
+};
 
 export const roomPresets: Record<string, Record<string, RegionData>> = {
   intro,

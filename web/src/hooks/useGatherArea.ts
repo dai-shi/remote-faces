@@ -37,6 +37,7 @@ export type RegionData = {
   background?: string;
   border?: string;
   iframe?: string;
+  movable?: boolean;
 };
 
 export const isRegionData = (x: unknown): x is RegionData => {
