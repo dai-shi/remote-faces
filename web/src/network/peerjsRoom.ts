@@ -103,7 +103,7 @@ export const createRoom: CreateRoom = async (
           setTimeout(() => {
             if (peer.disconnected && !peer.destroyed && peer === myPeer) {
               console.log("reconnect failed, re-initializing");
-              reInitMyPeer()
+              reInitMyPeer();
             }
           }, 60 * 1000);
         }
