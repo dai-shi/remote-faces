@@ -31,7 +31,7 @@ so that we can discuss about it.
 
 ### Running in CodeSandbox
 
-https://codesandbox.io/s/github/dai-shi/remote-faces/tree/master/web
+https://codesandbox.io/s/github/dai-shi/remote-faces/tree/main/web
 
 (You could even fork and commit in CodeSandbox.)
 
