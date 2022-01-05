@@ -1,11 +1,11 @@
 {
   "files": {
     "main.css": "./static/css/main.7c65b7e3.css",
-    "main.js": "./static/js/main.36a288c6.js",
+    "main.js": "./static/js/main.c1752d2b.js",
     "static/css/747.608c336b.chunk.css": "./static/css/747.608c336b.chunk.css",
     "static/js/747.062030d0.chunk.js": "./static/js/747.062030d0.chunk.js",
-    "static/css/228.651fbd7d.chunk.css": "./static/css/228.651fbd7d.chunk.css",
-    "static/js/228.595cfb4d.chunk.js": "./static/js/228.595cfb4d.chunk.js",
+    "static/css/235.e836c541.chunk.css": "./static/css/235.e836c541.chunk.css",
+    "static/js/235.7e5a7f2e.chunk.js": "./static/js/235.7e5a7f2e.chunk.js",
     "static/css/378.a52ea961.chunk.css": "./static/css/378.a52ea961.chunk.css",
     "static/js/378.cfe6d562.chunk.js": "./static/js/378.cfe6d562.chunk.js",
     "static/css/98.afacea06.chunk.css": "./static/css/98.afacea06.chunk.css",
@@ -23,11 +23,11 @@
     "static/js/326.fc92be0f.chunk.js": "./static/js/326.fc92be0f.chunk.js",
     "index.html": "./index.html",
     "main.7c65b7e3.css.map": "./static/css/main.7c65b7e3.css.map",
-    "main.36a288c6.js.map": "./static/js/main.36a288c6.js.map",
+    "main.c1752d2b.js.map": "./static/js/main.c1752d2b.js.map",
     "747.608c336b.chunk.css.map": "./static/css/747.608c336b.chunk.css.map",
     "747.062030d0.chunk.js.map": "./static/js/747.062030d0.chunk.js.map",
-    "228.651fbd7d.chunk.css.map": "./static/css/228.651fbd7d.chunk.css.map",
-    "228.595cfb4d.chunk.js.map": "./static/js/228.595cfb4d.chunk.js.map",
+    "235.e836c541.chunk.css.map": "./static/css/235.e836c541.chunk.css.map",
+    "235.7e5a7f2e.chunk.js.map": "./static/js/235.7e5a7f2e.chunk.js.map",
     "378.a52ea961.chunk.css.map": "./static/css/378.a52ea961.chunk.css.map",
     "378.cfe6d562.chunk.js.map": "./static/js/378.cfe6d562.chunk.js.map",
     "98.afacea06.chunk.css.map": "./static/css/98.afacea06.chunk.css.map",
@@ -46,6 +46,6 @@
   },
   "entrypoints": [
     "static/css/main.7c65b7e3.css",
-    "static/js/main.36a288c6.js"
+    "static/js/main.c1752d2b.js"
   ]
 }
