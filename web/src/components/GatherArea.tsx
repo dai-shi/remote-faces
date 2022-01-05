@@ -1,6 +1,7 @@
 /* eslint jsx-a11y/no-static-element-interactions: off */
 
 import {
+  ClipboardEvent,
   DragEvent,
   Suspense,
   lazy,
@@ -387,6 +388,9 @@ export const GatherArea = memo<{
 
     const onMouseDragRef = useRef<OnMouseMove>();
     const registerOnMouseDrag = useCallback((onMouseMove?: OnMouseMove) => {
+      if (onMouseDragRef.current) {
+        onMouseDragRef.current("ended");
+      }
       onMouseDragRef.current = onMouseMove;
     }, []);
 
@@ -412,43 +416,46 @@ export const GatherArea = memo<{
       null | "region-editor" | "link-opener" | "setting"
     >(null);
 
-    const handleDrop = async (e: DragEvent) => {
+    const handlePasteOrDrop = async (e: ClipboardEvent | DragEvent) => {
       e.preventDefault();
-      const dropText = e.dataTransfer.getData("text");
-      if (/^http.*\.(png|jpg|jpeg|gif|svg)/.test(dropText)) {
-        const width = 50;
-        const height = 50;
-        const target = e.currentTarget;
+      const dataTransfer =
+        "clipboardData" in e ? e.clipboardData : e.dataTransfer;
+      const text = dataTransfer.getData("text");
+      const target = e.currentTarget || (e.target as HTMLDivElement);
+      const clientX = "clientX" in e ? e.clientX : target.clientWidth / 2;
+      const clientY = "clientY" in e ? e.clientY : target.clientHeight / 2;
+      if (/^http.*\.(png|jpg|jpeg|gif|svg)$/.test(text)) {
+        const width = 36;
+        const height = 36;
         updateRegion(`img${rand4()}`, {
           type: "default",
           position: [
-            target.scrollLeft + e.clientX - width / 2,
-            target.scrollTop + e.clientY - height / 2,
+            target.scrollLeft + clientX - width / 2,
+            target.scrollTop + clientY - height / 2,
           ],
           size: [width, height],
-          background: `url(${dropText}) center center / contain no-repeat`,
+          background: `url(${text}) center center / contain no-repeat`,
           movable: true,
         });
-      } else if (/^https:\/\/www.youtube.com\//.test(dropText)) {
-        const match = /([-0-9a-zA-Z]+)$/.exec(dropText);
+      } else if (/^https:\/\/www.youtube.com\//.test(text)) {
+        const match = /([-0-9a-zA-Z]+)$/.exec(text);
         if (!match) {
-          window.alert(`Invalid YouTube URL: ${dropText}`);
+          window.alert(`Invalid YouTube URL: ${text}`);
           return;
         }
-        const width = 100;
-        const height = 100;
-        const target = e.currentTarget;
+        const width = 160;
+        const height = 120;
         updateRegion(`mov${rand4()}`, {
           type: "default",
           position: [
-            target.scrollLeft + e.clientX - width / 2,
-            target.scrollTop + e.clientY - height / 2,
+            target.scrollLeft + clientX - width / 2,
+            target.scrollTop + clientY - height / 2,
           ],
           size: [width, height],
           iframe: `https://www.youtube.com/embed/${match[1]}`,
           border: "5px solid #F0F0F020",
         });
-      } else if (dropText) {
+      } else if (text) {
         const html = await encodeBase64Async(
           new TextEncoder().encode(`
             <!DOCTYPE html><html>
@@ -461,17 +468,16 @@ export const GatherArea = memo<{
                 }
               </style>
             </head>
-            <body>${dropText}</body>
+            <body>${text}</body>
             </html>`)
         );
         const width = 80;
         const height = 15;
-        const target = e.target as HTMLDivElement;
         updateRegion(`text${rand4()}`, {
           type: "default",
           position: [
-            target.scrollLeft + e.clientX - width / 2,
-            target.scrollTop + e.clientY - height / 2,
+            target.scrollLeft + clientX - width / 2,
+            target.scrollTop + clientY - height / 2,
           ],
           size: [width, height],
           iframe: `data:text/html;base64,${html}`,
@@ -479,7 +485,7 @@ export const GatherArea = memo<{
           movable: true,
         });
       } else {
-        window.alert("Unsupported object dropped");
+        window.alert("Unsupported object pasted or dropped");
       }
     };
 
@@ -487,10 +493,9 @@ export const GatherArea = memo<{
       <div className="GatherArea-container">
         <div
           className="GatherArea-body"
-          onDragOver={(e) => {
-            e.preventDefault();
-          }}
-          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handlePasteOrDrop}
+          onPaste={handlePasteOrDrop}
           onMouseDown={() => {
             setSelectedRegionId(undefined);
           }}
@@ -500,9 +505,6 @@ export const GatherArea = memo<{
             }
           }}
           onMouseUp={() => {
-            if (onMouseDragRef.current) {
-              onMouseDragRef.current("ended");
-            }
             registerOnMouseDrag();
           }}
         >
