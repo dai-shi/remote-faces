@@ -118,8 +118,7 @@ const Region = memo<{
             setSelectedRegionId(id);
             return;
           }
-          // TODO more explicit movable flag
-          if (data.type !== "background") {
+          if (!data.movable) {
             return;
           }
           e.preventDefault();
