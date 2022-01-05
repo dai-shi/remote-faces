@@ -1,4 +1,6 @@
 import { memo, useState } from "react";
+
+import "./MySetting.css";
 import { setConfigAvatar } from "../states/singleRoom";
 
 export const MySetting = memo<{
@@ -29,7 +31,7 @@ export const MySetting = memo<{
   };
 
   return (
-    <div className="RegionEditor-container">
+    <div className="MySetting-container">
       <h3>Setting</h3>
       <label>
         Camera :{" "}
