@@ -41,7 +41,7 @@ const createGoBoard = (i: number, x: number, y: number) => ({
 
 const intro: Record<string, RegionData> = {
   background: {
-    type: "background",
+    type: "default",
     position: [36, 36],
     size: [800, 500],
     zIndex: -100,
@@ -108,7 +108,7 @@ const igo: Record<string, RegionData> = {
 
 const office1: Record<string, RegionData> = {
   background: {
-    type: "background",
+    type: "default",
     position: [0, 0],
     size: [1021, 676],
     zIndex: -100,
@@ -160,7 +160,7 @@ const office1: Record<string, RegionData> = {
 
 const office2: Record<string, RegionData> = {
   background: {
-    type: "background",
+    type: "default",
     position: [0, 0],
     size: [1120, 740],
     zIndex: -100,
@@ -198,7 +198,7 @@ const office2: Record<string, RegionData> = {
 
 const office3: Record<string, RegionData> = {
   background: {
-    type: "background",
+    type: "default",
     position: [0, 0],
     size: [1120, 740],
     zIndex: -100,
@@ -241,7 +241,7 @@ const office3: Record<string, RegionData> = {
     iframe: "",
   },
   movable: {
-    type: "background",
+    type: "default",
     position: [244, 109],
     size: [36, 36],
     zIndex: 0,
@@ -255,7 +255,7 @@ const office3: Record<string, RegionData> = {
 
 const office4: Record<string, RegionData> = {
   background: {
-    type: "background",
+    type: "default",
     position: [0, 0],
     size: [1120, 740],
     zIndex: -100,
@@ -277,7 +277,7 @@ const office4: Record<string, RegionData> = {
   ...createMeeting(2, 160, 300, 250, 140),
   ...createMeeting(3, 830, 190, 140, 70),
   movie: {
-    type: "background",
+    type: "default",
     position: [763, 289],
     size: [109, 63],
     zIndex: 0,
@@ -304,7 +304,7 @@ const office4: Record<string, RegionData> = {
     iframe: "",
   },
   BeachChair: {
-    type: "background",
+    type: "default",
     position: [959, 422],
     size: [35, 63],
     zIndex: 0,
@@ -315,7 +315,7 @@ const office4: Record<string, RegionData> = {
     movable: true,
   },
   BeachChair2: {
-    type: "background",
+    type: "default",
     position: [1068, 423],
     size: [35, 63],
     zIndex: 0,
@@ -326,7 +326,7 @@ const office4: Record<string, RegionData> = {
     movable: true,
   },
   ChairA: {
-    type: "background",
+    type: "default",
     position: [367, 317],
     size: [35, 48],
     zIndex: 0,
@@ -337,7 +337,7 @@ const office4: Record<string, RegionData> = {
     movable: true,
   },
   ChairB: {
-    type: "background",
+    type: "default",
     position: [174, 330],
     size: [35, 48],
     zIndex: 0,
@@ -348,7 +348,7 @@ const office4: Record<string, RegionData> = {
     movable: true,
   },
   ChairC: {
-    type: "background",
+    type: "default",
     position: [345, 374],
     size: [35, 48],
     zIndex: 0,
@@ -359,7 +359,7 @@ const office4: Record<string, RegionData> = {
     movable: true,
   },
   Digda: {
-    type: "background",
+    type: "default",
     position: [119, 409],
     size: [26, 22],
     zIndex: 0,
@@ -370,7 +370,7 @@ const office4: Record<string, RegionData> = {
     movable: true,
   },
   Kintone: {
-    type: "background",
+    type: "default",
     position: [907, 110],
     size: [46, 28],
     zIndex: 0,
@@ -381,7 +381,7 @@ const office4: Record<string, RegionData> = {
     movable: true,
   },
   BlockA: {
-    type: "background",
+    type: "default",
     position: [400, 500],
     size: [22, 19],
     zIndex: 0,
@@ -392,7 +392,7 @@ const office4: Record<string, RegionData> = {
     movable: true,
   },
   BlockB: {
-    type: "background",
+    type: "default",
     position: [430, 500],
     size: [22, 19],
     zIndex: 0,
@@ -403,7 +403,7 @@ const office4: Record<string, RegionData> = {
     movable: true,
   },
   BlockC: {
-    type: "background",
+    type: "default",
     position: [460, 500],
     size: [22, 19],
     zIndex: 0,
@@ -414,7 +414,7 @@ const office4: Record<string, RegionData> = {
     movable: true,
   },
   BlockD: {
-    type: "background",
+    type: "default",
     position: [490, 500],
     size: [22, 19],
     zIndex: 0,

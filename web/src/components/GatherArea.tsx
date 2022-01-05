@@ -420,16 +420,17 @@ export const GatherArea = memo<{
         const height = 50;
         const target = e.currentTarget;
         updateRegion(`img${rand4()}`, {
-          type: "background",
+          type: "default",
           position: [
             target.scrollLeft + e.clientX - width / 2,
             target.scrollTop + e.clientY - height / 2,
           ],
           size: [width, height],
           background: `url(${dropText}) center center / contain no-repeat`,
+          movable: true,
         });
       } else if (/^https:\/\/www.youtube.com\//.test(dropText)) {
-        const match = /(\w+)$/.exec(dropText);
+        const match = /([-0-9a-zA-Z]+)$/.exec(dropText);
         if (!match) {
           window.alert(`Invalid YouTube URL: ${dropText}`);
           return;
@@ -438,7 +439,7 @@ export const GatherArea = memo<{
         const height = 100;
         const target = e.currentTarget;
         updateRegion(`mov${rand4()}`, {
-          type: "background",
+          type: "default",
           position: [
             target.scrollLeft + e.clientX - width / 2,
             target.scrollTop + e.clientY - height / 2,
@@ -447,16 +448,27 @@ export const GatherArea = memo<{
           iframe: `https://www.youtube.com/embed/${match[1]}`,
           border: "5px solid #F0F0F020",
         });
-      } else {
-        const style = "margin:0;padding:0;";
+      } else if (dropText) {
         const html = await encodeBase64Async(
-          new TextEncoder().encode(`<body style='${style}'>${dropText}</body>`)
+          new TextEncoder().encode(`
+            <!DOCTYPE html><html>
+            <head>
+              <meta charset="utf-8"/>
+              <style>
+                html, body {
+                  margin: 0; padding: 0;
+                  font: 0.5em sans-serif;
+                }
+              </style>
+            </head>
+            <body>${dropText}</body>
+            </html>`)
         );
-        const width = 100;
-        const height = 20;
+        const width = 80;
+        const height = 15;
         const target = e.target as HTMLDivElement;
         updateRegion(`text${rand4()}`, {
-          type: "background",
+          type: "default",
           position: [
             target.scrollLeft + e.clientX - width / 2,
             target.scrollTop + e.clientY - height / 2,
@@ -466,6 +478,8 @@ export const GatherArea = memo<{
           border: "5px solid #F0F0F040",
           movable: true,
         });
+      } else {
+        window.alert("Unsupported object dropped");
       }
     };
 
