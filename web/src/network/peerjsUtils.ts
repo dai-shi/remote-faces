@@ -16,9 +16,6 @@ export const generatePeerId = (roomId: string, peerIndex: number) =>
 export const getPeerIndexFromPeerId = (peerId: string) =>
   Number(peerId.split(" ")[1]);
 
-export const getPeerIndexFromConn = (conn: Peer.DataConnection) =>
-  getPeerIndexFromPeerId(conn.peer);
-
 export const createConnectionMap = () => {
   type Value = {
     conn: Peer.DataConnection;
@@ -69,8 +66,6 @@ export const createConnectionMap = () => {
   const isConnected = (value?: Value) =>
     !!(value && value.connected && value.conn.open);
 
-  const isConnectedPeerId = (peerId: string) => isConnected(map.get(peerId));
-
   const isConnectedConn = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
     if (value && value.conn === conn) {
@@ -89,12 +84,6 @@ export const createConnectionMap = () => {
   const getUserId = (conn: Peer.DataConnection) => {
     const value = map.get(conn.peer);
     return value && value.userId;
-  };
-
-  const hasFreshConn = (peerId: string) => {
-    const value = map.get(peerId);
-    if (!value) return false;
-    return value.createdAt > Date.now() - 10 * 60 * 1000; // 10min
   };
 
   const getConn = (peerId: string) => {
@@ -203,11 +192,9 @@ export const createConnectionMap = () => {
     getAcceptingMediaTypes,
     addConn,
     markConnected,
-    isConnectedPeerId,
     isConnectedConn,
     setUserId,
     getUserId,
-    hasFreshConn,
     getConn,
     delConn,
     getConnectedPeerIds,

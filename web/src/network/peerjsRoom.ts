@@ -9,7 +9,6 @@ import {
   isValidPeerId,
   generatePeerId,
   getPeerIndexFromPeerId,
-  getPeerIndexFromConn,
   createConnectionMap,
 } from "./peerjsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
@@ -38,32 +37,32 @@ export const createRoom: CreateRoom = async (
   // if (process.env.NODE_ENV !== "production") {
   (window as any).getMyPeer = () => myPeer;
   // }
-  const initMyPeer = (peerIndex = MIN_PEER_INDEX) => {
+  const initMyPeer = (index = MIN_PEER_INDEX) => {
     if (disposed) return;
     connMap.clearAll();
-    updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex });
-    const id = generatePeerId(roomId, peerIndex);
+    updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: index });
+    const id = generatePeerId(roomId, index);
     const peer = new Peer(id, getPeerJsConfigFromUrl());
     peer.on("open", () => {
       myPeer = peer;
-      updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
+      console.log("myPeer initialized", index);
       setTimeout(connectSeedPeers, 10);
     });
     peer.on("error", (err) => {
       if (err.type === "unavailable-id") {
         peer.destroy();
-        if (peerIndex === MAX_PEER_INDEX) {
+        if (index === MAX_PEER_INDEX) {
           throw new Error("max peer index reached");
         }
         setTimeout(() => {
-          initMyPeer(peerIndex + 1);
+          initMyPeer(index + 1);
         }, 100);
       } else if (err.type === "peer-unavailable") {
         // ignore
       } else if (err.type === "disconnected") {
-        console.log("initMyPeer disconnected error", peerIndex, err);
+        console.log("initMyPeer disconnected error", index, err);
       } else if (err.type === "network") {
-        console.log("initMyPeer network error", peerIndex, err);
+        console.log("initMyPeer network error", index, err);
         setTimeout(() => {
           if (!peer.destroyed && myPeer === null) {
             peer.destroy();
@@ -71,10 +70,10 @@ export const createRoom: CreateRoom = async (
           }
         }, 10 * 1000);
       } else if (err.type === "server-error") {
-        console.log("initMyPeer server error", peerIndex, err);
+        console.log("initMyPeer server error", index, err);
         updateNetworkStatus({ type: "SERVER_ERROR" });
       } else {
-        console.error("initMyPeer unknown error", peerIndex, err.type, err);
+        console.error("initMyPeer unknown error", index, err.type, err);
         updateNetworkStatus({ type: "UNKNOWN_ERROR", err });
       }
     });
@@ -91,22 +90,20 @@ export const createRoom: CreateRoom = async (
       }
       updateNetworkStatus({
         type: "NEW_CONNECTION",
-        peerIndex: getPeerIndexFromConn(conn),
+        peerIndex: getPeerIndexFromPeerId(conn.peer),
       });
       initConnection(conn);
     });
     peer.on("disconnected", () => {
-      console.log("initMyPeer disconnected", peerIndex);
+      console.log("initMyPeer disconnected", index);
       setTimeout(() => {
         if (!peer.destroyed && peer === myPeer) {
-          updateNetworkStatus({ type: "RECONNECTING", peerIndex });
+          updateNetworkStatus({ type: "RECONNECTING", peerIndex: index });
           peer.reconnect();
           setTimeout(() => {
             if (peer.disconnected && !peer.destroyed && peer === myPeer) {
               console.log("reconnect failed, re-initializing");
-              peer.destroy();
-              myPeer = null;
-              initMyPeer();
+              reInitMyPeer()
             }
           }, 60 * 1000);
         }
@@ -133,29 +130,18 @@ export const createRoom: CreateRoom = async (
     if (!myPeer) return;
     const myPeerIndex = getPeerIndexFromPeerId(myPeer.id);
     if (myPeerIndex > MIN_PEER_INDEX) {
+      updateNetworkStatus({ type: "CONNECTING_SEED_PEERS" });
       for (let i = MIN_PEER_INDEX; i < myPeerIndex; i += 1) {
         const seedId = generatePeerId(roomId, i);
         connectPeer(seedId);
       }
-    } else {
-      const loop = (index: number) => {
-        if (index > MAX_PEER_INDEX) return;
-        if (connMap.getConnectedPeerIds().length > 0) return;
-        const seedId = generatePeerId(roomId, index);
-        connectPeer(seedId);
-        setTimeout(() => {
-          loop(index + 1);
-        }, 1000);
-      };
-      loop(myPeerIndex + 1);
     }
   };
 
   const connectPeer = (id: string) => {
     if (disposed || !myPeer) return;
     if (myPeer.id === id || myPeer.disconnected) return;
-    if (connMap.isConnectedPeerId(id)) return;
-    if (connMap.hasFreshConn(id)) return;
+    if (connMap.getConn(id)) return;
     console.log("connectPeer", id);
     const conn = myPeer.connect(id);
     initConnection(conn);
@@ -242,7 +228,11 @@ export const createRoom: CreateRoom = async (
   const handlePayloadPeers = (peers: unknown) => {
     if (Array.isArray(peers)) {
       peers.forEach((peer) => {
-        if (isValidPeerId(roomId, peer)) {
+        if (
+          isValidPeerId(roomId, peer) &&
+          myPeer &&
+          getPeerIndexFromPeerId(peer) < getPeerIndexFromPeerId(myPeer.id)
+        ) {
           connectPeer(peer);
         }
       });
@@ -254,7 +244,7 @@ export const createRoom: CreateRoom = async (
     if (connUserId) {
       const info: PeerInfo = {
         userId: connUserId,
-        peerIndex: getPeerIndexFromConn(conn),
+        peerIndex: getPeerIndexFromPeerId(conn.peer),
         mediaTypes: connMap.getAcceptingMediaTypes(conn),
       };
       try {
@@ -298,33 +288,34 @@ export const createRoom: CreateRoom = async (
   };
 
   const initConnection = (conn: Peer.DataConnection) => {
-    if (connMap.isConnectedPeerId(conn.peer)) {
-      console.info("dataConnection already in map, overriding", conn.peer);
-    }
+    const peerIndex = getPeerIndexFromPeerId(conn.peer);
     connMap.addConn(conn);
     let timer: NodeJS.Timeout;
-    const scheduleClose = () => {
+    const scheduleClose = (wait: number) => {
       clearTimeout(timer);
       timer = setTimeout(() => {
-        const peerIndex = getPeerIndexFromConn(conn);
-        console.log("dataConnection inactive for 5min", peerIndex, conn.open);
-        if (!conn.open) {
-          connMap.delConn(conn);
-        }
+        console.log(
+          "Connection inactive for",
+          wait,
+          "msec:",
+          peerIndex,
+          conn.open
+        );
         conn.close();
-      }, 5 * 60 * 1000); // 5 minutes
+        connMap.delConn(conn);
+        reconnectPeer(conn.peer);
+      }, wait);
     };
-    scheduleClose();
+    scheduleClose(10 * 1000); // 10sec
     conn.on("open", () => {
-      scheduleClose();
+      scheduleClose(30 * 1000); // 30sec
       connMap.markConnected(conn);
-      const peerIndex = getPeerIndexFromConn(conn);
       console.log("dataConnection open", peerIndex);
       showConnectedStatus();
       notifyNewPeer(peerIndex);
     });
     conn.on("data", (buf: ArrayBuffer) => {
-      scheduleClose();
+      scheduleClose(3 * 60 * 1000); // 3min
       connMap.markConnected(conn);
       handlePayload(conn, buf);
     });
@@ -362,7 +353,7 @@ export const createRoom: CreateRoom = async (
       if (connUserId) {
         const info: PeerInfo = {
           userId: connUserId,
-          peerIndex: getPeerIndexFromPeerId(conn.peer),
+          peerIndex,
           mediaTypes: connMap.getAcceptingMediaTypes(conn),
         };
         receiveTrack(
@@ -374,14 +365,25 @@ export const createRoom: CreateRoom = async (
     });
     conn.on("close", () => {
       clearTimeout(timer);
-      if (!connMap.delConn(conn)) return;
-      const peerIndex = getPeerIndexFromConn(conn);
+      connMap.delConn(conn);
       updateNetworkStatus({ type: "CONNECTION_CLOSED", peerIndex });
       showConnectedStatus();
-      if (connMap.getConnectedPeerIds().length === 0) {
+      if (
+        connMap.getNotConnectedPeerIds().length >=
+        connMap.getConnectedPeerIds().length
+      ) {
         reInitMyPeer();
+      } else {
+        reconnectPeer(conn.peer);
       }
     });
+  };
+
+  const reconnectPeer = (id: string) => {
+    if (!myPeer) return;
+    if (getPeerIndexFromPeerId(id) < getPeerIndexFromPeerId(myPeer.id)) {
+      connectPeer(id);
+    }
   };
 
   const reInitMyPeer = () => {
