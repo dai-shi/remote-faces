@@ -306,7 +306,7 @@ export const createRoom: CreateRoom = async (
         reconnectPeer(conn.peer);
       }, wait);
     };
-    scheduleClose(10 * 1000); // 10sec
+    scheduleClose(20 * 1000); // 20sec
     conn.on("open", () => {
       scheduleClose(30 * 1000); // 30sec
       connMap.markConnected(conn);

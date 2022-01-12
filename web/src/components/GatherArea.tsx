@@ -114,7 +114,7 @@ const Region = memo<{
           border: data.border,
         }}
         onMouseDown={(e) => {
-          if (e.metaKey) {
+          if (e.metaKey || e.ctrlKey) {
             e.preventDefault();
             e.stopPropagation();
             setSelectedRegionId(id);
