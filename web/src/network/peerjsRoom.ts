@@ -308,11 +308,9 @@ export const createRoom: CreateRoom = async (
     };
     const initiatingConnection =
       myPeer && peerIndex < getPeerIndexFromPeerId(myPeer.id);
-    scheduleClose(
-      initiatingConnection
-        ? 20 * 1000 // 20sec
-        : 50 * 1000 // 50sec
-    );
+    if (initiatingConnection) {
+      scheduleClose(90 * 1000); // 90sec
+    }
     conn.on("open", () => {
       scheduleClose(30 * 1000); // 30sec
       connMap.markConnected(conn);
