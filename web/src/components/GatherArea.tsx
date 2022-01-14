@@ -464,7 +464,7 @@ export const GatherArea = memo<{
               <style>
                 html, body {
                   margin: 0; padding: 0;
-                  font: 0.5em sans-serif;
+                  font: 0.5em -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
                 }
               </style>
             </head>

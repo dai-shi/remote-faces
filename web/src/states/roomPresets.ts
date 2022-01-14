@@ -181,9 +181,6 @@ const office2: Record<string, RegionData> = {
   ...createMeeting(1, 220, 180, 240, 180),
   ...createMeeting(2, 863, 230, 250, 230),
   ...createMeeting(3, 650, 47, 160, 160),
-  ...createMeeting(4, 64, 315, 100, 45),
-  ...createMeeting(5, 64, 388, 100, 45),
-  ...createMeeting(6, 64, 457, 100, 45),
   share: {
     type: "media",
     position: [600, 480],
@@ -219,9 +216,6 @@ const office3: Record<string, RegionData> = {
   ...createMeeting(1, 575, 295, 200, 130),
   ...createMeeting(2, 516, 555, 200, 180),
   ...createMeeting(3, 441, 373, 100, 100),
-  ...createMeeting(4, 684, 17, 100, 45),
-  ...createMeeting(5, 684, 83, 100, 45),
-  ...createMeeting(6, 684, 149, 100, 45),
   share: {
     type: "media",
     position: [763, 643],
