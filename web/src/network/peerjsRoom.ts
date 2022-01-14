@@ -42,7 +42,7 @@ export const createRoom: CreateRoom = async (
     connMap.clearAll();
     updateNetworkStatus({ type: "INITIALIZING_PEER", peerIndex: index });
     const id = generatePeerId(roomId, index);
-    const peer = new Peer(id, getPeerJsConfigFromUrl());
+    const peer = new Peer(id, { ...getPeerJsConfigFromUrl(), debug: 3 });
     peer.on("open", () => {
       myPeer = peer;
       console.log("myPeer initialized", index);
@@ -309,7 +309,7 @@ export const createRoom: CreateRoom = async (
     const initiatingConnection =
       myPeer && peerIndex < getPeerIndexFromPeerId(myPeer.id);
     if (initiatingConnection) {
-      scheduleClose(90 * 1000); // 90sec
+      scheduleClose(45 * 1000); // 45sec
     }
     conn.on("open", () => {
       scheduleClose(30 * 1000); // 30sec
