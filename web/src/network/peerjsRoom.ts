@@ -29,7 +29,7 @@ export const createRoom: CreateRoom = async (
   // if (process.env.NODE_ENV !== "production") {
   (window as any).myConnMap = connMap;
   // }
-  let mediaTypes: string[] = [];
+  let mediaTypes: readonly string[] = [];
 
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
@@ -399,7 +399,7 @@ export const createRoom: CreateRoom = async (
     initMyPeer();
   };
 
-  const acceptMediaTypes = (mTypes: string[]) => {
+  const acceptMediaTypes = (mTypes: readonly string[]) => {
     if (disposed) return;
     if (mTypes.length !== mediaTypes.length) {
       connMap.forEachConnectedConns((conn) => {
