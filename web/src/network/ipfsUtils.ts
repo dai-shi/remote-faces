@@ -19,9 +19,9 @@ const DEFAULT_CONFIG = {
   iceServers: [
     { urls: "stun:stun.l.google.com:19302" },
     {
-      urls: "turn:0.peerjs.com:3478",
-      username: "peerjs",
-      credential: "peerjsp",
+      urls: "turn:openrelay.metered.ca:80",
+      username: "openrelayproject",
+      credential: "openrelayproject",
     },
   ],
   sdpSemantics: "unified-plan",
