@@ -28,9 +28,9 @@ export const createRoom: CreateRoom = async (
 ) => {
   let disposed = false;
   const connMap = createConnectionMap();
-  if (process.env.NODE_ENV !== "production") {
-    (window as any).myConnMap = connMap;
-  }
+  // if (process.env.NODE_ENV !== "production") {
+  (window as any).myConnMap = connMap;
+  // }
   let mediaTypes: readonly string[] = [];
 
   const roomTopic = roomId.slice(0, ROOM_ID_PREFIX_LEN);
@@ -65,16 +65,16 @@ export const createRoom: CreateRoom = async (
       });
     }
   });
-  if (process.env.NODE_ENV !== "production") {
-    (window as any).myIpfs = myIpfs;
-  }
+  // if (process.env.NODE_ENV !== "production") {
+  (window as any).myIpfs = myIpfs;
+  // }
 
   const parsePayload = async (encrypted: ArrayBuffer): Promise<unknown> => {
     try {
       const str = await decryptStringFromChunks(encrypted, cryptoKey);
       if (str === null) return undefined;
       const payload = JSON.parse(str);
-      console.log("decrypted payload", payload);
+      // console.log("decrypted payload", payload);
       return payload;
     } catch (e) {
       console.info("Error in parsePayload", e, encrypted);
@@ -82,9 +82,9 @@ export const createRoom: CreateRoom = async (
     }
   };
 
-  const sendPayload = async (topic: string, payload: unknown) => {
+  const sendPayload = async (_topic: string, payload: unknown) => {
     try {
-      console.log("payload to encrypt", topic, payload);
+      // console.log("payload to encrypt", topic, payload);
       for await (const encrypted of encryptStringToChunks(
         JSON.stringify(payload),
         cryptoKey
