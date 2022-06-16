@@ -6533,10 +6533,10 @@ electron@^1.6.11:
     electron-download "^3.0.1"
     extract-zip "^1.0.3"
 
-electron@^16.0.6:
-  version "16.1.1"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-16.1.1.tgz#21101655b15399f962d78ba38ffb569e79cc0a46"
-  integrity sha512-FahVLQhSMXBDgtFoEb+xSaWyPCbhD+CE2UL5ASVyEgql23WdhfwhkqOvPWkgfZo91HJwama/3AWCakybBky1YA==
+electron@^16.2.6:
+  version "16.2.6"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-16.2.6.tgz#2d22077edb5361ab52034bb3b19405380921931b"
+  integrity sha512-FJLnIu318WNh1WigMmWqSidOPwipwym2Qi3Hs/YY6znquztf6ZJuaq/TdJJyHIJHld+znG0hSmq3VbyW5KUr9A==
   dependencies:
     "@electron/get" "^1.13.0"
     "@types/node" "^14.6.2"
