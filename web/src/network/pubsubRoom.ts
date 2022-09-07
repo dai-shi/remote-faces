@@ -96,7 +96,7 @@ export const createRoom: CreateRoom = async (
         JSON.stringify(payload),
         cryptoKey
       )) {
-        await myIpfs.pubsub.publish(topic, Buffer.from(encrypted), {});
+        await myIpfs.pubsub.publish(topic, new Uint8Array(encrypted), {});
       }
     } catch (e) {
       console.error("sendPayload", e);
@@ -133,8 +133,9 @@ export const createRoom: CreateRoom = async (
     mediaTypeDisposeMap.set(mediaType, disposeList);
     const topic = await getTopicForMediaType(roomId, mediaType);
     const audioHandler = async (msg: Message) => {
-      if (msg.from === myPeerId) return;
-      const conn = connMap.getConn(msg.from);
+      if (!("from" in msg)) return;
+      if (msg.from.toString() === myPeerId.toString()) return;
+      const conn = connMap.getConn(msg.from.toString());
       if (!conn) {
         console.warn("conn not ready");
         return;
@@ -202,8 +203,9 @@ export const createRoom: CreateRoom = async (
     mediaTypeDisposeMap.set(mediaType, disposeList);
     const topic = await getTopicForMediaType(roomId, mediaType);
     const videoHandler = async (msg: Message) => {
-      if (msg.from === myPeerId) return;
-      const conn = connMap.getConn(msg.from);
+      if (!("from" in msg)) return;
+      if (msg.from.toString() === myPeerId.toString()) return;
+      const conn = connMap.getConn(msg.from.toString());
       if (!conn) {
         console.warn("conn not ready");
         return;
@@ -319,14 +321,15 @@ export const createRoom: CreateRoom = async (
 
   const pubsubHandler = async (msg: Message) => {
     if (disposed) return;
-    if (msg.from === myPeerId) return;
+    if (!("from" in msg)) return;
+    if (msg.from.toString() === myPeerId.toString()) return;
     const payload = await parsePayload(msg.data);
     if (payload === undefined) return;
     const payloadUserId = getUserIdFromPayload(payload);
-    let conn = connMap.getConn(msg.from);
+    let conn = connMap.getConn(msg.from.toString());
     if (!conn) {
       if (payloadUserId) {
-        conn = initConnection(msg.from, payloadUserId);
+        conn = initConnection(msg.from.toString(), payloadUserId);
       } else {
         console.warn("cannot initialize conn without user id");
       }
@@ -342,7 +345,7 @@ export const createRoom: CreateRoom = async (
     if (disposed) return;
     const peers = await myIpfs.pubsub.peers(roomTopic);
     connMap.forEachConns((conn) => {
-      if (!peers.includes(conn.peer)) {
+      if (!peers.some((peer) => peer.toString() === conn.peer)) {
         connMap.delConn(conn);
         updateNetworkStatus({
           type: "CONNECTION_CLOSED",
@@ -387,7 +390,7 @@ export const createRoom: CreateRoom = async (
         bufList.splice(0, bufList.length),
         cryptoKey
       );
-      myIpfs.pubsub.publish(topic, Buffer.from(encrypted), {});
+      myIpfs.pubsub.publish(topic, new Uint8Array(encrypted), {});
     };
     trackSource.connect(audioEncoder);
     trackDisposeMap.set(track, () => {
@@ -409,7 +412,7 @@ export const createRoom: CreateRoom = async (
           cryptoKey
         )) {
           if (videoDisposed) return;
-          await myIpfs.pubsub.publish(topic, Buffer.from(encrypted), {});
+          await myIpfs.pubsub.publish(topic, new Uint8Array(encrypted), {});
           await sleep(1000);
         }
       } else {

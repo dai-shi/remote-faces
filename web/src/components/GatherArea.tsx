@@ -556,7 +556,8 @@ export const GatherArea = memo<{
             image={myImage}
             position={myAvatar.position}
             setPosition={useCallback(
-              (position) => setMyAvatar((prev) => ({ ...prev, position })),
+              (position: [number, number]) =>
+                setMyAvatar((prev) => ({ ...prev, position })),
               [setMyAvatar]
             )}
             registerOnMouseDrag={registerOnMouseDrag}

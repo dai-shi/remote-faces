@@ -50,7 +50,11 @@ export const createRoom: CreateRoom = async (
     },
   });
   const myPeerId = (await myIpfs.id()).id;
-  const myIpfsPubSubRoom = new IpfsPubSubRoom(myIpfs, roomTopic);
+  const myIpfsPubSubRoom = new IpfsPubSubRoom(
+    // https://github.com/ipfs-shipyard/ipfs-pubsub-room/pull/110
+    (myIpfs as any).libp2p,
+    roomTopic
+  );
   myIpfsPubSubRoom.on("message", (msg) => pubsubHandler(msg));
   myIpfsPubSubRoom.on("peer joined", () => {
     broadcastData(null); // XXX this is not efficient, we don't need to broadcast
@@ -355,14 +359,15 @@ export const createRoom: CreateRoom = async (
 
   const pubsubHandler = async (msg: Message) => {
     if (disposed) return;
-    if (msg.from === myPeerId) return;
+    if (!("from" in msg)) return;
+    if (msg.from.toString() === myPeerId.toString()) return;
     const payload = await parsePayload(msg.data);
     if (payload === undefined) return;
     const payloadUserId = getUserIdFromPayload(payload);
-    let conn = connMap.getConn(msg.from);
+    let conn = connMap.getConn(msg.from.toString());
     if (!conn) {
       if (payloadUserId) {
-        conn = initConnection(msg.from, payloadUserId);
+        conn = initConnection(msg.from.toString(), payloadUserId);
       } else {
         console.warn("cannot initialize conn without user id");
       }
