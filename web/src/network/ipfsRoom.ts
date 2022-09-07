@@ -46,6 +46,7 @@ export const createRoom: CreateRoom = async (
             "/dns4/wrtc-star1.par.dwebops.pub/tcp/443/wss/p2p-webrtc-star/",
         ],
       },
+      Bootstrap: [], // not sure why this helps
     },
   });
   const myPeerId = (await myIpfs.id()).id;
