@@ -1,4 +1,4 @@
-import { ComponentType, ComponentProps } from "react";
+import { ComponentType } from "react";
 import "emoji-mart/css/emoji-mart.css";
 import { BaseEmoji, Picker, getEmojiDataFromNative, Data } from "emoji-mart";
 import data from "emoji-mart/data/all.json";
@@ -8,9 +8,10 @@ export type EmojiDataType = BaseEmoji;
 
 // we do not support custom emojis
 export const EmojiPicker = Picker as ComponentType<
-  | Omit<ComponentProps<typeof Picker>, "custom" | "onSelect">
+  | Omit<Picker, "custom" | "onSelect">
   | {
       onSelect: (emoji: BaseEmoji) => void;
+      style: unknown;
     }
 >;
 

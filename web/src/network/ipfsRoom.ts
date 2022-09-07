@@ -51,6 +51,7 @@ export const createRoom: CreateRoom = async (
   });
   const myPeerId = (await myIpfs.id()).id;
   const myIpfsPubSubRoom = new IpfsPubSubRoom(
+    // https://github.com/ipfs-shipyard/ipfs-pubsub-room/pull/110
     (myIpfs as any).libp2p,
     roomTopic
   );
