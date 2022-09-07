@@ -9562,7 +9562,7 @@ ipfs-bitswap@^11.0.0:
     varint "^6.0.0"
     varint-decoder "^1.0.0"
 
-ipfs-cli@^0.13.0:
+ipfs-cli@^0.13.5:
   version "0.13.5"
   resolved "https://registry.yarnpkg.com/ipfs-cli/-/ipfs-cli-0.13.5.tgz#aa27f64b29853d5e6d0b86fc2461e7728ac2aafc"
   integrity sha512-sUJu+yjb0WW6wihGoTcy7q+mcOUp7VITVviMC9Iuux0pwzcsZ34i2qrJOG4cy+agbZcnWWcePn23/jQK/tlMYA==
@@ -9663,7 +9663,7 @@ ipfs-core-utils@^0.15.1:
     timeout-abort-controller "^3.0.0"
     uint8arrays "^3.0.0"
 
-ipfs-core@^0.15.0, ipfs-core@^0.15.4:
+ipfs-core@^0.15.4:
   version "0.15.4"
   resolved "https://registry.yarnpkg.com/ipfs-core/-/ipfs-core-0.15.4.tgz#e5d033fdcd5c6f653f67383141b55ef454f98605"
   integrity sha512-4wZU76x4GjJGO5gtyHCk+1AjiSnWEUz/jynY5XRcz1bEus0otlUYTpm/B1Rw73Ixvyx1nKSQCSKh7gf36YDf3Q==
@@ -10013,14 +10013,14 @@ ipfs-utils@^9.0.6:
     react-native-fetch-api "^2.0.0"
     stream-to-it "^0.2.2"
 
-ipfs@0.63.0:
-  version "0.63.0"
-  resolved "https://registry.yarnpkg.com/ipfs/-/ipfs-0.63.0.tgz#0b2e9cab988552390539e48116392977549a9cb2"
-  integrity sha512-cE35Of16MLIpfho5j+yA99jOq1n6cAJKXPPGrZxopx4/ePCxSKDQMt1lX8cJ/gQ+WjOM8GAijUa4pirS1xe/qA==
+ipfs@^0.63.5:
+  version "0.63.5"
+  resolved "https://registry.yarnpkg.com/ipfs/-/ipfs-0.63.5.tgz#91a3ced8523969f1cd9268d5c57998d7c85b724d"
+  integrity sha512-Tksul2OBCcohNCLjRimHfbK2philVPj9Cg8abieZxY0WN/PyKirCA+vnicmEFRWYYaUbqu4kORba3+nv4snhIg==
   dependencies:
     "@libp2p/logger" "^1.1.4"
-    ipfs-cli "^0.13.0"
-    ipfs-core "^0.15.0"
+    ipfs-cli "^0.13.5"
+    ipfs-core "^0.15.4"
     semver "^7.3.2"
     update-notifier "^5.0.0"
 
