@@ -1,6 +1,5 @@
-import { create as createUntyped } from "ipfs";
-import type { create as createFn } from "ipfs-core/dist/src/components/index";
-import type { Message } from "@libp2p/interfaces/pubsub";
+import { create } from "ipfs";
+import type { Message } from "ipfs-core/dist/src/components/pubsub";
 import IpfsPubSubRoom from "ipfs-pubsub-room";
 
 import { sleep } from "../utils/sleep";
@@ -15,8 +14,6 @@ import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./ipfsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
-
-const create = createUntyped as typeof createFn;
 
 export const createRoom: CreateRoom = async (
   roomId,
@@ -359,6 +356,7 @@ export const createRoom: CreateRoom = async (
 
   const pubsubHandler = async (msg: Message) => {
     if (disposed) return;
+    if (!("from" in msg)) return;
     if (msg.from.toString() === myPeerId.toString()) return;
     const payload = await parsePayload(msg.data);
     if (payload === undefined) return;

@@ -1,6 +1,5 @@
-import { create as createUntyped } from "ipfs";
-import type { create as createFn } from "ipfs-core/dist/src/components/index";
-import type { Message } from "@libp2p/interfaces/pubsub";
+import { create } from "ipfs";
+import type { Message } from "ipfs-core/dist/src/components/pubsub";
 
 import { sleep } from "../utils/sleep";
 import {
@@ -21,8 +20,6 @@ import {
   videoTrackToImageConverter,
   imageToVideoTrackConverter,
 } from "./trackUtils";
-
-const create = createUntyped as typeof createFn;
 
 const topicsForMediaTypes = new Map<string, string>();
 
@@ -133,6 +130,7 @@ export const createRoom: CreateRoom = async (
     mediaTypeDisposeMap.set(mediaType, disposeList);
     const topic = await getTopicForMediaType(roomId, mediaType);
     const audioHandler = async (msg: Message) => {
+      if (!("from" in msg)) return;
       if (msg.from.toString() === myPeerId.toString()) return;
       const conn = connMap.getConn(msg.from.toString());
       if (!conn) {
@@ -202,6 +200,7 @@ export const createRoom: CreateRoom = async (
     mediaTypeDisposeMap.set(mediaType, disposeList);
     const topic = await getTopicForMediaType(roomId, mediaType);
     const videoHandler = async (msg: Message) => {
+      if (!("from" in msg)) return;
       if (msg.from.toString() === myPeerId.toString()) return;
       const conn = connMap.getConn(msg.from.toString());
       if (!conn) {
@@ -319,6 +318,7 @@ export const createRoom: CreateRoom = async (
 
   const pubsubHandler = async (msg: Message) => {
     if (disposed) return;
+    if (!("from" in msg)) return;
     if (msg.from.toString() === myPeerId.toString()) return;
     const payload = await parsePayload(msg.data);
     if (payload === undefined) return;
@@ -342,7 +342,7 @@ export const createRoom: CreateRoom = async (
     if (disposed) return;
     const peers = await myIpfs.pubsub.peers(roomTopic);
     connMap.forEachConns((conn) => {
-      if (!peers.includes(conn.peer)) {
+      if (!peers.some((peer) => peer.toString() === conn.peer)) {
         connMap.delConn(conn);
         updateNetworkStatus({
           type: "CONNECTION_CLOSED",
