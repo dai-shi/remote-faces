@@ -9243,15 +9243,15 @@ ipfs-http-server@^0.11.3:
   optionalDependencies:
     prom-client "^14.0.1"
 
-ipfs-pubsub-room@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/ipfs-pubsub-room/-/ipfs-pubsub-room-3.0.0.tgz#559b11cb0bd3b8433188023759c0ecde6fff1c4a"
-  integrity sha512-01P/UqSFvq9nNjz0Yf2bRZqBrAU1mgcWFwirPcSxjuitfNbTGt1xbJ9l4qUolK2T1LPruejCfc6D9YZG+XKflw==
+"ipfs-pubsub-room@npm:@daishi/ipfs-pubsub-room@^2.0.1-custom.3":
+  version "2.0.1-custom.3"
+  resolved "https://registry.yarnpkg.com/@daishi/ipfs-pubsub-room/-/ipfs-pubsub-room-2.0.1-custom.3.tgz#7983ae69393060faeaf57d3af581a2edc5cef8d7"
+  integrity sha512-d30NUdZBh5l1bwxMxR6q/fk1m353KmT5rNrYnkvBiGsVcRnvaFOsfjtqpObAqvhn4V8E1wGN8MmmcsQiTtNlOg==
   dependencies:
     hyperdiff "^2.0.5"
-    it-pipe "^2.0.3"
+    it-pipe "^1.1.0"
     lodash.clonedeep "^4.5.0"
-    uint8arrays "^3.0.0"
+    uint8arrays "^2.1.5"
 
 ipfs-repo-migrations@^12.0.1:
   version "12.0.1"
@@ -10005,7 +10005,7 @@ it-map@^1.0.4, it-map@^1.0.5:
   resolved "https://registry.yarnpkg.com/it-map/-/it-map-1.0.6.tgz#6aa547e363eedcf8d4f69d8484b450bc13c9882c"
   integrity sha512-XT4/RM6UHIFG9IobGlQPFQUrlEKkU4eBUFG3qhWhfAdh1JfF2x11ShCrKCdmZ0OiZppPfoLuzcfA4cey6q3UAQ==
 
-it-merge@^1.0.0, it-merge@^1.0.1, it-merge@^1.0.2, it-merge@^1.0.3, it-merge@^1.0.4:
+it-merge@^1.0.0, it-merge@^1.0.1, it-merge@^1.0.2, it-merge@^1.0.3:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/it-merge/-/it-merge-1.0.4.tgz#81c8d427b389b1cd039c25015edb804cd1a60545"
   integrity sha512-DcL6GksTD2HQ7+5/q3JznXaLNfwjyG3/bObaF98da+oHfUiPmdo64oJlT9J8R8G5sJRU7thwaY5zxoAKCn7FJw==
@@ -10059,26 +10059,12 @@ it-pipe@^1.0.1, it-pipe@^1.1.0:
   resolved "https://registry.yarnpkg.com/it-pipe/-/it-pipe-1.1.0.tgz#f5964c6bb785dd776f11a62d1e75964787ab95ce"
   integrity sha512-lF0/3qTVeth13TOnHVs0BTFaziwQF7m5Gg+E6JV0BXcLKutC92YjSi7bASgkPOXaLEb+YvNZrPorGMBIJvZfxg==
 
-it-pipe@^2.0.3:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/it-pipe/-/it-pipe-2.0.4.tgz#fa72c2fdb3c7a467ff21d109e746ebfadfe9c749"
-  integrity sha512-lK0BV0egwfc64DFJva+0Jh1z8UxwmYBpAHDwq21s0OenRCaEDIntx/iOyWH/jg5efBU6Xa8igzmOqm2CPPNDgg==
-  dependencies:
-    it-merge "^1.0.4"
-    it-pushable "^3.1.0"
-    it-stream-types "^1.0.3"
-
 it-pushable@^1.4.0, it-pushable@^1.4.1, it-pushable@^1.4.2:
   version "1.4.2"
   resolved "https://registry.yarnpkg.com/it-pushable/-/it-pushable-1.4.2.tgz#fb127a53ec99b35a3a455a775abc85ab193c220b"
   integrity sha512-vVPu0CGRsTI8eCfhMknA7KIBqqGFolbRx+1mbQ6XuZ7YCz995Qj7L4XUviwClFunisDq96FdxzF5FnAbw15afg==
   dependencies:
     fast-fifo "^1.0.0"
-
-it-pushable@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/it-pushable/-/it-pushable-3.1.0.tgz#2fba7aaca189595e64e042ac947c6748ece2eb6b"
-  integrity sha512-sEAdT86u6aIWvLkH4hlOmgvHpRyUOUG22HD365H+Dh67zYpaPdILmT4Om7Wjdb+m/SjEB81z3nYCoIrgVYpOFA==
 
 it-reader@^3.0.0:
   version "3.0.0"
@@ -10105,11 +10091,6 @@ it-split@^1.0.0:
   integrity sha512-CTr10HhgK5LYgGCrPVorfliiW4bBl10K7earFLII4yoxWsKaAf8swCYgXXEe/W2Fou/YMOZGyTk6cmVKGyienw==
   dependencies:
     bl "^5.0.0"
-
-it-stream-types@^1.0.3:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/it-stream-types/-/it-stream-types-1.0.4.tgz#6e66a11abfd98abab4894c30da15829a0a56bb43"
-  integrity sha512-0F3CqTIcIHwtnmIgqd03a7sw8BegAmE32N2w7anIGdALea4oAN4ltqPgDMZ7zn4XPLZifXEZlBXSzgg64L1Ebw==
 
 it-take@^1.0.0, it-take@^1.0.1, it-take@^1.0.2:
   version "1.0.2"
@@ -16557,6 +16538,13 @@ typescript@^4.8.2:
   version "4.8.2"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.8.2.tgz#e3b33d5ccfb5914e4eeab6699cf208adee3fd790"
   integrity sha512-C0I1UsrrDHo2fYI5oaCGbSejwX4ch+9Y5jTQELvovfmFkK3HHSZJB8MSJcWLmCUBzQBchCrZ9rMRV6GuNrvGtw==
+
+uint8arrays@^2.1.5:
+  version "2.1.10"
+  resolved "https://registry.yarnpkg.com/uint8arrays/-/uint8arrays-2.1.10.tgz#34d023c843a327c676e48576295ca373c56e286a"
+  integrity sha512-Q9/hhJa2836nQfEJSZTmr+pg9+cDJS9XEAp7N2Vg5MzL3bK/mkMVfjscRGYruP9jNda6MAdf4QD/y78gSzkp6A==
+  dependencies:
+    multiformats "^9.4.2"
 
 uint8arrays@^3.0.0:
   version "3.1.0"

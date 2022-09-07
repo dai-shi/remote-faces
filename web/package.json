@@ -20,7 +20,7 @@
     "dompurify": "^2.4.0",
     "emoji-mart": "3.0.1",
     "ipfs": "0.62.1",
-    "ipfs-pubsub-room": "^3.0.0",
+    "ipfs-pubsub-room": "npm:@daishi/ipfs-pubsub-room@^2.0.1-custom.3",
     "pako": "^2.0.4",
     "peerjs": "^1.4.7",
     "react": "^18.2.0",
