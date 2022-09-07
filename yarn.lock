@@ -1427,10 +1427,10 @@
     "@ckeditor/ckeditor5-core" "^24.0.0"
     "@ckeditor/ckeditor5-engine" "^24.0.0"
 
-"@ckeditor/ckeditor5-react@^4.0.0":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@ckeditor/ckeditor5-react/-/ckeditor5-react-4.0.1.tgz#fc09e21295f115b8806f4122f63c4073f06d2b82"
-  integrity sha512-5qKZn8EVBeEYzmDrgpq31dC2rqcJ341xKQmuj7JYzT9szsuIIzI4zOm3cf9IIglRXVWCuWvELJs8qmRNW19dzg==
+"@ckeditor/ckeditor5-react@^5.0.2":
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/@ckeditor/ckeditor5-react/-/ckeditor5-react-5.0.2.tgz#446518e1d7ce842c63fc6ac24e818cc78a753903"
+  integrity sha512-pN4acvCAIsuXaZDMttqy4dNBKXiJ6AS6P8NM3ggMc/rQkMIPp3YPhDWWf+pyQLUiewj1Bfr5EFeBfcXPQTOn+Q==
   dependencies:
     prop-types "^15.7.2"
 
@@ -2412,9 +2412,9 @@
     p-queue "^7.2.0"
 
 "@libp2p/delegated-peer-routing@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@libp2p/delegated-peer-routing/-/delegated-peer-routing-2.0.1.tgz#e7be6ac3fef2d22e6947db9f00276b94fb166dbb"
-  integrity sha512-9u5cZaDM4xtWJVjlwg4v45lBlHyXFeqGX1zoj2y6xuJqO/BWKt9yKglNZ0HRJXIPkBU/lmNr9xsjh2ffH6wzmA==
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@libp2p/delegated-peer-routing/-/delegated-peer-routing-2.0.2.tgz#18071644d5265fa8e7e30dd6c2a0cb9eeb62db49"
+  integrity sha512-V8Ri2818ulrAhwCHM59sQQvkiz79Le2wx5ME8IwLafGzx4f3UmI/HGp1PpOJUMrL7ppiFh6TQ4nSHUpgevOG1w==
   dependencies:
     "@libp2p/interface-peer-id" "^1.0.2"
     "@libp2p/interface-peer-info" "^1.0.1"
@@ -2422,7 +2422,6 @@
     "@libp2p/interfaces" "^3.0.2"
     "@libp2p/logger" "^2.0.0"
     "@libp2p/peer-id" "^1.1.11"
-    "@multiformats/multiaddr" "^10.1.8"
     any-signal "^3.0.1"
     err-code "^3.0.1"
     multiformats "^9.6.3"
@@ -17946,9 +17945,9 @@ webpack-dev-middleware@^5.3.1:
     schema-utils "^4.0.0"
 
 webpack-dev-server@^4.6.0:
-  version "4.10.1"
-  resolved "https://registry.yarnpkg.com/webpack-dev-server/-/webpack-dev-server-4.10.1.tgz#124ac9ac261e75303d74d95ab6712b4aec3e12ed"
-  integrity sha512-FIzMq3jbBarz3ld9l7rbM7m6Rj1lOsgq/DyLGMX/fPEB1UBUPtf5iL/4eNfhx8YYJTRlzfv107UfWSWcBK5Odw==
+  version "4.11.0"
+  resolved "https://registry.yarnpkg.com/webpack-dev-server/-/webpack-dev-server-4.11.0.tgz#290ee594765cd8260adfe83b2d18115ea04484e7"
+  integrity sha512-L5S4Q2zT57SK7tazgzjMiSMBdsw+rGYIX27MgPgx7LDhWO0lViPrHKoLS7jo5In06PWYAhlYu3PbyoC6yAThbw==
   dependencies:
     "@types/bonjour" "^3.5.9"
     "@types/connect-history-api-fallback" "^1.3.5"
