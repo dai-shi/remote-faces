@@ -1,4 +1,4 @@
-import Peer from "peerjs";
+import { DataConnection } from "peerjs";
 
 import { ROOM_ID_PREFIX_LEN } from "./common";
 import { hasObjectProp, hasStringProp } from "../utils/types";
@@ -18,7 +18,7 @@ export const getPeerIndexFromPeerId = (peerId: string) =>
 
 export const createConnectionMap = () => {
   type Value = {
-    conn: Peer.DataConnection;
+    conn: DataConnection;
     createdAt: number;
     connected?: boolean;
     userId?: string;
@@ -28,7 +28,7 @@ export const createConnectionMap = () => {
   const map = new Map<string, Value>();
 
   const setAcceptingMediaTypes = (
-    conn: Peer.DataConnection,
+    conn: DataConnection,
     mediaTypes: string[]
   ) => {
     const value = map.get(conn.peer);
@@ -37,13 +37,13 @@ export const createConnectionMap = () => {
     }
   };
 
-  const getAcceptingMediaTypes = (conn: Peer.DataConnection) => {
+  const getAcceptingMediaTypes = (conn: DataConnection) => {
     const value = map.get(conn.peer);
     if (!value) return [];
     return value.acceptingMediaTypes;
   };
 
-  const addConn = (conn: Peer.DataConnection) => {
+  const addConn = (conn: DataConnection) => {
     const value = map.get(conn.peer);
     map.set(conn.peer, {
       conn,
@@ -56,7 +56,7 @@ export const createConnectionMap = () => {
     }
   };
 
-  const markConnected = (conn: Peer.DataConnection) => {
+  const markConnected = (conn: DataConnection) => {
     const value = map.get(conn.peer);
     if (value && value.conn === conn) {
       value.connected = true;
@@ -66,7 +66,7 @@ export const createConnectionMap = () => {
   const isConnected = (value?: Value) =>
     !!(value && value.connected && value.conn.open);
 
-  const isConnectedConn = (conn: Peer.DataConnection) => {
+  const isConnectedConn = (conn: DataConnection) => {
     const value = map.get(conn.peer);
     if (value && value.conn === conn) {
       return isConnected(value);
@@ -74,14 +74,14 @@ export const createConnectionMap = () => {
     return false;
   };
 
-  const setUserId = (conn: Peer.DataConnection, userId: string) => {
+  const setUserId = (conn: DataConnection, userId: string) => {
     const value = map.get(conn.peer);
     if (value) {
       value.userId = userId;
     }
   };
 
-  const getUserId = (conn: Peer.DataConnection) => {
+  const getUserId = (conn: DataConnection) => {
     const value = map.get(conn.peer);
     return value && value.userId;
   };
@@ -92,7 +92,7 @@ export const createConnectionMap = () => {
     return value.conn;
   };
 
-  const delConn = (conn: Peer.DataConnection) => {
+  const delConn = (conn: DataConnection) => {
     const value = map.get(conn.peer);
     if (value && value.conn === conn) {
       map.delete(conn.peer);
@@ -107,9 +107,7 @@ export const createConnectionMap = () => {
   const getNotConnectedPeerIds = () =>
     Array.from(map.keys()).filter((k) => !isConnected(map.get(k)));
 
-  const forEachConnectedConns = (
-    callback: (conn: Peer.DataConnection) => void
-  ) => {
+  const forEachConnectedConns = (callback: (conn: DataConnection) => void) => {
     Array.from(map.values()).forEach((value) => {
       if (isConnected(value)) {
         callback(value.conn);
@@ -119,7 +117,7 @@ export const createConnectionMap = () => {
 
   const forEachConnsAcceptingMedia = (
     mediaType: string,
-    callback: (conn: Peer.DataConnection) => void
+    callback: (conn: DataConnection) => void
   ) => {
     Array.from(map.values()).forEach((value) => {
       if (isConnected(value) && value.acceptingMediaTypes.includes(mediaType)) {
@@ -144,14 +142,14 @@ export const createConnectionMap = () => {
     map.clear();
   };
 
-  const getRemoteMediaType = (conn: Peer.DataConnection, mid: string) => {
+  const getRemoteMediaType = (conn: DataConnection, mid: string) => {
     const value = map.get(conn.peer);
     if (!value) return null;
     return value.remoteMediaTypes[mid] || null;
   };
 
   const registerRemoteMediaTypeFromSDP = (
-    conn: Peer.DataConnection,
+    conn: DataConnection,
     msid2mediaType: Record<string, unknown>,
     sdpLines: string
   ) => {
@@ -175,7 +173,7 @@ export const createConnectionMap = () => {
   };
 
   const registerRemoteMediaType = (
-    conn: Peer.DataConnection,
+    conn: DataConnection,
     sdp: Record<string, unknown>
   ) => {
     if (!hasObjectProp(sdp, "msid2mediaType")) return;

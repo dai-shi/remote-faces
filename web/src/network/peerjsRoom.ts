@@ -1,4 +1,4 @@
-import Peer from "peerjs";
+import { Peer, DataConnection } from "peerjs";
 
 import { sleep } from "../utils/sleep";
 import { importCryptoKey, encryptString, decryptString } from "../utils/crypto";
@@ -48,7 +48,7 @@ export const createRoom: CreateRoom = async (
       console.log("myPeer initialized", index);
       setTimeout(connectSeedPeers, 10);
     });
-    peer.on("error", (err) => {
+    peer.on("error", (err: Error & { type?: string }) => {
       if (err.type === "unavailable-id") {
         peer.destroy();
         if (index === MAX_PEER_INDEX) {
@@ -164,14 +164,14 @@ export const createRoom: CreateRoom = async (
   };
 
   const sendSDP = (
-    conn: Peer.DataConnection,
+    conn: DataConnection,
     sdp: { offer: unknown } | { answer: unknown }
   ) => {
     const msid2mediaType = getMsid2MediaType();
     sendPayload(conn, { SDP: { ...sdp, msid2mediaType } });
   };
 
-  const handlePayloadSDP = async (conn: Peer.DataConnection, sdp: unknown) => {
+  const handlePayloadSDP = async (conn: DataConnection, sdp: unknown) => {
     if (!isObject(sdp)) return;
     connMap.registerRemoteMediaType(conn, sdp);
     if (hasObjectProp(sdp, "offer")) {
@@ -203,7 +203,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const handlePayloadUserId = (
-    conn: Peer.DataConnection,
+    conn: DataConnection,
     payloadUserId: unknown
   ) => {
     if (typeof payloadUserId === "string") {
@@ -212,7 +212,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const handlePayloadMediaTypes = async (
-    conn: Peer.DataConnection,
+    conn: DataConnection,
     payloadMediaTypes: unknown
   ) => {
     if (
@@ -239,7 +239,7 @@ export const createRoom: CreateRoom = async (
     }
   };
 
-  const handlePayloadData = (conn: Peer.DataConnection, data: unknown) => {
+  const handlePayloadData = (conn: DataConnection, data: unknown) => {
     const connUserId = connMap.getUserId(conn);
     if (connUserId) {
       const info: PeerInfo = {
@@ -256,7 +256,7 @@ export const createRoom: CreateRoom = async (
   };
 
   const handlePayload = async (
-    conn: Peer.DataConnection,
+    conn: DataConnection,
     encrypted: ArrayBuffer
   ) => {
     if (disposed) return;
@@ -278,7 +278,7 @@ export const createRoom: CreateRoom = async (
     }
   };
 
-  const sendPayload = async (conn: Peer.DataConnection, payload: unknown) => {
+  const sendPayload = async (conn: DataConnection, payload: unknown) => {
     try {
       const encrypted = await encryptString(JSON.stringify(payload), cryptoKey);
       conn.send(encrypted);
@@ -287,7 +287,7 @@ export const createRoom: CreateRoom = async (
     }
   };
 
-  const initConnection = (conn: Peer.DataConnection) => {
+  const initConnection = (conn: DataConnection) => {
     const peerIndex = getPeerIndexFromPeerId(conn.peer);
     connMap.addConn(conn);
     let timer: NodeJS.Timeout;
@@ -320,10 +320,10 @@ export const createRoom: CreateRoom = async (
       showConnectedStatus();
       notifyNewPeer(peerIndex);
     });
-    conn.on("data", (buf: ArrayBuffer) => {
+    conn.on("data", (buf) => {
       scheduleClose(3 * 60 * 1000); // 3min
       connMap.markConnected(conn);
-      handlePayload(conn, buf);
+      handlePayload(conn, buf as ArrayBuffer);
     });
     conn.peerConnection.addEventListener("icegatheringstatechange", () => {
       const pc = conn.peerConnection;
@@ -494,7 +494,7 @@ export const createRoom: CreateRoom = async (
     });
   };
 
-  const syncAllTracks = (conn: Peer.DataConnection) => {
+  const syncAllTracks = (conn: DataConnection) => {
     const senders = conn.peerConnection?.getSenders() ?? [];
     const acceptingMediaTypes = connMap.getAcceptingMediaTypes(conn);
     acceptingMediaTypes.forEach((mType) => {
@@ -519,7 +519,7 @@ export const createRoom: CreateRoom = async (
     }
   };
 
-  const removeAllTracks = (conn: Peer.DataConnection) => {
+  const removeAllTracks = (conn: DataConnection) => {
     const senders = conn.peerConnection?.getSenders() ?? [];
     senders.forEach((sender) => {
       if (sender.track && conn.peerConnection.signalingState !== "closed") {
