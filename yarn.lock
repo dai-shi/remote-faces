@@ -3360,7 +3360,7 @@
   dependencies:
     "@types/ms" "*"
 
-"@types/dompurify@^2.3.3":
+"@types/dompurify@^2.3.4":
   version "2.3.4"
   resolved "https://registry.yarnpkg.com/@types/dompurify/-/dompurify-2.3.4.tgz#94e997e30338ea24d4c8d08beca91ce4dd17a1b4"
   integrity sha512-EXzDatIb5EspL2eb/xPGmaC8pePcTHrkDCONjeisusLFrVfl38Pjea/R0YJGu3k9ZQadSvMqW0WXPI2hEo2Ajg==
@@ -7029,7 +7029,7 @@ domhandler@^4.0.0, domhandler@^4.2.0, domhandler@^4.3.0:
   dependencies:
     domelementtype "^2.2.0"
 
-dompurify@^2.3.6:
+dompurify@^2.4.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-2.4.0.tgz#c9c88390f024c2823332615c9e20a453cf3825dd"
   integrity sha512-Be9tbQMZds4a3C6xTmz68NlMfeONA//4dOavl/1rNw50E+/QO0KVpbcU0PcaW0nsQxurXls9ZocqFxk8R2mWEA==
@@ -14616,7 +14616,7 @@ prettier-linter-helpers@^1.0.0:
   dependencies:
     fast-diff "^1.1.2"
 
-prettier@^2.6.1:
+prettier@^2.7.1:
   version "2.7.1"
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.7.1.tgz#e235806850d057f97bb08368a4f7d899f7760c64"
   integrity sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==
