@@ -74,10 +74,28 @@ const intro: Record<string, RegionData> = {
 
 const phone: Record<string, RegionData> = {
   ...createMeeting(0, 45, 40, 45, 500),
-  share: {
+  share1: {
     type: "media",
     position: [100, 40],
-    size: [1000, 500],
+    size: [250, 250],
+    zIndex: 0,
+    background: "rgba(0, 240, 0, 0.2)",
+    border: "",
+    iframe: "",
+  },
+  share2: {
+    type: "media",
+    position: [100, 300],
+    size: [250, 250],
+    zIndex: 0,
+    background: "rgba(0, 240, 0, 0.2)",
+    border: "",
+    iframe: "",
+  },
+  share3: {
+    type: "media",
+    position: [360, 40],
+    size: [800, 550],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
     border: "",
