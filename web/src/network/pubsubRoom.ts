@@ -1,5 +1,6 @@
-import { create } from "ipfs";
-import type { Message } from "ipfs-core/dist/src/components/pubsub";
+import { create as createUntyped } from "ipfs";
+import type { create as createFn } from "ipfs-core/types/src/components/index";
+import type { Message } from "ipfs-core-types/types/src/pubsub/index";
 
 import { sleep } from "../utils/sleep";
 import {
@@ -20,6 +21,8 @@ import {
   videoTrackToImageConverter,
   imageToVideoTrackConverter,
 } from "./trackUtils";
+
+const create = createUntyped as typeof createFn;
 
 const topicsForMediaTypes = new Map<string, string>();
 
