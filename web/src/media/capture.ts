@@ -35,7 +35,7 @@ const captureImage = async (stream: MediaStream, track: MediaStreamTrack) => {
   return { srcImg, srcW, srcH, dispose };
 };
 
-export const takePhoto = async (deviceId?: string) => {
+export const takePhoto = async (deviceId?: string, size = 72) => {
   const constraints = {
     video: {
       deviceId,
@@ -47,8 +47,8 @@ export const takePhoto = async (deviceId?: string) => {
   const [track] = stream.getVideoTracks();
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-  const dstW = 72;
-  const dstH = 72;
+  const dstW = size;
+  const dstH = size;
   canvas.width = dstW;
   canvas.height = dstH;
   const { srcImg, srcW, srcH, dispose } = await captureImage(stream, track);
