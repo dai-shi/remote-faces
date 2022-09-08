@@ -4,7 +4,7 @@ import "./MySetting.css";
 import { setConfigAvatar } from "../states/singleRoom";
 import { preferenceState } from "../states/preference";
 
-const LOW_RESOLUTION = 36;
+const LOW_RESOLUTION = 24;
 
 export const MySetting = memo<{
   statusMesg: string;
