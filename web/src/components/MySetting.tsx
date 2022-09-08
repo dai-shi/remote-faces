@@ -2,6 +2,9 @@ import { memo, useState } from "react";
 
 import "./MySetting.css";
 import { setConfigAvatar } from "../states/singleRoom";
+import { preferenceState } from "../states/preference";
+
+const LOW_RESOLUTION = 24;
 
 export const MySetting = memo<{
   statusMesg: string;
@@ -11,6 +14,9 @@ export const MySetting = memo<{
 }>(({ statusMesg, suspended, toggleSuspended, setStatusMesg }) => {
   const [message, setMessage] = useState(statusMesg);
   const [camera, setCamera] = useState(!suspended);
+  const [lowResPhoto, setLowResPhoto] = useState(
+    preferenceState.photoSize === LOW_RESOLUTION
+  );
   const [avatar, setAvatar] = useState("");
   const onChangeAvatar = (files: FileList | null) => {
     const file = files && files[0];
@@ -44,6 +50,20 @@ export const MySetting = memo<{
           {camera ? "on" : "off"}
         </button>
       </label>
+      {camera && (
+        <>
+          {" "}
+          <label>
+            Low resolution:{" "}
+            <input
+              type="checkbox"
+              checked={lowResPhoto}
+              onChange={() => setLowResPhoto((x) => !x)}
+            />
+          </label>
+          <hr />
+        </>
+      )}
       <hr />
       {!camera && (
         <>
@@ -78,6 +98,7 @@ export const MySetting = memo<{
           if (suspended === camera) {
             toggleSuspended();
           }
+          preferenceState.photoSize = lowResPhoto ? LOW_RESOLUTION : undefined;
           if (suspended && avatar) {
             setConfigAvatar(avatar);
           }
