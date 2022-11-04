@@ -19,7 +19,7 @@
     "@daishi/ckeditor5-build-inline-custom": "^24.0.0-custom.1",
     "dompurify": "^2.4.0",
     "emoji-mart": "3.0.1",
-    "ipfs": "^0.64.0",
+    "ipfs": "^0.65.0",
     "ipfs-pubsub-room": "^3.0.0",
     "pako": "^2.0.4",
     "peerjs": "^1.4.7",

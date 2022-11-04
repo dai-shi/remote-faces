@@ -90,7 +90,7 @@ export const createRoom: CreateRoom = async (
         JSON.stringify(payload),
         cryptoKey
       )) {
-        myIpfsPubSubRoom.broadcast(encrypted);
+        myIpfsPubSubRoom.broadcast(new Uint8Array(encrypted));
       }
     } catch (e) {
       console.error("sendPayload", e);
@@ -103,7 +103,7 @@ export const createRoom: CreateRoom = async (
         JSON.stringify(payload),
         cryptoKey
       )) {
-        myIpfsPubSubRoom.sendTo(conn.peer, encrypted);
+        myIpfsPubSubRoom.sendTo(conn.peer, new Uint8Array(encrypted));
       }
     } catch (e) {
       console.error("sendPayloadDirectly", e);

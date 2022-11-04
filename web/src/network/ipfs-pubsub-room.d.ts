@@ -8,9 +8,9 @@ declare module "ipfs-pubsub-room" {
 
     async leave(): Promise<void>;
 
-    async broadcast(message: ArrayBuffer | string): Promise<void>;
+    async broadcast(message: Uint8Array | string): Promise<void>;
 
-    sendTo(peer: string, message: ArrayBuffer | string): void;
+    sendTo(peer: string, message: Uint8Array | string): void;
 
     on(name: string, listener: (...args: any) => void);
   }
