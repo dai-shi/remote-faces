@@ -99,9 +99,11 @@ export const useFaceImages = (
 
   const [myImage, setMyImage] = useState<ImageUrl>();
 
+  type Timeout = ReturnType<typeof setTimeout>;
+
   useEffect(() => {
     let didCleanup = false;
-    let timer: NodeJS.Timeout;
+    let timer: Timeout;
     const loop = async () => {
       if (didCleanup) return;
       try {

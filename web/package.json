@@ -5,13 +5,13 @@
   "private": true,
   "author": "Daishi Kato",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test:app": "react-scripts test",
+    "start": "vite",
+    "build": "tsc && vite build",
+    "serve": "vite preview",
+    "test:app": "jest",
     "test:lint": "eslint --ext .js,.ts,.tsx src",
     "test:type": "tsc --noEmit",
-    "test": "yarn test:lint && yarn test:type && yarn test:app --watchAll=false",
-    "eject": "react-scripts eject"
+    "test": "yarn test:lint && yarn test:type && yarn test:app"
   },
   "homepage": "./",
   "dependencies": {
@@ -31,6 +31,7 @@
     "yjs": "^13.5.41"
   },
   "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
@@ -42,111 +43,25 @@
     "@types/react": "^18.0.18",
     "@types/react-dom": "^18.0.6",
     "@types/w3c-image-capture": "^1.0.6",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsx-a11y": "^6.6.1",
-    "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-react": "^7.31.7",
-    "eslint-plugin-react-hooks": "^4.6.0",
+    "@vitejs/plugin-react": "^2.2.0",
+    "eslint": "^8.26.0",
+    "eslint-config-airbnb-typescript-prettier": "^5.0.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.2.2",
+    "jest-environment-jsdom": "^29.2.2",
     "prettier": "^2.7.1",
     "process": "^0.11.10",
-    "react-scripts": "^5.0.1",
     "stream-browserify": "^3.0.0",
-    "typescript": "^4.8.2"
+    "ts-jest": "^29.0.3",
+    "typescript": "^4.8.4",
+    "vite": "^3.2.2"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "plugin:prettier/recommended",
-      "prettier"
-    ],
-    "settings": {
-      "import/resolver": {
-        "node": {
-          "extensions": [
-            ".js",
-            ".ts",
-            ".tsx"
-          ]
-        }
-      }
-    },
-    "rules": {
-      "no-console": "off",
-      "import/prefer-default-export": "off",
-      "react/prop-types": "off",
-      "react/jsx-filename-extension": [
-        "error",
-        {
-          "extensions": [
-            ".tsx"
-          ]
-        }
-      ],
-      "import/extensions": [
-        "error",
-        "never"
-      ],
-      "react/state-in-constructor": "off",
-      "jsx-a11y/media-has-caption": "off",
-      "jsx-a11y/label-has-associated-control": "off",
-      "no-unused-vars": "off",
-      "no-use-before-define": "off",
-      "no-undef": "off",
-      "no-shadow": "off",
-      "react/react-in-jsx-scope": "off",
-      "no-param-reassign": "off",
-      "no-alert": "off"
-    },
-    "overrides": [
-      {
-        "files": [
-          "**/*.test.*",
-          "src/setupTests.ts"
-        ],
-        "env": {
-          "jest": true
-        },
-        "rules": {
-          "import/no-extraneous-dependencies": [
-            "error",
-            {
-              "devDependencies": true
-            }
-          ]
-        }
-      },
-      {
-        "files": [
-          "src/network/peerjsRoom.ts",
-          "src/network/ipfsRoom.ts",
-          "src/network/pubsubRoom.ts"
-        ],
-        "rules": {
-          "no-use-before-define": "off",
-          "no-restricted-syntax": "off"
-        }
-      },
-      {
-        "files": [
-          "src/components/MomentaryChat.tsx"
-        ],
-        "rules": {
-          "react/no-danger": "off"
-        }
-      },
-      {
-        "files": [
-          "src/react-app-env.d.ts",
-          "src/serviceWorker.ts"
-        ],
-        "rules": {
-          "no-use-before-define": "off",
-          "no-param-reassign": "off",
-          "spaced-comment": "off"
-        }
-      }
-    ]
+  "jest": {
+    "preset": "ts-jest/presets/js-with-ts",
+    "testEnvironment": "jsdom",
+    "moduleNameMapper": {
+      "\\.(css|sass)$": "identity-obj-proxy"
+    }
   },
   "browserslist": {
     "production": [
