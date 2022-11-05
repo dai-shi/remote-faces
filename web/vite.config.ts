@@ -16,6 +16,7 @@ export default defineConfig({
           buffer: true,
         }),
       ],
+      supported: { bigint: true },
     },
   },
   build: {
