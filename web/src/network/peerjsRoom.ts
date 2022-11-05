@@ -26,7 +26,7 @@ export const createRoom: CreateRoom = async (
 ) => {
   let disposed = false;
   const connMap = createConnectionMap();
-  // if (process.env.NODE_ENV !== "production") {
+  // if (import.meta.env.DEV) {
   (window as any).myConnMap = connMap;
   // }
   let mediaTypes: readonly string[] = [];
@@ -34,7 +34,7 @@ export const createRoom: CreateRoom = async (
   const cryptoKey = await importCryptoKey(roomId.slice(ROOM_ID_PREFIX_LEN));
 
   let myPeer: Peer | null = null;
-  // if (process.env.NODE_ENV !== "production") {
+  // if (import.meta.env.DEV) {
   (window as any).getMyPeer = () => myPeer;
   // }
   const initMyPeer = (index = MIN_PEER_INDEX) => {
@@ -287,10 +287,12 @@ export const createRoom: CreateRoom = async (
     }
   };
 
+  type Timeout = ReturnType<typeof setTimeout>;
+
   const initConnection = (conn: DataConnection) => {
     const peerIndex = getPeerIndexFromPeerId(conn.peer);
     connMap.addConn(conn);
-    let timer: NodeJS.Timeout;
+    let timer: Timeout;
     const scheduleClose = (wait: number) => {
       clearTimeout(timer);
       timer = setTimeout(() => {

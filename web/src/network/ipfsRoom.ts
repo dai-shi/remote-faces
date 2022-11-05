@@ -25,7 +25,7 @@ export const createRoom: CreateRoom = async (
 ) => {
   let disposed = false;
   const connMap = createConnectionMap();
-  // if (process.env.NODE_ENV !== "production") {
+  // if (import.meta.env.DEV) {
   (window as any).myConnMap = connMap;
   // }
   let mediaTypes: readonly string[] = [];
@@ -66,7 +66,7 @@ export const createRoom: CreateRoom = async (
       });
     }
   });
-  // if (process.env.NODE_ENV !== "production") {
+  // if (import.meta.env.DEV) {
   (window as any).myIpfs = myIpfs;
   // }
 
@@ -123,7 +123,7 @@ export const createRoom: CreateRoom = async (
     const payload = { userId, data, mediaTypes };
     await sendPayloadDirectly(conn, payload);
   };
-  if (process.env.NODE_ENV !== "production") {
+  if (import.meta.env.DEV) {
     (window as any).sendData = sendData;
   }
 

@@ -37,6 +37,40 @@ const isImageData = (x: unknown): x is ImageData =>
   isFaceInfo((x as { info: unknown }).info) &&
   typeof (x as { updated: unknown }).updated === "number";
 
+const TTL = 2 * 60 * 1000; // 2 minutes
+
+let myImageCache:
+  | {
+      deviceId?: string;
+      photoSize?: number;
+      createdAt: number;
+      promiseUrl: Promise<ImageUrl>;
+    }
+  | undefined;
+
+const takePhotoWithCache = (
+  deviceId?: string,
+  photoSize?: number
+): Promise<ImageUrl> => {
+  const now = Date.now();
+  if (
+    myImageCache &&
+    myImageCache.deviceId === deviceId &&
+    myImageCache.photoSize === photoSize &&
+    myImageCache.createdAt + TTL > now
+  ) {
+    return myImageCache.promiseUrl;
+  }
+  const promiseUrl = takePhoto(deviceId, photoSize);
+  myImageCache = {
+    deviceId,
+    photoSize,
+    createdAt: now,
+    promiseUrl,
+  };
+  return promiseUrl;
+};
+
 export const useFaceImages = (
   roomId: string,
   userId: string,
@@ -65,13 +99,17 @@ export const useFaceImages = (
 
   const [myImage, setMyImage] = useState<ImageUrl>();
 
+  type Timeout = ReturnType<typeof setTimeout>;
+
   useEffect(() => {
     let didCleanup = false;
-    let timer: NodeJS.Timeout;
+    let timer: Timeout;
     const loop = async () => {
       if (didCleanup) return;
       try {
-        const image = suspended ? avatar : await takePhoto(deviceId, photoSize);
+        const image = suspended
+          ? avatar
+          : await takePhotoWithCache(deviceId, photoSize);
         if (didCleanup) return;
         setMyImage(image);
         const info: FaceInfo = {
@@ -91,7 +129,7 @@ export const useFaceImages = (
       } catch (e) {
         console.error(e);
       }
-      timer = setTimeout(loop, 2 * 60 * 1000);
+      timer = setTimeout(loop, TTL);
     };
     loop();
     return () => {
@@ -125,7 +163,7 @@ export const useFaceImageObsoleted = (
   useEffect(() => {
     if (updated) {
       const callback = () => {
-        const twoMinAgo = Date.now() - 2 * 60 * 1000;
+        const twoMinAgo = Date.now() - TTL;
         setObsoleted(updated < twoMinAgo);
       };
       const timer = setInterval(callback, 10 * 1000);

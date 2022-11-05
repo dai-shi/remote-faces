@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck XXX ckeditor5 doesn't come with types
 
 import { memo } from "react";

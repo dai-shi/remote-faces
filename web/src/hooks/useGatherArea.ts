@@ -123,7 +123,9 @@ export const useGatherArea = (roomId: string, userId: string) => {
     };
   }, [roomState]);
 
-  const timerMap = useRef<{ [id: string]: NodeJS.Timeout }>({});
+  type Timeout = ReturnType<typeof setTimeout>;
+
+  const timerMap = useRef<{ [id: string]: Timeout }>({});
   const updateRegion = useCallback(
     (id: string, data: RegionData | null) => {
       clearTimeout(timerMap.current[id]);
