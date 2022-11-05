@@ -68,6 +68,12 @@ export const getWebrtcStarFromUrl = () => {
   return searchParams.get("webrtcstar");
 };
 
+export const hasIpfsConfigInUrl = () => {
+  const hash = window.location.hash.slice(1);
+  const searchParams = new URLSearchParams(hash);
+  return searchParams.has("ipfs");
+};
+
 export const hasPubsubConfigInUrl = () => {
   const hash = window.location.hash.slice(1);
   const searchParams = new URLSearchParams(hash);
