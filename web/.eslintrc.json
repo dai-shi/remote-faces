@@ -1,0 +1,54 @@
+{
+  "extends": ["airbnb-typescript-prettier"],
+  "rules": {
+    "no-console": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/no-shadow": "off",
+    "import/prefer-default-export": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/state-in-constructor": "off",
+    "jsx-a11y/media-has-caption": "off",
+    "jsx-a11y/label-has-associated-control": "off",
+    "no-param-reassign": "off",
+    "no-alert": "off"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.*", "src/setupTests.ts"],
+      "env": {
+        "jest": true
+      },
+      "rules": {
+        "import/no-extraneous-dependencies": [
+          "error",
+          {
+            "devDependencies": true
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/network/peerjsRoom.ts",
+        "src/network/ipfsRoom.ts",
+        "src/network/pubsubRoom.ts"
+      ],
+      "rules": {
+        "no-restricted-syntax": "off"
+      }
+    },
+    {
+      "files": ["src/states/roomPresets.ts", "src/hooks/useGatherArea.ts"],
+      "rules": {
+        "import/no-cycle": "off"
+      }
+    },
+    {
+      "files": ["src/components/MomentaryChat.tsx"],
+      "rules": {
+        "react/no-danger": "off"
+      }
+    }
+  ]
+}
