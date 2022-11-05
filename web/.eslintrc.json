@@ -15,7 +15,7 @@
   },
   "overrides": [
     {
-      "files": ["**/*.test.*", "src/setupTests.ts"],
+      "files": ["**/*.test.*", "src/setupTests.ts", "vite.config.ts"],
       "env": {
         "jest": true
       },
