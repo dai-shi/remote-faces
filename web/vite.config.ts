@@ -16,10 +16,11 @@ export default defineConfig({
           buffer: true,
         }),
       ],
-      supported: { bigint: true },
+      target: "es2020",
     },
   },
   build: {
+    target: "es2020",
     outDir: "build",
   },
 });
