@@ -1,6 +1,5 @@
-import { create as createUntyped } from "ipfs";
-import type { create as createFn } from "ipfs-core/types/src/components/index";
-import type { Message } from "ipfs-core-types/types/src/pubsub/index";
+import { create } from "ipfs";
+import type { Message } from "ipfs-core/dist/src/components/pubsub";
 import IpfsPubSubRoom from "ipfs-pubsub-room";
 
 import { sleep } from "../utils/sleep";
@@ -15,8 +14,6 @@ import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./ipfsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
-
-const create = createUntyped as typeof createFn;
 
 export const createRoom: CreateRoom = async (
   roomId,
@@ -93,7 +90,7 @@ export const createRoom: CreateRoom = async (
         JSON.stringify(payload),
         cryptoKey
       )) {
-        myIpfsPubSubRoom.broadcast(encrypted);
+        myIpfsPubSubRoom.broadcast(new Uint8Array(encrypted));
       }
     } catch (e) {
       console.error("sendPayload", e);
@@ -106,7 +103,7 @@ export const createRoom: CreateRoom = async (
         JSON.stringify(payload),
         cryptoKey
       )) {
-        myIpfsPubSubRoom.sendTo(conn.peer, encrypted);
+        myIpfsPubSubRoom.sendTo(conn.peer, new Uint8Array(encrypted));
       }
     } catch (e) {
       console.error("sendPayloadDirectly", e);

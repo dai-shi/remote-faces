@@ -1,6 +1,6 @@
 import { proxy, snapshot, ref } from "valtio";
 import * as Y from "yjs";
-import { bindProxyAndYMap } from "valtio-yjs";
+import { bind } from "valtio-yjs";
 
 import { PeerInfo, createRoom, NetworkStatus } from "../network/room";
 import { encodeBase64Async, decodeBase64Async } from "../utils/base64";
@@ -73,10 +73,10 @@ const createRoomState = (roomId: string, userId: string) => {
     dispose,
   });
   const ydoc = new Y.Doc();
-  bindProxyAndYMap(state.faceImages, ydoc.getMap("faceImages"));
-  bindProxyAndYMap(state.gatherAvatarMap, ydoc.getMap("gatherAvatarMap"));
-  bindProxyAndYMap(state.gatherRegionMap, ydoc.getMap("gatherRegionMap"));
-  bindProxyAndYMap(state.extraDataListMap, ydoc.getMap("extraDataListMap"));
+  bind(state.faceImages, ydoc.getMap("faceImages"));
+  bind(state.gatherAvatarMap, ydoc.getMap("gatherAvatarMap"));
+  bind(state.gatherRegionMap, ydoc.getMap("gatherRegionMap"));
+  bind(state.extraDataListMap, ydoc.getMap("extraDataListMap"));
   const updateNetworkStatus = (status: NetworkStatus) => {
     console.log(new Date().toLocaleString(), "[network status]", status);
     state.networkStatusList.unshift(status);

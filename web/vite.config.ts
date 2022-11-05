@@ -16,9 +16,11 @@ export default defineConfig({
           buffer: true,
         }),
       ],
+      target: "es2020",
     },
   },
   build: {
+    target: "es2020",
     outDir: "build",
   },
 });

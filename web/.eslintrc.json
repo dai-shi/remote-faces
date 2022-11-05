@@ -35,7 +35,8 @@
         "src/network/pubsubRoom.ts"
       ],
       "rules": {
-        "no-restricted-syntax": "off"
+        "no-restricted-syntax": "off",
+        "import/no-unresolved": "off"
       }
     },
     {
