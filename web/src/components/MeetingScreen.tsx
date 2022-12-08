@@ -92,27 +92,33 @@ export const MeetingScreen = memo<{
           </button>
         )}
         {!isSharing && (
-          <button type="button" onClick={() => setIsSharing(true)}>
+          <button
+            type="button"
+            onClick={() => setIsSharing(true)}
+            disabled={!isActive}
+          >
             Start Screen Share
           </button>
         )}
       </div>
-      <div className="MeetingScreen-body">
-        {videoStream && (
-          <StreamOpener nickname={nickname} stream={videoStream} />
-        )}
-        {Object.keys(videoStreamMap).map((mediaUserId) => {
-          const stream = videoStreamMap[mediaUserId];
-          if (!stream) return null;
-          return (
-            <StreamOpener
-              key={mediaUserId}
-              nickname={nicknameMap[mediaUserId] || "No Name"}
-              stream={stream}
-            />
-          );
-        })}
-      </div>
+      {isActive && (
+        <div className="MeetingScreen-body">
+          {videoStream && (
+            <StreamOpener nickname={nickname} stream={videoStream} />
+          )}
+          {Object.keys(videoStreamMap).map((mediaUserId) => {
+            const stream = videoStreamMap[mediaUserId];
+            if (!stream) return null;
+            return (
+              <StreamOpener
+                key={mediaUserId}
+                nickname={nicknameMap[mediaUserId] || "No Name"}
+                stream={stream}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 });

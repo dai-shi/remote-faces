@@ -173,7 +173,10 @@ const Region = memo<{
               userId={userId}
               nickname={nickname}
               uniqueId={id}
-              isActive={data.meetingRegionId === activeMeetingRegionId}
+              isActive={
+                !!activeMeetingRegionId &&
+                activeMeetingRegionId === data.meetingRegionId
+              }
             />
           </Suspense>
         )}
