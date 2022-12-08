@@ -17,16 +17,13 @@ const StreamOpener = memo<{
       win.document.title = nickname;
       const pc = new RTCPeerConnection();
       pc.addTrack(stream.getVideoTracks()[0], stream);
-      pc.onicecandidate = (event) => {
-        if (!event.candidate && pc.localDescription) {
+      pc.onicecandidate = (evt) => {
+        if (!evt.candidate && pc.localDescription) {
           win.postMessage(pc.localDescription.sdp);
         }
       };
-      window.addEventListener("message", async (event) => {
-        await pc.setRemoteDescription({
-          type: "answer",
-          sdp: event.data,
-        });
+      window.addEventListener("message", async (evt) => {
+        await pc.setRemoteDescription({ type: "answer", sdp: evt.data });
       });
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);

@@ -2,9 +2,8 @@
 <html lang="en">
   <head>
     <style>
-      html, body {
+      body {
         margin: 0;
-        padding: 0;
       }
       #video {
         width: 100%;
@@ -13,20 +12,17 @@
     </style>
     <script>
       const pc = new RTCPeerConnection();
-      pc.ontrack = (event) => {
-        console.log('ontrack', event);
-        document.getElementById('video').srcObject = event.streams[0];
+      pc.ontrack = (evt) => {
+        console.log("ontrack", evt);
+        document.getElementById("video").srcObject = evt.streams[0];
       };
-      pc.onicecandidate = (event) => {
-        if (!event.candidate && pc.localDescription) {
+      pc.onicecandidate = (evt) => {
+        if (!evt.candidate && pc.localDescription) {
           window.opener.postMessage(pc.localDescription.sdp);
         }
       };
-      window.addEventListener('message', async (event) => {
-        await pc.setRemoteDescription({
-          type: 'offer',
-          sdp: event.data,
-        });
+      window.addEventListener("message", async (evt) => {
+        await pc.setRemoteDescription({ type: "offer", sdp: evt.data });
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
       });
