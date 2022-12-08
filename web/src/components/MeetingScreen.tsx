@@ -3,29 +3,40 @@ import { memo, useCallback, useState, useEffect } from "react";
 import "./MeetingScreen.css";
 import { useMediaShare } from "../hooks/useMediaShare";
 import { useNicknameMap } from "../hooks/useNicknameMap";
+import { secureRandomId } from "../utils/crypto";
 
 const StreamOpener = memo<{
   nickname: string;
   stream: MediaStream;
 }>(({ nickname, stream }) => {
   const open = useCallback(() => {
-    const win = window.open("stream_viewer.html", "_blank");
+    const id = secureRandomId();
+    const win = window.open(`stream_viewer.html#${id}`, "_blank");
     if (!win) {
       return;
     }
+    const channel = new BroadcastChannel(id);
+    const pc = new RTCPeerConnection();
+    pc.addTrack(stream.getVideoTracks()[0], stream);
+    pc.onicecandidate = (evt) => {
+      channel.postMessage({
+        type: "ice",
+        candidate: evt.candidate?.candidate,
+        sdpMid: evt.candidate?.sdpMid,
+        sdpMLineIndex: evt.candidate?.sdpMLineIndex,
+      });
+    };
+    channel.onmessage = (evt) => {
+      if (evt.data.type === "ice") {
+        pc.addIceCandidate(evt.data.candidate ? evt.data : undefined);
+        return;
+      }
+      pc.setRemoteDescription(evt.data);
+    };
     win.onload = async () => {
       win.document.title = nickname;
-      const pc = new RTCPeerConnection();
-      pc.addTrack(stream.getVideoTracks()[0], stream);
-      pc.onicecandidate = (evt) => {
-        if (!evt.candidate && pc.localDescription) {
-          win.postMessage(pc.localDescription.sdp);
-        }
-      };
-      window.addEventListener("message", async (evt) => {
-        await pc.setRemoteDescription({ type: "answer", sdp: evt.data });
-      });
       const offer = await pc.createOffer();
+      channel.postMessage({ type: "offer", sdp: offer.sdp });
       await pc.setLocalDescription(offer);
     };
   }, [nickname, stream]);

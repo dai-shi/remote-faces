@@ -11,24 +11,34 @@
       }
     </style>
     <script>
+      const id = location.hash.slice(1);
+      const channel = new BroadcastChannel(id);
       const pc = new RTCPeerConnection();
       pc.ontrack = (evt) => {
         console.log("ontrack", evt);
         document.getElementById("video").srcObject = evt.streams[0];
       };
       pc.onicecandidate = (evt) => {
-        if (!evt.candidate && pc.localDescription) {
-          window.opener.postMessage(pc.localDescription.sdp);
-        }
+        channel.postMessage({
+          type: "ice",
+          candidate: evt.candidate?.candidate,
+          sdpMid: evt.candidate?.sdpMid,
+          sdpMLineIndex: evt.candidate?.sdpMLineIndex,
+        });
       };
-      window.addEventListener("message", async (evt) => {
-        await pc.setRemoteDescription({ type: "offer", sdp: evt.data });
+      channel.onmessage = async (evt) => {
+        if (evt.data.type === "ice") {
+          pc.addIceCandidate(evt.data.candidate ? evt.data : undefined);
+          return;
+        }
+        await pc.setRemoteDescription(evt.data);
         const answer = await pc.createAnswer();
+        channel.postMessage({ type: "answer", sdp: answer.sdp });
         await pc.setLocalDescription(answer);
-      });
+      };
     </script>
   </head>
   <body>
-    <video id="video" auto-play muted />
+    <video id="video" autoplay muted />
   </body>
 </html>
