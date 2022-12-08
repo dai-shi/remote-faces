@@ -1,23 +1,42 @@
-import { memo, useCallback, useState, useRef, useEffect } from "react";
+import { memo, useCallback, useState, useEffect } from "react";
 
 import "./MeetingScreen.css";
 import { useMediaShare } from "../hooks/useMediaShare";
 import { useNicknameMap } from "../hooks/useNicknameMap";
 
-const Video = memo<{
+const StreamOpener = memo<{
   nickname: string;
   stream: MediaStream;
 }>(({ nickname, stream }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream;
+  const open = useCallback(() => {
+    const win = window.open("stream_viewer.html", "_blank");
+    if (!win) {
+      return;
     }
-  }, [stream]);
+    win.onload = async () => {
+      win.document.title = nickname;
+      const pc = new RTCPeerConnection();
+      pc.addTrack(stream.getVideoTracks()[0], stream);
+      pc.onicecandidate = (event) => {
+        if (!event.candidate && pc.localDescription) {
+          win.postMessage(pc.localDescription.sdp);
+        }
+      };
+      win.addEventListener("message", async (event) => {
+        await pc.setRemoteDescription({
+          type: "answer",
+          sdp: event.data,
+        });
+      });
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+    };
+  }, [nickname, stream]);
   return (
-    <div className="MeetingScreen-card">
-      <video className="MeetingScreen-video" ref={videoRef} autoPlay muted />
-      <div className="MeetingScreen-nickname">{nickname}</div>
+    <div className="MeetingScreen-opener">
+      <button type="button" onClick={open}>
+        {nickname}
+      </button>
     </div>
   );
 });
@@ -62,12 +81,14 @@ export const MeetingScreen = memo<{
         )}
       </div>
       <div className="MeetingScreen-body">
-        {videoStream && <Video nickname={nickname} stream={videoStream} />}
+        {videoStream && (
+          <StreamOpener nickname={nickname} stream={videoStream} />
+        )}
         {Object.keys(videoStreamMap).map((mediaUserId) => {
           const stream = videoStreamMap[mediaUserId];
           if (!stream) return null;
           return (
-            <Video
+            <StreamOpener
               key={mediaUserId}
               nickname={nicknameMap[mediaUserId] || "No Name"}
               stream={stream}

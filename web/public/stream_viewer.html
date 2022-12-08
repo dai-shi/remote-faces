@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
+      #video {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    <script>
+      const pc = new RTCPeerConnection();
+      pc.ontrack = (event) => {
+        console.log('ontrack', event);
+        document.getElementById('video').srcObject = event.streams[0];
+      };
+      pc.onicecandidate = (event) => {
+        if (!event.candidate && pc.localDescription) {
+          window.opener.postMessage(pc.localDescription.sdp);
+        }
+      };
+      window.addEventListener('message', async (event) => {
+        await pc.setRemoteDescription({
+          type: 'offer',
+          sdp: event.data,
+        });
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+      });
+    </script>
+  </head>
+  <body>
+    <video id="video" auto-play muted />
+  </body>
+</html>
