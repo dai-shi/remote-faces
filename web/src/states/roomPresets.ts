@@ -16,6 +16,16 @@ const createMeeting = (
     border: "",
     iframe: "",
   },
+  [`meeting${i}_screen`]: {
+    type: "screen",
+    meetingRegionId: `meeting${i}`,
+    position: [x, y + h + 5],
+    size: [w, 70],
+    zIndex: 0,
+    background: "rgba(140, 140, 140, 0.2)",
+    border: "",
+    iframe: "",
+  },
 });
 
 const createGoBoard = (i: number, x: number, y: number) => ({
