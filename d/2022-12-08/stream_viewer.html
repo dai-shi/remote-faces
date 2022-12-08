@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      body {
+        margin: 0;
+      }
+      #video {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    <script>
+      const id = location.hash.slice(1);
+      const channel = new BroadcastChannel(id);
+      const pc = new RTCPeerConnection();
+      pc.ontrack = (evt) => {
+        document.getElementById("video").srcObject = evt.streams[0];
+      };
+      pc.onicecandidate = (evt) => {
+        channel.postMessage({
+          type: "ice",
+          candidate: evt.candidate?.candidate,
+          sdpMid: evt.candidate?.sdpMid,
+          sdpMLineIndex: evt.candidate?.sdpMLineIndex,
+        });
+      };
+      channel.onmessage = async (evt) => {
+        if (evt.data.type === "ice") {
+          pc.addIceCandidate(evt.data.candidate ? evt.data : undefined);
+          return;
+        }
+        await pc.setRemoteDescription(evt.data);
+        const answer = await pc.createAnswer();
+        channel.postMessage({ type: "answer", sdp: answer.sdp });
+        await pc.setLocalDescription(answer);
+      };
+    </script>
+  </head>
+  <body>
+    <video id="video" autoplay muted />
+  </body>
+</html>
