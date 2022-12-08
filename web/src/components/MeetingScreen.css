@@ -10,20 +10,13 @@
 }
 
 .MeetingScreen-toolbar > button, select {
-  margin: 4px;
+  margin: 2px;
 }
 
 .MeetingScreen-body {
-  display: grid;
-  grid-gap: 5px;
-  grid-template-columns: repeat(1, 1fr);
-  grid-template-rows: repeat(1, 100%);
-  width: 100%;
-  height: 100%;
 }
 
 .MeetingScreen-opener {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  float: left;
+  margin: 2px;
 }
