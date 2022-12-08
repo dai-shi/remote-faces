@@ -15,7 +15,6 @@
       const channel = new BroadcastChannel(id);
       const pc = new RTCPeerConnection();
       pc.ontrack = (evt) => {
-        console.log("ontrack", evt);
         document.getElementById("video").srcObject = evt.streams[0];
       };
       pc.onicecandidate = (evt) => {

@@ -1,4 +1,4 @@
-import { memo, useCallback, useState, useEffect } from "react";
+import { memo, useCallback, useRef, useState, useEffect } from "react";
 
 import "./MeetingScreen.css";
 import { useMediaShare } from "../hooks/useMediaShare";
@@ -9,12 +9,21 @@ const StreamOpener = memo<{
   nickname: string;
   stream: MediaStream;
 }>(({ nickname, stream }) => {
+  const winRef = useRef<Window | null>(null);
+  useEffect(() => {
+    const cleanup = () => {
+      winRef.current?.close();
+    };
+    return cleanup;
+  }, []);
   const open = useCallback(() => {
+    winRef.current?.close();
     const id = secureRandomId();
-    const win = window.open(`stream_viewer.html#${id}`, "_blank");
-    if (!win) {
+    winRef.current = window.open(`stream_viewer.html#${id}`, "_blank");
+    if (!winRef.current) {
       return;
     }
+    const win = winRef.current;
     const channel = new BroadcastChannel(id);
     const pc = new RTCPeerConnection();
     pc.addTrack(stream.getVideoTracks()[0], stream);
