@@ -22,7 +22,7 @@ const StreamOpener = memo<{
           win.postMessage(pc.localDescription.sdp);
         }
       };
-      win.addEventListener("message", async (event) => {
+      window.addEventListener("message", async (event) => {
         await pc.setRemoteDescription({
           type: "answer",
           sdp: event.data,
