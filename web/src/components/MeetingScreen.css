@@ -1,0 +1,22 @@
+.MeetingScreen-container {
+  -webkit-app-region: no-drag;
+  overflow: scroll;
+  width: 100%;
+  height: 100%;
+}
+
+.MeetingScreen-toolbar {
+  border-bottom: gray 1px solid;
+}
+
+.MeetingScreen-toolbar > button, select {
+  margin: 2px;
+}
+
+.MeetingScreen-body {
+}
+
+.MeetingScreen-opener {
+  float: left;
+  margin: 2px;
+}
