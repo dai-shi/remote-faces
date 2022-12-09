@@ -10,14 +10,18 @@ const StreamOpener = memo<{
   stream: MediaStream;
 }>(({ nickname, stream }) => {
   const winRef = useRef<Window | null>(null);
-  useEffect(() => {
-    const cleanup = () => {
+  const close = useCallback(() => {
+    try {
       winRef.current?.close();
-    };
-    return cleanup;
+    } catch (e) {
+      // ignored
+    }
   }, []);
+  useEffect(() => {
+    return close;
+  }, [close]);
   const open = useCallback(() => {
-    winRef.current?.close();
+    close();
     const id = secureRandomId();
     winRef.current = window.open(`stream_viewer.html#${id}`, "_blank");
     if (!winRef.current) {
@@ -48,7 +52,7 @@ const StreamOpener = memo<{
       channel.postMessage({ type: "offer", sdp: offer.sdp });
       await pc.setLocalDescription(offer);
     };
-  }, [nickname, stream]);
+  }, [nickname, stream, close]);
   return (
     <div className="MeetingScreen-opener">
       <button type="button" onClick={open}>
