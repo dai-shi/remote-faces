@@ -3,13 +3,11 @@
 
 // https://github.com/electron/electron/issues/16513#issuecomment-602070250
 
-const { desktopCapturer } = require('electron');
+const { ipcRenderer } = require('electron');
 
 window.navigator.mediaDevices.getDisplayMedia = () => new Promise(async (resolve, reject) => {
   try {
-    const sources = await desktopCapturer.getSources({
-      types: ['screen', 'window'],
-    });
+    const sources = await ipcRenderer.invoke('desktop-capturer-get-sources');
     console.log(sources);
     const selectionElem = document.createElement('div');
     selectionElem.innerHTML = createSelectionHTML(sources);

@@ -6,6 +6,7 @@ const {
   dialog,
   shell,
   ipcMain,
+  desktopCapturer,
 } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const Store = require('electron-store');
@@ -56,6 +57,7 @@ const createWindow = () => {
     alwaysOnTop: store.get('alwaysOnTop', false),
     frame: false,
     webPreferences: {
+      sandbox: false,
       contextIsolation: false,
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -130,6 +132,9 @@ const createWindow = () => {
   ipcMain.on('prompt-response', (event, arg) => {
     promptResponse = arg;
   });
+  ipcMain.handle('desktop-capturer-get-sources', () => desktopCapturer.getSources({
+    types: ['screen', 'window'],
+  }));
 };
 
 const setupAppMenu = () => {
