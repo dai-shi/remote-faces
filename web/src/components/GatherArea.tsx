@@ -31,6 +31,7 @@ import { encodeBase64Async } from "../utils/base64";
 
 const MomentaryChat = lazy(() => import("./MomentaryChat"));
 const MediaShare = lazy(() => import("./MediaShare"));
+const MeetingScreen = lazy(() => import("./MeetingScreen"));
 const GoBoard = lazy(() => import("./GoBoard"));
 
 type OnMouseMove = (
@@ -76,6 +77,7 @@ const Region = memo<{
   registerOnMouseDrag: (onMouseMove?: OnMouseMove) => void;
   isSelected: boolean;
   setSelectedRegionId: (regionId: string) => void;
+  activeMeetingRegionId: string | undefined;
 }>(
   ({
     roomId,
@@ -88,6 +90,7 @@ const Region = memo<{
     registerOnMouseDrag,
     isSelected,
     setSelectedRegionId,
+    activeMeetingRegionId,
   }) => {
     let boxShadow: string | undefined;
     if (isSelected) {
@@ -160,6 +163,20 @@ const Region = memo<{
               userId={userId}
               nickname={nickname}
               uniqueId={id}
+            />
+          </Suspense>
+        )}
+        {data.type === "screen" && (
+          <Suspense fallback={<SuspenseFallback />}>
+            <MeetingScreen
+              roomId={roomId}
+              userId={userId}
+              nickname={nickname}
+              uniqueId={id}
+              isActive={
+                !!activeMeetingRegionId &&
+                activeMeetingRegionId === data.meetingRegionId
+              }
             />
           </Suspense>
         )}
@@ -525,6 +542,7 @@ export const GatherArea = memo<{
               registerOnMouseDrag={registerOnMouseDrag}
               isSelected={selectedRegionId === regionId}
               setSelectedRegionId={setSelectedRegionId}
+              activeMeetingRegionId={activeMeetingRegionId}
             />
           ))}
           {Object.entries(avatarMap).map(([uid, avatarData]) => {
