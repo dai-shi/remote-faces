@@ -4,7 +4,7 @@ import { useSnapshot } from "valtio";
 import { isObject } from "../utils/types";
 import { takePhoto } from "../media/capture";
 import { getRoomState } from "../states/roomMap";
-import { preferenceState } from "../states/preference";
+import { globalState } from "../states/global";
 
 type ImageUrl = string;
 
@@ -72,20 +72,19 @@ const takePhotoWithCache = (
 };
 
 export const useFaceImages = (
-  roomId: string,
-  userId: string,
-  avatar: string,
-  nickname: string,
-  statusMesg: string,
-  suspended: boolean,
   liveMode: boolean,
   micOn: boolean,
-  speakerOn: boolean,
-  deviceId?: string
+  speakerOn: boolean
 ) => {
+  const {
+    roomId,
+    userId,
+    statusMesg,
+    config: { avatar, nickname, takePhoto, videoDeviceId },
+    preference: { photoSize },
+  } = useSnapshot(globalState);
   const roomState = getRoomState(roomId, userId);
   const { userIdList, faceImages } = useSnapshot(roomState);
-  const { photoSize } = useSnapshot(preferenceState);
 
   const tenMinAgo = Date.now() - 10 * 60 * 1000;
   const roomImages: ImageData[] = [];
@@ -107,9 +106,9 @@ export const useFaceImages = (
     const loop = async () => {
       if (didCleanup) return;
       try {
-        const image = suspended
-          ? avatar
-          : await takePhotoWithCache(deviceId, photoSize);
+        const image = takePhoto
+          ? await takePhotoWithCache(videoDeviceId, photoSize)
+          : avatar;
         if (didCleanup) return;
         setMyImage(image);
         const info: FaceInfo = {
@@ -139,11 +138,11 @@ export const useFaceImages = (
   }, [
     roomState,
     userId,
-    deviceId,
+    videoDeviceId,
     avatar,
     nickname,
     statusMesg,
-    suspended,
+    takePhoto,
     liveMode,
     micOn,
     speakerOn,

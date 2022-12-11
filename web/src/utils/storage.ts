@@ -2,11 +2,10 @@ type StringItemName =
   | "nickname"
   | "avatar_img"
   | "take_photo"
-  | "config_hidden"
   | "faceimage_video_device_id"
   | "faceimage_audio_device_id";
 
-type JsonItemName = "TODO2" | "TODO3";
+type JsonItemName = "preference";
 
 export const setStringItem = (name: StringItemName, value: string) => {
   try {

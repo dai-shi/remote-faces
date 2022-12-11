@@ -2,13 +2,12 @@ import { memo, useEffect, useState } from "react";
 import { useSnapshot } from "valtio";
 
 import "./SingleRoom.css";
-import { singleRoomState, toggleConfigTakePhoto } from "../states/singleRoom";
+import { globalState } from "../states/global";
 import { setRoomIdToUrl } from "../utils/url";
 import { GatherArea } from "./GatherArea";
 
 export const SingleRoom = memo(() => {
-  const { roomId, userId, config } = useSnapshot(singleRoomState);
-  const [statusMesg, setStatusMesg] = useState("");
+  const { roomId } = useSnapshot(globalState);
   useEffect(() => {
     setRoomIdToUrl(roomId);
   }, [roomId]);
@@ -33,18 +32,7 @@ export const SingleRoom = memo(() => {
 
   return (
     <div className="SingleRoom-container">
-      <GatherArea
-        roomId={roomId}
-        userId={userId}
-        avatar={config.avatar}
-        nickname={config.nickname}
-        statusMesg={statusMesg}
-        setStatusMesg={setStatusMesg}
-        suspended={!config.takePhoto}
-        videoDeviceId={config.videoDeviceId}
-        audioDeviceId={config.audioDeviceId}
-        toggleSuspended={toggleConfigTakePhoto}
-      />
+      <GatherArea />
     </div>
   );
 });
