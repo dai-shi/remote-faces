@@ -2,17 +2,17 @@ import { lazy, memo, useState } from "react";
 import { useSnapshot } from "valtio";
 
 import "./SingleRoomEntrance.css";
-import { singleRoomState, setConfig } from "../states/singleRoom";
+import { globalState } from "../states/global";
 import { secureRandomId, generateCryptoKey } from "../utils/crypto";
 import { ROOM_ID_PREFIX_LEN } from "../network/room";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import { setRoomPresetToUrl } from "../utils/url";
 
-const Landing = lazy(() => import("./Landing"));
+const Landing = lazy(() => import("./reusable/Landing"));
 const SingleRoom = lazy(() => import("./SingleRoom"));
 
 export const SingleRoomEntrance = memo(() => {
-  const { roomId, roomEntered, config } = useSnapshot(singleRoomState);
+  const { roomId, roomEntered, config } = useSnapshot(globalState);
   const [name, setName] = useState(config.nickname);
   const [takePhoto, setTakePhoto] = useState(config.takePhoto);
   const [avatar, setAvatar] = useState(config.avatar);
@@ -43,15 +43,19 @@ export const SingleRoomEntrance = memo(() => {
 
   const onEnter = async () => {
     setEntering(true);
-    if (!singleRoomState.roomId) {
+    if (!globalState.roomId) {
       if (roomPreset) {
         setRoomPresetToUrl(roomPreset);
       }
-      singleRoomState.roomId =
+      globalState.roomId =
         secureRandomId(ROOM_ID_PREFIX_LEN / 2) + (await generateCryptoKey());
     }
-    setConfig(avatar, name, takePhoto, videoDeviceId, audioDeviceId);
-    singleRoomState.roomEntered = true;
+    globalState.config.avatar = avatar;
+    globalState.config.nickname = name;
+    globalState.config.takePhoto = takePhoto;
+    globalState.config.videoDeviceId = videoDeviceId;
+    globalState.config.audioDeviceId = audioDeviceId;
+    globalState.roomEntered = true;
   };
 
   if (roomId && roomEntered) {

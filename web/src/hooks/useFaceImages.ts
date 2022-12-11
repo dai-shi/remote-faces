@@ -4,7 +4,6 @@ import { useSnapshot } from "valtio";
 import { isObject } from "../utils/types";
 import { takePhoto } from "../media/capture";
 import { getRoomState } from "../states/roomMap";
-import { preferenceState } from "../states/preference";
 
 type ImageUrl = string;
 
@@ -81,11 +80,11 @@ export const useFaceImages = (
   liveMode: boolean,
   micOn: boolean,
   speakerOn: boolean,
-  deviceId?: string
+  deviceId?: string,
+  photoSize?: number
 ) => {
   const roomState = getRoomState(roomId, userId);
   const { userIdList, faceImages } = useSnapshot(roomState);
-  const { photoSize } = useSnapshot(preferenceState);
 
   const tenMinAgo = Date.now() - 10 * 60 * 1000;
   const roomImages: ImageData[] = [];

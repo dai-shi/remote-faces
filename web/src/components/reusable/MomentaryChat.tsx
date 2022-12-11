@@ -2,10 +2,10 @@ import { memo, useState, useRef, useEffect, useCallback } from "react";
 import DOMPurify from "dompurify";
 
 import "./MomentaryChat.css";
-import { useMomentaryChat, ChatItem } from "../hooks/useMomentaryChat";
-import { EmojiPicker } from "../utils/emoji";
+import { useMomentaryChat, ChatItem } from "../../hooks/useMomentaryChat";
+import { EmojiPicker } from "../../utils/emoji";
 import { WysiwygEditor } from "./WysiwygEditor";
-import { useNotification } from "../hooks/useNotification";
+import { useNotification } from "../../hooks/useNotification";
 
 const MAX_CHAT_TEXT_SIZE = 1 * 1024 * 1024;
 

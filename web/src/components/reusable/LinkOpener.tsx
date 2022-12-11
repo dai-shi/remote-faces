@@ -1,7 +1,7 @@
 import { memo, useEffect, useState } from "react";
 
 import "./LinkOpener.css";
-import { generateExcalidrawURL } from "../utils/excalidraw";
+import { generateExcalidrawURL } from "../../utils/excalidraw";
 
 export const LinkOpener = memo<{
   roomId: string;

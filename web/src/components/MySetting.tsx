@@ -1,21 +1,15 @@
 import { memo, useState } from "react";
 
 import "./MySetting.css";
-import { setConfigAvatar } from "../states/singleRoom";
-import { preferenceState } from "../states/preference";
+import { globalState } from "../states/global";
 
 const LOW_RESOLUTION = 24;
 
-export const MySetting = memo<{
-  statusMesg: string;
-  suspended: boolean;
-  toggleSuspended: () => void;
-  setStatusMesg: (message: string) => void;
-}>(({ statusMesg, suspended, toggleSuspended, setStatusMesg }) => {
-  const [message, setMessage] = useState(statusMesg);
-  const [camera, setCamera] = useState(!suspended);
+export const MySetting = memo(() => {
+  const [message, setMessage] = useState(globalState.statusMesg);
+  const [camera, setCamera] = useState(globalState.config.takePhoto);
   const [lowResPhoto, setLowResPhoto] = useState(
-    preferenceState.photoSize === LOW_RESOLUTION
+    globalState.preference.photoSize === LOW_RESOLUTION
   );
   const [avatar, setAvatar] = useState("");
   const onChangeAvatar = (files: FileList | null) => {
@@ -82,7 +76,7 @@ export const MySetting = memo<{
         Message:{" "}
         <input
           type="text"
-          defaultValue={message || ""}
+          defaultValue={message}
           onChange={(e) => {
             setMessage(e.target.value);
           }}
@@ -92,16 +86,16 @@ export const MySetting = memo<{
       <button
         type="button"
         onClick={() => {
-          if (message !== null) {
-            setStatusMesg(message);
+          if (message) {
+            globalState.statusMesg = message;
           }
-          if (suspended === camera) {
-            toggleSuspended();
+          if (avatar) {
+            globalState.config.avatar = avatar;
           }
-          preferenceState.photoSize = lowResPhoto ? LOW_RESOLUTION : undefined;
-          if (suspended && avatar) {
-            setConfigAvatar(avatar);
-          }
+          globalState.config.takePhoto = camera;
+          globalState.preference.photoSize = lowResPhoto
+            ? LOW_RESOLUTION
+            : undefined;
         }}
       >
         update

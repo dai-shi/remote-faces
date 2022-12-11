@@ -46,7 +46,7 @@
       }
     },
     {
-      "files": ["src/components/MomentaryChat.tsx"],
+      "files": ["src/components/reusable/MomentaryChat.tsx"],
       "rules": {
         "react/no-danger": "off"
       }

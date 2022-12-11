@@ -1,9 +1,9 @@
 import { memo, useCallback, useRef, useState, useEffect } from "react";
 
 import "./MeetingScreen.css";
-import { useMediaShare } from "../hooks/useMediaShare";
-import { useNicknameMap } from "../hooks/useNicknameMap";
-import { secureRandomId } from "../utils/crypto";
+import { useMediaShare } from "../../hooks/useMediaShare";
+import { useNicknameMap } from "../../hooks/useNicknameMap";
+import { secureRandomId } from "../../utils/crypto";
 
 const StreamOpener = memo<{
   nickname: string;

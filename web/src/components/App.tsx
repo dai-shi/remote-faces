@@ -1,10 +1,10 @@
 import { PureComponent, ReactNode, Suspense, memo } from "react";
 
 import "./App.css";
-import { ErrorFallback } from "./ErrorFallback";
-import { SuspenseFallback } from "./SuspenseFallback";
+import { ErrorFallback } from "./reusable/ErrorFallback";
+import { SuspenseFallback } from "./reusable/SuspenseFallback";
 import { SingleRoomEntrance } from "./SingleRoomEntrance";
-import { GitHubCorner } from "./GitHubCorner";
+import { GitHubCorner } from "./reusable/GitHubCorner";
 
 class ErrorBoundary extends PureComponent<{ children: ReactNode }> {
   state: { err?: Error } = {};
