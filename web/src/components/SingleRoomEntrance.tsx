@@ -8,7 +8,7 @@ import { ROOM_ID_PREFIX_LEN } from "../network/room";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
 import { setRoomPresetToUrl } from "../utils/url";
 
-const Landing = lazy(() => import("./Landing"));
+const Landing = lazy(() => import("./reusable/Landing"));
 const SingleRoom = lazy(() => import("./SingleRoom"));
 
 export const SingleRoomEntrance = memo(() => {

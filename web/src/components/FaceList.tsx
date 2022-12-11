@@ -2,9 +2,9 @@ import { memo } from "react";
 import { useSnapshot } from "valtio";
 
 import "./FaceList.css";
-import { Loading } from "./Loading";
+import { Loading } from "./reusable/Loading";
 import { useFaceImages } from "../hooks/useFaceImages";
-import { FaceCard } from "./FaceCard";
+import { FaceCard } from "./reusable/FaceCard";
 import { NG_IMAGE } from "../media/imagePresets";
 import { globalState } from "../states/global";
 
@@ -20,11 +20,24 @@ export const FaceList = memo(() => {
     roomId,
     userId,
     statusMesg,
-    config: { nickname },
+    config: { avatar, nickname, takePhoto, videoDeviceId },
+    preference: { photoSize },
   } = useSnapshot(globalState);
   const roomState = getRoomState(roomId, userId);
   const { userIdList } = useSnapshot(roomState);
-  const { myImage, roomImages } = useFaceImages(false, false, false);
+  const { myImage, roomImages } = useFaceImages(
+    roomId,
+    userId,
+    avatar,
+    nickname,
+    statusMesg,
+    !takePhoto,
+    false,
+    false,
+    false,
+    videoDeviceId,
+    photoSize
+  );
   return (
     <div className="FaceList-list">
       <div className="FaceList-item">

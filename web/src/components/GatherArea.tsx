@@ -24,10 +24,10 @@ import { useFaceImages, useFaceImageObsoleted } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { RegionEditor } from "./RegionEditor";
 import { MySetting } from "./MySetting";
-import { LinkOpener } from "./LinkOpener";
+import { LinkOpener } from "./reusable/LinkOpener";
 import { FaceList } from "./FaceList";
-import { FaceCard } from "./FaceCard";
-import { SuspenseFallback } from "./SuspenseFallback";
+import { FaceCard } from "./reusable/FaceCard";
+import { SuspenseFallback } from "./reusable/SuspenseFallback";
 import { rand4 } from "../utils/crypto";
 import { encodeBase64Async } from "../utils/base64";
 
@@ -369,9 +369,22 @@ export const GatherArea = memo(() => {
     roomId,
     userId,
     statusMesg,
-    config: { nickname, videoDeviceId, audioDeviceId },
+    config: { avatar, nickname, takePhoto, videoDeviceId, audioDeviceId },
+    preference: { photoSize },
   } = useSnapshot(globalState);
-  const { myImage, roomImages } = useFaceImages(false, false, false);
+  const { myImage, roomImages } = useFaceImages(
+    roomId,
+    userId,
+    avatar,
+    nickname,
+    statusMesg,
+    !takePhoto,
+    false,
+    false,
+    false,
+    videoDeviceId,
+    photoSize
+  );
   const { avatarMap, myAvatar, setMyAvatar, regionMap, updateRegion } =
     useGatherArea(roomId, userId);
 
