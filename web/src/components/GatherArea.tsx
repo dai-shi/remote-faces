@@ -31,10 +31,10 @@ import { SuspenseFallback } from "./reusable/SuspenseFallback";
 import { rand4 } from "../utils/crypto";
 import { encodeBase64Async } from "../utils/base64";
 
-const MomentaryChat = lazy(() => import("./MomentaryChat"));
-const MediaShare = lazy(() => import("./MediaShare"));
-const MeetingScreen = lazy(() => import("./MeetingScreen"));
-const GoBoard = lazy(() => import("./GoBoard"));
+const MomentaryChat = lazy(() => import("./reusable/MomentaryChat"));
+const MediaShare = lazy(() => import("./reusable/MediaShare"));
+const MeetingScreen = lazy(() => import("./reusable/MeetingScreen"));
+const GoBoard = lazy(() => import("./reusable/GoBoard"));
 
 type OnMouseMove = (
   e: React.MouseEvent<HTMLDivElement, MouseEvent> | "ended"

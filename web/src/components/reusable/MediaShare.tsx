@@ -1,9 +1,9 @@
 import { memo, useCallback, useState, useRef, useEffect } from "react";
 
 import "./MediaShare.css";
-import { useMediaShare } from "../hooks/useMediaShare";
-import { useVideoDevices } from "../hooks/useAvailableDevices";
-import { useNicknameMap } from "../hooks/useNicknameMap";
+import { useMediaShare } from "../../hooks/useMediaShare";
+import { useVideoDevices } from "../../hooks/useAvailableDevices";
+import { useNicknameMap } from "../../hooks/useNicknameMap";
 
 const Video = memo<{
   nickname: string;

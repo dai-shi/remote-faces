@@ -9,7 +9,7 @@ import {
 } from "wgo";
 
 import "./GoBoard.css";
-import { useGoBoard, PositionData } from "../hooks/useGoBoard";
+import { useGoBoard, PositionData } from "../../hooks/useGoBoard";
 
 const createPosition = (positionData: PositionData) => {
   const position = new Position(positionData.size);
