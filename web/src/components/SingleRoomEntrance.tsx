@@ -6,6 +6,7 @@ import { globalState } from "../states/global";
 import { secureRandomId, generateCryptoKey } from "../utils/crypto";
 import { ROOM_ID_PREFIX_LEN } from "../network/room";
 import { useVideoDevices, useAudioDevices } from "../hooks/useAvailableDevices";
+import { useInputAvatar } from "../hooks/useInputAvatar";
 import { setRoomPresetToUrl } from "../utils/url";
 
 const Landing = lazy(() => import("./reusable/Landing"));
@@ -15,31 +16,13 @@ export const SingleRoomEntrance = memo(() => {
   const { roomId, roomEntered, config } = useSnapshot(globalState);
   const [name, setName] = useState(config.nickname);
   const [takePhoto, setTakePhoto] = useState(config.takePhoto);
-  const [avatar, setAvatar] = useState(config.avatar);
+  const [avatar, onChangeAvatar] = useInputAvatar(config.avatar);
   const videoDevices = useVideoDevices();
   const audioDevices = useAudioDevices();
   const [videoDeviceId, setVideoDeviceId] = useState(config.videoDeviceId);
   const [audioDeviceId, setAudioDeviceId] = useState(config.audioDeviceId);
   const [roomPreset, setRoomPreset] = useState("intro");
   const [entering, setEntering] = useState(false);
-
-  const onChangeAvatar = (files: FileList | null) => {
-    const file = files && files[0];
-    if (!file) {
-      return;
-    }
-    if (file.size > 16 * 1024) {
-      window.alert(`Too large: ${file.size}`);
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setAvatar(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
 
   const onEnter = async () => {
     setEntering(true);
