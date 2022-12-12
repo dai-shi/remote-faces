@@ -22,7 +22,7 @@ import {
 } from "../hooks/useGatherArea";
 import { useFaceImages, useFaceImageObsoleted } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
-import { RegionEditor } from "./RegionEditor";
+import { RegionEditor } from "./reusable/RegionEditor";
 import { MySetting } from "./MySetting";
 import { LinkOpener } from "./reusable/LinkOpener";
 import { FaceList } from "./FaceList";
