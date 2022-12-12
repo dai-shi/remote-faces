@@ -22,6 +22,7 @@ import {
 } from "../hooks/useGatherArea";
 import { useFaceImages, useFaceImageObsoleted } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
+import { ControlPanel } from "./ControlPanel";
 import { RegionEditor } from "./reusable/RegionEditor";
 import { MySetting } from "./MySetting";
 import { LinkOpener } from "./reusable/LinkOpener";
@@ -627,6 +628,9 @@ export const GatherArea = memo(() => {
             </div>
           )}
         </div>
+      </div>
+      <div className="GatherArea-controlpanel">
+        <ControlPanel />
       </div>
     </div>
   );
