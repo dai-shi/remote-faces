@@ -12,7 +12,7 @@ type OnMouseMove = (
 
 export const ControlPanel = memo(() => {
   const positionRef = useRef<readonly [number, number]>(
-    globalState.preference.controlPanelPosition || [40, 5]
+    globalState.preference.controlPanelPosition || [40, 350]
   );
   const onMouseDragRef = useRef<OnMouseMove>();
   // TODO

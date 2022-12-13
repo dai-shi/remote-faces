@@ -5,6 +5,18 @@
   background: green;
 }
 
+@keyframes ControlPanel-rumble {
+  0%   { transform:translate(0, 0); }
+  25%  { transform:translate(0, 0) rotate(1deg); }
+  50%  { transform:translate(0, 0); }
+  75%  { transform:translate(0, 0) rotate(-1deg); }
+  100% { transform:translate(0, 0); }
+}
+
+.ControlPanel-container:hover {
+  animation:ControlPanel-rumble 0.2s linear;
+}
+
 .ControlPanel-header {
   width: 100%;
   height: 15px;
