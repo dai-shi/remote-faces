@@ -22,3 +22,41 @@
   height: 15px;
   background: rgba(0, 0, 0, 0.5);
 }
+
+.ControlPanel-toolbar {
+  margin: 5px;
+}
+
+.ControlPanel-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ControlPanel-setting {
+  -webkit-app-region: no-drag;
+  margin: 5px;
+  padding: 10px;
+  background: rgb(224, 255, 228);
+  border: 3px solid gray;
+  border-radius: 8px;
+}
+
+.ControlPanel-region-editor {
+  -webkit-app-region: no-drag;
+  margin: 5px;
+  padding: 10px;
+  background: lightyellow;
+  border: 3px solid gray;
+  border-radius: 8px;
+}
+
+.ControlPanel-link-opener {
+  -webkit-app-region: no-drag;
+  margin: 5px;
+  padding: 10px;
+  background: skyblue;
+  border: 3px solid gray;
+  border-radius: 8px;
+}

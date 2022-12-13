@@ -6,7 +6,7 @@ import { useInputAvatar } from "../hooks/useInputAvatar";
 
 const LOW_RESOLUTION = 24;
 
-export const MySetting = memo(() => {
+const MySetting = memo(() => {
   const [message, setMessage] = useState(globalState.statusMesg);
   const [camera, setCamera] = useState(globalState.config.takePhoto);
   const [lowResPhoto, setLowResPhoto] = useState(
@@ -87,3 +87,5 @@ export const MySetting = memo(() => {
     </div>
   );
 });
+
+export default MySetting;
