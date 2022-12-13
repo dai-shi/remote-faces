@@ -17,7 +17,11 @@ type OnMouseMove = (
 ) => void;
 
 export const ControlPanel = memo(() => {
-  const { roomId, userId } = useSnapshot(globalState);
+  const {
+    roomId,
+    userId,
+    preference: { hideFaceList },
+  } = useSnapshot(globalState);
 
   const positionRef = useRef<readonly [number, number]>(
     globalState.preference.controlPanelPosition || [40, 350]
@@ -85,6 +89,16 @@ export const ControlPanel = memo(() => {
           }}
         />
         <div className="ControlPanel-toolbar">
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                globalState.preference.hideFaceList = !hideFaceList;
+              }}
+            >
+              {hideFaceList ? "Show Face List" : "Hide Face List"}
+            </button>
+          </div>
           <div>
             <button
               type="button"

@@ -23,12 +23,12 @@ import {
 import { useFaceImages, useFaceImageObsoleted } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
 import { ControlPanel } from "./ControlPanel";
-import { FaceList } from "./FaceList";
 import { FaceCard } from "./reusable/FaceCard";
 import { SuspenseFallback } from "./reusable/SuspenseFallback";
 import { rand4 } from "../utils/crypto";
 import { encodeBase64Async } from "../utils/base64";
 
+const FaceList = lazy(() => import("./FaceList"));
 const MomentaryChat = lazy(() => import("./reusable/MomentaryChat"));
 const MediaShare = lazy(() => import("./reusable/MediaShare"));
 const MeetingScreen = lazy(() => import("./reusable/MeetingScreen"));
@@ -368,7 +368,7 @@ export const GatherArea = memo(() => {
     userId,
     statusMesg,
     config: { avatar, nickname, takePhoto, videoDeviceId, audioDeviceId },
-    preference: { photoSize },
+    preference: { photoSize, hideFaceList },
   } = useSnapshot(globalState);
   const { myImage, roomImages } = useFaceImages(
     roomId,
@@ -566,9 +566,13 @@ export const GatherArea = memo(() => {
           micOn={activeMeetingMicOn}
         />
       </div>
-      <div className="GatherArea-facelist">
-        <FaceList />
-      </div>
+      {!hideFaceList && (
+        <div className="GatherArea-facelist">
+          <Suspense fallback={<SuspenseFallback />}>
+            <FaceList />
+          </Suspense>
+        </div>
+      )}
       <div className="GatherArea-controlpanel">
         <ControlPanel />
       </div>

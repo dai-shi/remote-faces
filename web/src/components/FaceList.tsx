@@ -15,7 +15,7 @@ const setStatusMesg = (mesg: string) => {
   globalState.statusMesg = mesg;
 };
 
-export const FaceList = memo(() => {
+const FaceList = memo(() => {
   const {
     roomId,
     userId,
@@ -80,3 +80,5 @@ export const FaceList = memo(() => {
     </div>
   );
 });
+
+export default FaceList;
