@@ -22,15 +22,13 @@ import {
 } from "../hooks/useGatherArea";
 import { useFaceImages, useFaceImageObsoleted } from "../hooks/useFaceImages";
 import { useFaceVideos } from "../hooks/useFaceVideos";
-import { RegionEditor } from "./RegionEditor";
-import { MySetting } from "./MySetting";
-import { LinkOpener } from "./reusable/LinkOpener";
-import { FaceList } from "./FaceList";
+import { ControlPanel } from "./ControlPanel";
 import { FaceCard } from "./reusable/FaceCard";
 import { SuspenseFallback } from "./reusable/SuspenseFallback";
 import { rand4 } from "../utils/crypto";
 import { encodeBase64Async } from "../utils/base64";
 
+const FaceList = lazy(() => import("./FaceList"));
 const MomentaryChat = lazy(() => import("./reusable/MomentaryChat"));
 const MediaShare = lazy(() => import("./reusable/MediaShare"));
 const MeetingScreen = lazy(() => import("./reusable/MeetingScreen"));
@@ -370,7 +368,7 @@ export const GatherArea = memo(() => {
     userId,
     statusMesg,
     config: { avatar, nickname, takePhoto, videoDeviceId, audioDeviceId },
-    preference: { photoSize },
+    preference: { photoSize, hideFaceList },
   } = useSnapshot(globalState);
   const { myImage, roomImages } = useFaceImages(
     roomId,
@@ -415,10 +413,6 @@ export const GatherArea = memo(() => {
     audioDeviceId,
     `gatherArea/meeting/${activeMeetingRegionId}/`
   );
-
-  const [showModal, setShowModal] = useState<
-    null | "region-editor" | "link-opener" | "setting"
-  >(null);
 
   const handlePasteOrDrop = async (e: ClipboardEvent | DragEvent) => {
     e.preventDefault();
@@ -572,61 +566,15 @@ export const GatherArea = memo(() => {
           micOn={activeMeetingMicOn}
         />
       </div>
-      <div className="GatherArea-facelist">
-        <FaceList />
-      </div>
-      <div className="GatherArea-toolbar">
-        <div>
-          <button
-            type="button"
-            onClick={() =>
-              setShowModal(showModal === "setting" ? null : "setting")
-            }
-          >
-            {showModal === "setting" ? "Close Setting" : "Open Setting"}
-          </button>
-          {showModal === "setting" && (
-            <div className="GatherArea-setting">
-              <MySetting />
-            </div>
-          )}
+      {!hideFaceList && (
+        <div className="GatherArea-facelist">
+          <Suspense fallback={<SuspenseFallback />}>
+            <FaceList />
+          </Suspense>
         </div>
-        <div>
-          <button
-            type="button"
-            onClick={() =>
-              setShowModal(
-                showModal === "region-editor" ? null : "region-editor"
-              )
-            }
-          >
-            {showModal === "region-editor"
-              ? "Close Region Editor"
-              : "Open Region Editor"}
-          </button>
-          {showModal === "region-editor" && (
-            <div className="GatherArea-region-editor">
-              <RegionEditor roomId={roomId} userId={userId} />
-            </div>
-          )}
-        </div>
-        <div>
-          <button
-            type="button"
-            onClick={() =>
-              setShowModal(showModal === "link-opener" ? null : "link-opener")
-            }
-          >
-            {showModal === "link-opener"
-              ? "Close Link Opener"
-              : "Open Link Opener"}
-          </button>
-          {showModal === "link-opener" && (
-            <div className="GatherArea-link-opener">
-              <LinkOpener roomId={roomId} />
-            </div>
-          )}
-        </div>
+      )}
+      <div className="GatherArea-controlpanel">
+        <ControlPanel />
       </div>
     </div>
   );

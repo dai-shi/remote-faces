@@ -3,7 +3,7 @@ import { memo, useEffect, useState } from "react";
 import "./LinkOpener.css";
 import { generateExcalidrawURL } from "../../utils/excalidraw";
 
-export const LinkOpener = memo<{
+const LinkOpener = memo<{
   roomId: string;
 }>(({ roomId }) => {
   const [excalidrawUrl, setExcalidrawUrl] = useState<string>();
@@ -37,3 +37,5 @@ export const LinkOpener = memo<{
     </div>
   );
 });
+
+export default LinkOpener;

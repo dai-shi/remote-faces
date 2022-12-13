@@ -91,41 +91,5 @@
 
 .GatherArea-facelist {
   -webkit-app-region: drag;
-  width: 36px;
-}
-
-.GatherArea-toolbar {
-  -webkit-app-region: drag;
-  overflow: scroll;
-  position: absolute;
-  left: 40px;
-  top: 5px;
-  display: flex;
-}
-
-.GatherArea-region-editor {
-  -webkit-app-region: no-drag;
-  margin: 5px;
-  padding: 10px;
-  background: lightyellow;
-  border: 3px solid gray;
-  border-radius: 8px;
-}
-
-.GatherArea-setting {
-  -webkit-app-region: no-drag;
-  margin: 5px;
-  padding: 10px;
-  background: rgb(224, 255, 228);
-  border: 3px solid gray;
-  border-radius: 8px;
-}
-
-.GatherArea-link-opener {
-  -webkit-app-region: no-drag;
-  margin: 5px;
-  padding: 10px;
-  background: skyblue;
-  border: 3px solid gray;
-  border-radius: 8px;
+  width: 38px;
 }

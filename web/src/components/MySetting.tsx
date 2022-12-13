@@ -2,33 +2,17 @@ import { memo, useState } from "react";
 
 import "./MySetting.css";
 import { globalState } from "../states/global";
+import { useInputAvatar } from "../hooks/useInputAvatar";
 
 const LOW_RESOLUTION = 24;
 
-export const MySetting = memo(() => {
+const MySetting = memo(() => {
   const [message, setMessage] = useState(globalState.statusMesg);
   const [camera, setCamera] = useState(globalState.config.takePhoto);
   const [lowResPhoto, setLowResPhoto] = useState(
     globalState.preference.photoSize === LOW_RESOLUTION
   );
-  const [avatar, setAvatar] = useState("");
-  const onChangeAvatar = (files: FileList | null) => {
-    const file = files && files[0];
-    if (!file) {
-      return;
-    }
-    if (file.size > 16 * 1024) {
-      window.alert(`Too large: ${file.size}`);
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setAvatar(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
+  const [avatar, onChangeAvatar] = useInputAvatar("");
 
   return (
     <div className="MySetting-container">
@@ -103,3 +87,5 @@ export const MySetting = memo(() => {
     </div>
   );
 });
+
+export default MySetting;

@@ -1,0 +1,62 @@
+.ControlPanel-container {
+  position: absolute;
+  width: 300px;
+  height: 150px;
+  background: green;
+}
+
+@keyframes ControlPanel-rumble {
+  0%   { transform:translate(0, 0); }
+  25%  { transform:translate(0, 0) rotate(1deg); }
+  50%  { transform:translate(0, 0); }
+  75%  { transform:translate(0, 0) rotate(-1deg); }
+  100% { transform:translate(0, 0); }
+}
+
+.ControlPanel-container:hover {
+  animation:ControlPanel-rumble 0.2s linear;
+}
+
+.ControlPanel-header {
+  width: 100%;
+  height: 15px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.ControlPanel-toolbar {
+  margin: 5px;
+}
+
+.ControlPanel-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ControlPanel-setting {
+  -webkit-app-region: no-drag;
+  margin: 5px;
+  padding: 10px;
+  background: rgb(224, 255, 228);
+  border: 3px solid gray;
+  border-radius: 8px;
+}
+
+.ControlPanel-region-editor {
+  -webkit-app-region: no-drag;
+  margin: 5px;
+  padding: 10px;
+  background: lightyellow;
+  border: 3px solid gray;
+  border-radius: 8px;
+}
+
+.ControlPanel-link-opener {
+  -webkit-app-region: no-drag;
+  margin: 5px;
+  padding: 10px;
+  background: skyblue;
+  border: 3px solid gray;
+  border-radius: 8px;
+}

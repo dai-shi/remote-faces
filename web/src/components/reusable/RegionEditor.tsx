@@ -1,10 +1,10 @@
 import { memo, useState } from "react";
 
 import "./RegionEditor.css";
-import { getRoomState } from "../states/roomMap";
-import { RegionData } from "../hooks/useGatherArea";
+import { getRoomState } from "../../states/roomMap";
+import { RegionData } from "../../hooks/useGatherArea";
 
-export const RegionEditor = memo<{
+const RegionEditor = memo<{
   roomId: string;
   userId: string;
 }>(({ roomId, userId }) => {
@@ -130,3 +130,5 @@ export const RegionEditor = memo<{
     </div>
   );
 });
+
+export default RegionEditor;
