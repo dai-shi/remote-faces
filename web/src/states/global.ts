@@ -20,14 +20,20 @@ type Config = {
 
 type Preference = {
   photoSize?: number;
+  controlPanelPosition?: readonly [number, number];
 };
 
 const isPreferenceType = (x: unknown): x is Preference => {
   try {
     const obj = x as Preference;
     if (
-      typeof obj.photoSize === "undefined" ||
-      typeof obj.photoSize === "number"
+      (typeof obj.photoSize === "undefined" ||
+        typeof obj.photoSize === "number") &&
+      (typeof obj.controlPanelPosition === "undefined" ||
+        (Array.isArray(obj.controlPanelPosition) &&
+          obj.controlPanelPosition.length === 2 &&
+          typeof obj.controlPanelPosition[0] === "number" &&
+          typeof obj.controlPanelPosition[1] === "number"))
     ) {
       return true;
     }
