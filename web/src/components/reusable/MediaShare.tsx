@@ -29,8 +29,7 @@ export const MediaShare = memo<{
   nickname: string;
   uniqueId?: string;
 }>(({ roomId, userId, nickname, uniqueId }) => {
-  const videoDevices = useVideoDevices();
-  const [videoDeviceId, setVideoDeviceId] = useState<string>("");
+  const [videoDevices, videoDeviceId, setVideoDeviceId] = useVideoDevices("");
   const [mediaId, setMediaId] = useState<{ video: string } | "SCREEN" | null>(
     null
   );

@@ -17,10 +17,12 @@ export const SingleRoomEntrance = memo(() => {
   const [name, setName] = useState(config.nickname);
   const [takePhoto, setTakePhoto] = useState(config.takePhoto);
   const [avatar, onChangeAvatar] = useInputAvatar(config.avatar);
-  const videoDevices = useVideoDevices();
-  const audioDevices = useAudioDevices();
-  const [videoDeviceId, setVideoDeviceId] = useState(config.videoDeviceId);
-  const [audioDeviceId, setAudioDeviceId] = useState(config.audioDeviceId);
+  const [videoDevices, videoDeviceId, setVideoDeviceId] = useVideoDevices(
+    config.videoDeviceId
+  );
+  const [audioDevices, audioDeviceId, setAudioDeviceId] = useAudioDevices(
+    config.audioDeviceId
+  );
   const [roomPreset, setRoomPreset] = useState("intro");
   const [entering, setEntering] = useState(false);
 
