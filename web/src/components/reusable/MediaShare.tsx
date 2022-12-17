@@ -23,7 +23,7 @@ const Video = memo<{
   );
 });
 
-export const MediaShare = memo<{
+const MediaShare = memo<{
   roomId: string;
   userId: string;
   nickname: string;

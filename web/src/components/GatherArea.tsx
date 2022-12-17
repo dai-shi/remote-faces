@@ -33,6 +33,7 @@ const MomentaryChat = lazy(() => import("./reusable/MomentaryChat"));
 const MediaShare = lazy(() => import("./reusable/MediaShare"));
 const MeetingScreen = lazy(() => import("./reusable/MeetingScreen"));
 const GoBoard = lazy(() => import("./reusable/GoBoard"));
+const TalkyStarter = lazy(() => import("./reusable/TalkyStarter"));
 
 type OnMouseMove = (
   e: React.MouseEvent<HTMLDivElement, MouseEvent> | "ended"
@@ -183,6 +184,11 @@ const Region = memo<{
         {data.type === "goboard" && (
           <Suspense fallback={<SuspenseFallback />}>
             <GoBoard roomId={roomId} userId={userId} uniqueId={id} />
+          </Suspense>
+        )}
+        {data.type === "talky" && (
+          <Suspense fallback={<SuspenseFallback />}>
+            <TalkyStarter roomId={roomId} uniqueId={id} />
           </Suspense>
         )}
         {isSelected && (
