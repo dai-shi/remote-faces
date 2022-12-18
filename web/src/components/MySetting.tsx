@@ -70,9 +70,7 @@ const MySetting = memo(() => {
       <button
         type="button"
         onClick={() => {
-          if (message) {
-            globalState.statusMesg = message;
-          }
+          globalState.statusMesg = message;
           if (avatar) {
             globalState.config.avatar = avatar;
           }
