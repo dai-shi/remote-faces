@@ -60,6 +60,7 @@ const RegionEditor = memo<{
           <option value="chat">Chat</option>
           <option value="media">Media</option>
           <option value="goboard">Go Board</option>
+          <option value="talky">Talky Starter</option>
         </select>
       </label>
       <br />

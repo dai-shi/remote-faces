@@ -1,0 +1,31 @@
+.TalkyStarter-container {
+  -webkit-app-region: no-drag;
+  overflow: scroll;
+  width: 100%;
+  height: 100%;
+}
+
+.TalkyStarter-body {
+  display: grid;
+  height: 100%;
+}
+
+.TalkyStarter-body a {
+  margin: auto;
+  text-decoration: none;
+  color: gray;
+  background-color: lightgray;
+  padding: 0.5rem;
+}
+
+@keyframes TalkyStarter-rumble {
+  0%   { transform:translate(0, 0); }
+  25%  { transform:translate(0, 0) rotate(5deg); }
+  50%  { transform:translate(0, 0); }
+  75%  { transform:translate(0, 0) rotate(-5deg); }
+  100% { transform:translate(0, 0); }
+}
+
+.TalkyStarter-body a:hover {
+  animation:TalkyStarter-rumble 0.2s linear;
+}
