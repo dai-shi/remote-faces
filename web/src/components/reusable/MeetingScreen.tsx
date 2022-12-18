@@ -5,6 +5,20 @@ import { useMediaShare } from "../../hooks/useMediaShare";
 import { useNicknameMap } from "../../hooks/useNicknameMap";
 import { secureRandomId } from "../../utils/crypto";
 
+const Video = memo<{
+  stream: MediaStream;
+}>(({ stream }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+  return (
+    <video className="MeetingScreen-video" ref={videoRef} autoPlay muted />
+  );
+});
+
 const StreamOpener = memo<{
   nickname: string;
   stream: MediaStream;
@@ -56,7 +70,7 @@ const StreamOpener = memo<{
   return (
     <div className="MeetingScreen-opener">
       <button type="button" onClick={open}>
-        {nickname}
+        {nickname} <Video stream={stream} />
       </button>
     </div>
   );

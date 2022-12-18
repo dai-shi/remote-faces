@@ -20,3 +20,7 @@
   float: left;
   margin: 2px;
 }
+
+.MeetingScreen-video {
+  height: 2rem;
+}
