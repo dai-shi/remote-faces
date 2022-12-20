@@ -83,11 +83,11 @@ const intro: Record<string, RegionData> = {
 };
 
 const phone: Record<string, RegionData> = {
-  ...createMeeting(0, 45, 40, 45, 500),
+  ...createMeeting(0, 45, 200, 280, 70),
   share1: {
     type: "media",
-    position: [100, 40],
-    size: [250, 250],
+    position: [350, 5],
+    size: [250, 295],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
     border: "",
@@ -95,8 +95,8 @@ const phone: Record<string, RegionData> = {
   },
   share2: {
     type: "media",
-    position: [100, 300],
-    size: [250, 250],
+    position: [350, 310],
+    size: [250, 295],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
     border: "",
@@ -104,8 +104,8 @@ const phone: Record<string, RegionData> = {
   },
   share3: {
     type: "media",
-    position: [360, 40],
-    size: [800, 550],
+    position: [610, 5],
+    size: [900, 600],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
     border: "",
