@@ -116,22 +116,22 @@ const phone: Record<string, RegionData> = {
 const igo: Record<string, RegionData> = {
   chat: {
     type: "chat",
-    position: [45, 200],
-    size: [240, 310],
+    position: [45, 170],
+    size: [290, 170],
     zIndex: 0,
     background: "rgba(135, 206, 235, 0.2)",
     border: "",
     iframe: "",
   },
-  ...createGoBoard(1, 300, 40),
-  ...createGoBoard(2, 300, 200),
-  ...createGoBoard(3, 300, 360),
-  ...createGoBoard(4, 560, 40),
-  ...createGoBoard(5, 560, 200),
-  ...createGoBoard(6, 560, 360),
-  ...createGoBoard(7, 820, 40),
-  ...createGoBoard(8, 820, 200),
-  ...createGoBoard(9, 820, 360),
+  ...createGoBoard(1, 360, 40),
+  ...createGoBoard(2, 360, 200),
+  ...createGoBoard(3, 360, 360),
+  ...createGoBoard(4, 620, 40),
+  ...createGoBoard(5, 620, 200),
+  ...createGoBoard(6, 620, 360),
+  ...createGoBoard(7, 880, 40),
+  ...createGoBoard(8, 880, 200),
+  ...createGoBoard(9, 880, 360),
 };
 
 const office1: Record<string, RegionData> = {
