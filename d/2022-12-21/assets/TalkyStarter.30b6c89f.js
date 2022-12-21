@@ -1,0 +1,1 @@
+import{r as l,q as s,a as r}from"./index.1135ee6d.js";const o=l.exports.memo(({roomId:a,uniqueId:e})=>{const t=`https://talky.io/${a.slice(0,s)}_${e||"default"}`;return r("div",{className:"TalkyStarter-container",children:r("div",{className:"TalkyStarter-body",children:r("a",{href:t,target:"_blank",rel:"noreferrer",children:"Open Talky"})})})});export{o as default};
