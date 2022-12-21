@@ -12,8 +12,8 @@
   "scripts": {
     "start": "electron .",
     "test": "eslint src",
-    "dist": "electron-builder --mac --universal --win",
-    "release": "electron-builder --mac --universal --win --publish always"
+    "dist": "electron-builder --mac --universal",
+    "release": "electron-builder --mac --universal --publish always"
   },
   "main": "src/main.js",
   "dependencies": {
