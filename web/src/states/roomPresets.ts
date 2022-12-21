@@ -56,7 +56,7 @@ const intro: Record<string, RegionData> = {
     size: [819, 507],
     zIndex: -100,
     background:
-      "url(https://user-images.githubusercontent.com/490574/208681874-3f7051ab-7f3f-4c8a-ad1c-83d2e1c4b1c2.png)",
+      "url(https://user-images.githubusercontent.com/490574/208681874-3f7051ab-7f3f-4c8a-ad1c-83d2e1c4b1c2.png) left top / contain no-repeat",
     border: "",
     iframe: "",
   },
@@ -154,8 +154,8 @@ const office1: Record<string, RegionData> = {
     border: "skyblue solid 3px",
     iframe: "",
   },
-  ...createMeeting(1, 77, 244, 273, 230),
-  ...createMeeting(2, 297, 41, 135, 125),
+  ...createMeeting(1, 77, 244, 273, 160),
+  ...createMeeting(2, 297, 40, 135, 100),
   ...createMeeting(3, 385, 321, 113, 75),
   share: {
     type: "media",
@@ -206,8 +206,8 @@ const office2: Record<string, RegionData> = {
     border: "#2C2F33 solid 2px",
     iframe: "",
   },
-  ...createMeeting(1, 220, 180, 240, 180),
-  ...createMeeting(2, 863, 230, 250, 230),
+  ...createMeeting(1, 220, 180, 240, 160),
+  ...createMeeting(2, 863, 230, 250, 170),
   ...createMeeting(3, 650, 47, 160, 160),
   share: {
     type: "media",
@@ -242,8 +242,8 @@ const office3: Record<string, RegionData> = {
     iframe: "",
   },
   ...createMeeting(1, 575, 295, 200, 130),
-  ...createMeeting(2, 516, 555, 200, 180),
-  ...createMeeting(3, 441, 373, 100, 100),
+  ...createMeeting(2, 516, 555, 200, 100),
+  ...createMeeting(3, 391, 373, 150, 100),
   share: {
     type: "media",
     position: [763, 643],
@@ -288,16 +288,16 @@ const office4: Record<string, RegionData> = {
   },
   chat: {
     type: "chat",
-    position: [60, 460],
-    size: [230, 270],
+    position: [660, 560],
+    size: [150, 170],
     zIndex: 0,
     background: "rgba(255,255,255,0.3)",
     border: "#deca54 solid 1px",
     iframe: "",
   },
-  ...createMeeting(1, 480, 580, 220, 150),
-  ...createMeeting(2, 160, 300, 250, 140),
-  ...createMeeting(3, 830, 190, 140, 70),
+  ...createMeeting(1, 400, 540, 250, 120),
+  ...createMeeting(2, 160, 290, 250, 140),
+  ...createMeeting(3, 880, 190, 140, 70),
   movie: {
     type: "default",
     position: [763, 289],
@@ -318,7 +318,7 @@ const office4: Record<string, RegionData> = {
   },
   go: {
     type: "goboard",
-    position: [292, 590],
+    position: [150, 510],
     size: [160, 140],
     zIndex: 0,
     background: "rgba(255,255,255,0.3)",
@@ -404,7 +404,7 @@ const office4: Record<string, RegionData> = {
   },
   BlockA: {
     type: "default",
-    position: [400, 500],
+    position: [430, 500],
     size: [22, 19],
     zIndex: 0,
     background:
@@ -415,7 +415,7 @@ const office4: Record<string, RegionData> = {
   },
   BlockB: {
     type: "default",
-    position: [430, 500],
+    position: [460, 500],
     size: [22, 19],
     zIndex: 0,
     background:
@@ -426,7 +426,7 @@ const office4: Record<string, RegionData> = {
   },
   BlockC: {
     type: "default",
-    position: [460, 500],
+    position: [490, 500],
     size: [22, 19],
     zIndex: 0,
     background:
@@ -437,7 +437,7 @@ const office4: Record<string, RegionData> = {
   },
   BlockD: {
     type: "default",
-    position: [490, 500],
+    position: [520, 500],
     size: [22, 19],
     zIndex: 0,
     background:
@@ -445,6 +445,71 @@ const office4: Record<string, RegionData> = {
     border: "",
     iframe: "",
     movable: true,
+  },
+};
+
+const office5: Record<string, RegionData> = {
+  background: {
+    type: "default",
+    position: [0, 0],
+    size: [260, 2560],
+    zIndex: -100,
+    background:
+      "url(https://user-images.githubusercontent.com/17561803/208803666-0107e07b-0e38-491d-9f75-53a81f2856c1.png) left top / contain no-repeat",
+    border: "",
+    iframe: "",
+  },
+  ...createMeeting(1, 480, 10, 200, 100),
+  ...createMeeting(2, 690, 10, 200, 100),
+  ...createMeeting(3, 900, 10, 200, 100),
+  ...createMeeting(4, 270, 200, 200, 100),
+  ...createMeeting(5, 480, 200, 200, 100),
+  ...createMeeting(6, 690, 200, 200, 100),
+  ...createMeeting(7, 900, 200, 200, 100),
+  chat: {
+    type: "chat",
+    position: [270, 10],
+    size: [200, 180],
+    zIndex: 0,
+    background: "rgba(135, 206, 235, 0.2)",
+    border: "",
+    iframe: "",
+  },
+  talky1: {
+    type: "talky",
+    position: [270, 390],
+    size: [200, 100],
+    zIndex: 0,
+    background: "rgba(0, 240, 0, 0.2)",
+    border: "",
+    iframe: "",
+  },
+  talky2: {
+    type: "talky",
+    position: [480, 390],
+    size: [200, 100],
+    zIndex: 0,
+    background: "rgba(0, 240, 0, 0.2)",
+    border: "",
+    iframe: "",
+  },
+  talky3: {
+    type: "talky",
+    position: [690, 390],
+    size: [200, 100],
+    zIndex: 0,
+    background: "rgba(0, 240, 0, 0.2)",
+    border: "",
+    iframe: "",
+  },
+  talky4: {
+    type: "talky",
+    position: [900, 390],
+    size: [200, 100],
+    zIndex: 0,
+    background: "rgba(0, 240, 0, 0.2)",
+    border: "",
+    iframe: "",
   },
 };
 
@@ -456,4 +521,5 @@ export const roomPresets: Record<string, Record<string, RegionData>> = {
   office2,
   office3,
   office4,
+  office5,
 };
