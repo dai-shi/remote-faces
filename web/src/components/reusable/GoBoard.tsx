@@ -187,6 +187,7 @@ export const GoBoard = memo<{
       }
       return () => {
         observer.disconnect();
+        div.innerHTML = "";
       };
     }
     return undefined;
