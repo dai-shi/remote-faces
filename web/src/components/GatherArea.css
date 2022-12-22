@@ -10,6 +10,7 @@
 
 .GatherArea-memberlist {
   -webkit-app-region: drag;
+  overflow: scroll;
 }
 
 .GatherArea-body {
