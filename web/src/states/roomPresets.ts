@@ -12,9 +12,6 @@ const createMeeting = (
     position: [x, y],
     size: [w, h],
     zIndex: 0,
-    background: "",
-    border: "",
-    iframe: "",
   },
   [`meeting${i}_screen`]: {
     type: "screen",
@@ -23,8 +20,6 @@ const createMeeting = (
     size: [w, 70],
     zIndex: 0,
     background: "rgba(140, 140, 140, 0.2)",
-    border: "",
-    iframe: "",
   },
 });
 
@@ -34,9 +29,6 @@ const createGoBoard = (i: number, x: number, y: number) => ({
     position: [x, y],
     size: [250, 150],
     zIndex: 0,
-    background: "",
-    border: "",
-    iframe: "",
   },
   [`gobard${i}`]: {
     type: "goboard",
@@ -44,8 +36,6 @@ const createGoBoard = (i: number, x: number, y: number) => ({
     size: [250, 150],
     zIndex: 0,
     background: "rgba(140, 140, 140, 0.2)",
-    border: "",
-    iframe: "",
   },
 });
 
@@ -57,8 +47,6 @@ const intro: Record<string, RegionData> = {
     zIndex: -100,
     background:
       "url(https://user-images.githubusercontent.com/490574/208681874-3f7051ab-7f3f-4c8a-ad1c-83d2e1c4b1c2.png) left top / contain no-repeat",
-    border: "",
-    iframe: "",
   },
   chat: {
     type: "chat",
@@ -66,8 +54,6 @@ const intro: Record<string, RegionData> = {
     size: [205, 205],
     zIndex: 0,
     background: "rgba(135, 206, 235, 0.2)",
-    border: "",
-    iframe: "",
   },
   ...createMeeting(1, 400, 80, 190, 45),
   ...createMeeting(2, 637, 80, 190, 45),
@@ -77,8 +63,6 @@ const intro: Record<string, RegionData> = {
     size: [185, 210],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
-    border: "",
-    iframe: "",
   },
 };
 
@@ -90,8 +74,6 @@ const phone: Record<string, RegionData> = {
     size: [250, 295],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
-    border: "",
-    iframe: "",
   },
   share2: {
     type: "media",
@@ -99,8 +81,6 @@ const phone: Record<string, RegionData> = {
     size: [250, 295],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
-    border: "",
-    iframe: "",
   },
   share3: {
     type: "media",
@@ -108,8 +88,6 @@ const phone: Record<string, RegionData> = {
     size: [900, 600],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
-    border: "",
-    iframe: "",
   },
 };
 
@@ -120,8 +98,6 @@ const igo: Record<string, RegionData> = {
     size: [290, 170],
     zIndex: 0,
     background: "rgba(135, 206, 235, 0.2)",
-    border: "",
-    iframe: "",
   },
   ...createGoBoard(1, 360, 40),
   ...createGoBoard(2, 360, 200),
@@ -142,8 +118,6 @@ const office1: Record<string, RegionData> = {
     zIndex: -100,
     background:
       "url(https://user-images.githubusercontent.com/17561803/111254880-55862c80-8659-11eb-88f1-3aaa42ba2b68.png) left top / contain no-repeat",
-    border: "",
-    iframe: "",
   },
   chat: {
     type: "chat",
@@ -152,7 +126,6 @@ const office1: Record<string, RegionData> = {
     zIndex: 0,
     background: "white",
     border: "skyblue solid 3px",
-    iframe: "",
   },
   ...createMeeting(1, 77, 244, 273, 160),
   ...createMeeting(2, 297, 40, 135, 100),
@@ -163,8 +136,6 @@ const office1: Record<string, RegionData> = {
     size: [480, 270],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.3)",
-    border: "",
-    iframe: "",
   },
   go: {
     type: "goboard",
@@ -172,8 +143,6 @@ const office1: Record<string, RegionData> = {
     size: [200, 120],
     zIndex: 0,
     background: "rgba(0,240,0,0.6)",
-    border: "",
-    iframe: "",
   },
   go2: {
     type: "goboard",
@@ -181,8 +150,6 @@ const office1: Record<string, RegionData> = {
     size: [200, 120],
     zIndex: 0,
     background: "rgba(0,100,240,0.6)",
-    border: "",
-    iframe: "",
   },
 };
 
@@ -194,8 +161,6 @@ const office2: Record<string, RegionData> = {
     zIndex: -100,
     background:
       "url(https://user-images.githubusercontent.com/17561803/118205142-ab7d2200-b49a-11eb-863a-3a9a5560d7df.png) left top / contain no-repeat",
-    border: "",
-    iframe: "",
   },
   chat: {
     type: "chat",
@@ -204,7 +169,6 @@ const office2: Record<string, RegionData> = {
     zIndex: 0,
     background: "rgba(206,206,206,0.9)",
     border: "#2C2F33 solid 2px",
-    iframe: "",
   },
   ...createMeeting(1, 220, 180, 240, 160),
   ...createMeeting(2, 863, 230, 250, 170),
@@ -216,7 +180,6 @@ const office2: Record<string, RegionData> = {
     zIndex: 0,
     background: "rgba(0,0,0,0.2)",
     border: "limegreen solid 2px",
-    iframe: "",
   },
   ...createGoBoard(10, 865, 5),
 };
@@ -229,8 +192,6 @@ const office3: Record<string, RegionData> = {
     zIndex: -100,
     background:
       "url(https://user-images.githubusercontent.com/17561803/120201967-fc459680-c260-11eb-8b1f-6bb108476f2f.png) left top / contain no-repeat",
-    border: "",
-    iframe: "",
   },
   chat: {
     type: "chat",
@@ -239,7 +200,6 @@ const office3: Record<string, RegionData> = {
     zIndex: 0,
     background: "rgba(167,194,211,0.9)",
     border: "#2C2F33 solid 3px",
-    iframe: "",
   },
   ...createMeeting(1, 575, 295, 200, 130),
   ...createMeeting(2, 516, 555, 200, 100),
@@ -251,7 +211,6 @@ const office3: Record<string, RegionData> = {
     zIndex: 0,
     background: "rgba(167,194,211,0.6)",
     border: "#2C2F33 solid 3px",
-    iframe: "",
   },
   go: {
     type: "goboard",
@@ -260,7 +219,6 @@ const office3: Record<string, RegionData> = {
     zIndex: 0,
     background: "rgba(167,194,211,0.6)",
     border: "#2C2F33 solid 3px",
-    iframe: "",
   },
   movable: {
     type: "default",
@@ -269,8 +227,6 @@ const office3: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/17561803/120613305-12d23480-c491-11eb-91ba-d338c3ba631e.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
 };
@@ -283,8 +239,6 @@ const office4: Record<string, RegionData> = {
     zIndex: -100,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126919537-78c7d05e-26f4-43f6-9fdd-4db8e7fbc098.jpg) left top / contain no-repeat",
-    border: "",
-    iframe: "",
   },
   chat: {
     type: "chat",
@@ -293,7 +247,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background: "rgba(255,255,255,0.3)",
     border: "#deca54 solid 1px",
-    iframe: "",
   },
   ...createMeeting(1, 400, 540, 250, 120),
   ...createMeeting(2, 160, 290, 250, 140),
@@ -303,8 +256,6 @@ const office4: Record<string, RegionData> = {
     position: [763, 289],
     size: [109, 63],
     zIndex: 0,
-    background: "",
-    border: "",
     iframe: "https://www.youtube.com/embed/ofrC1WFeoLw",
   },
   share: {
@@ -314,7 +265,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background: "rgba(255,255,255,0.3)",
     border: "#deca54 solid 1px",
-    iframe: "",
   },
   go: {
     type: "goboard",
@@ -323,7 +273,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background: "rgba(255,255,255,0.3)",
     border: "#deca54 solid 1px",
-    iframe: "",
   },
   BeachChair: {
     type: "default",
@@ -332,8 +281,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126919528-eac984b0-ce64-4ab1-8973-c429e9a10052.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
   BeachChair2: {
@@ -343,8 +290,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126919528-eac984b0-ce64-4ab1-8973-c429e9a10052.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
   ChairA: {
@@ -354,8 +299,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126919531-82d14682-c684-4da7-bc83-8ae17861150e.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
   ChairB: {
@@ -365,8 +308,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126919533-6a09f353-16c2-465d-b09f-ff64b0357418.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
   ChairC: {
@@ -376,8 +317,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126919534-d4a669f9-c228-4a55-9b2a-df04bd2dd0d1.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
   Digda: {
@@ -387,8 +326,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126919535-97212807-b151-4937-8e08-b4fdd1f497e7.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
   Kintone: {
@@ -398,8 +335,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126919536-99b58589-238f-44e9-b2a2-f20a615e730c.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
   BlockA: {
@@ -409,8 +344,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126926610-244ca224-89b8-4418-b457-5d23ca34d69e.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
   BlockB: {
@@ -420,8 +353,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126926292-dd184ddb-2a78-4720-8b69-2daa6e911f08.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
   BlockC: {
@@ -431,8 +362,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126919530-aeff42a1-a033-4eb1-a395-bc3700b9a54d.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
   BlockD: {
@@ -442,8 +371,6 @@ const office4: Record<string, RegionData> = {
     zIndex: 0,
     background:
       "url(https://user-images.githubusercontent.com/52230939/126919529-b82d5f24-71ae-482b-987d-55d68829a490.png) center center / contain no-repeat",
-    border: "",
-    iframe: "",
     movable: true,
   },
 };
@@ -456,8 +383,6 @@ const office5: Record<string, RegionData> = {
     zIndex: -100,
     background:
       "url(https://user-images.githubusercontent.com/17561803/208803666-0107e07b-0e38-491d-9f75-53a81f2856c1.png) left top / contain no-repeat",
-    border: "",
-    iframe: "",
   },
   ...createMeeting(1, 480, 10, 200, 100),
   ...createMeeting(2, 690, 10, 200, 100),
@@ -472,8 +397,6 @@ const office5: Record<string, RegionData> = {
     size: [200, 180],
     zIndex: 0,
     background: "rgba(135, 206, 235, 0.2)",
-    border: "",
-    iframe: "",
   },
   talky1: {
     type: "talky",
@@ -481,8 +404,6 @@ const office5: Record<string, RegionData> = {
     size: [200, 100],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
-    border: "",
-    iframe: "",
   },
   talky2: {
     type: "talky",
@@ -490,8 +411,6 @@ const office5: Record<string, RegionData> = {
     size: [200, 100],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
-    border: "",
-    iframe: "",
   },
   talky3: {
     type: "talky",
@@ -499,8 +418,6 @@ const office5: Record<string, RegionData> = {
     size: [200, 100],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
-    border: "",
-    iframe: "",
   },
   talky4: {
     type: "talky",
@@ -508,8 +425,76 @@ const office5: Record<string, RegionData> = {
     size: [200, 100],
     zIndex: 0,
     background: "rgba(0, 240, 0, 0.2)",
-    border: "",
-    iframe: "",
+  },
+  hiroba: {
+    type: "meeting",
+    position: [0, 170],
+    size: [220, 230],
+  },
+  kaigi01: {
+    type: "meeting",
+    position: [0, 1945],
+    size: [260, 190],
+  },
+  kaigi02: {
+    type: "meeting",
+    position: [0, 2220],
+    size: [260, 260],
+  },
+  koshitsu01: {
+    type: "meeting",
+    position: [0, 1010],
+    size: [100, 64],
+  },
+  koshitsu02: {
+    type: "meeting",
+    position: [0, 1080],
+    size: [100, 64],
+  },
+  koshitsu03: {
+    type: "meeting",
+    position: [0, 1150],
+    size: [100, 64],
+  },
+  koshitsu04: {
+    type: "meeting",
+    position: [0, 1270],
+    size: [100, 64],
+  },
+  koshitsu05: {
+    type: "meeting",
+    position: [0, 1340],
+    size: [100, 64],
+  },
+  koshitsu06: {
+    type: "meeting",
+    position: [0, 1410],
+    size: [100, 64],
+  },
+  koshitsu07: {
+    type: "meeting",
+    position: [160, 1270],
+    size: [100, 64],
+  },
+  koshitsu08: {
+    type: "meeting",
+    position: [160, 1150],
+    size: [100, 64],
+  },
+  koshitsu09: {
+    type: "meeting",
+    position: [160, 1080],
+    size: [100, 64],
+  },
+  koshitsu10: {
+    type: "meeting",
+    position: [160, 1010],
+    size: [100, 64],
+  },
+  koshitsu11: {
+    type: "meeting",
+    position: [160, 1340],
+    size: [100, 70],
   },
 };
 
