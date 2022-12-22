@@ -9,15 +9,32 @@
 }
 
 .MemberList-item {
-  padding: 16px;
+  margin: 16px;
   display: grid;
+  grid-gap: 8px;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
 }
 
 .MemberList-face {
+  grid-row: 1 / 3;
+  width: 36px;
+  height: 36px;
+  border: 2px solid white;
+  border-radius: 50%;
+  overflow: hidden;
+  align-self: center;
+  margin-right: 8px;
 }
 
 .MemberList-name {
+  color: #a5a5a5;
+  font-weight: bold;
 }
 
 .MemberList-mesg {
+  color: #a5a5a5;
+  word-break: break-all;
+  font-size: 0.8rem;
+  min-height: 2.0rem;
 }

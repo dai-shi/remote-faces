@@ -20,7 +20,7 @@ export const ControlPanel = memo(() => {
   const {
     roomId,
     userId,
-    preference: { hideFaceList },
+    preference: { hideMemberList },
   } = useSnapshot(globalState);
 
   const positionRef = useRef<readonly [number, number]>(
@@ -93,10 +93,10 @@ export const ControlPanel = memo(() => {
             <button
               type="button"
               onClick={() => {
-                globalState.preference.hideFaceList = !hideFaceList;
+                globalState.preference.hideMemberList = !hideMemberList;
               }}
             >
-              {hideFaceList ? "Show Face List" : "Hide Face List"}
+              {hideMemberList ? "Show Member List" : "Hide Member List"}
             </button>
           </div>
           <div>

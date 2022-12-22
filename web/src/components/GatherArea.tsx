@@ -495,6 +495,13 @@ export const GatherArea = memo(() => {
 
   return (
     <div className="GatherArea-container">
+      <div className="GatherArea-memberlist">
+        {!hideMemberList && (
+          <Suspense fallback={<SuspenseFallback />}>
+            <MemberList />
+          </Suspense>
+        )}
+      </div>
       <div
         className="GatherArea-body"
         onDragOver={(e) => e.preventDefault()}
@@ -572,13 +579,6 @@ export const GatherArea = memo(() => {
           micOn={activeMeetingMicOn}
         />
       </div>
-      {!hideMemberList && (
-        <div className="GatherArea-facelist">
-          <Suspense fallback={<SuspenseFallback />}>
-            <MemberList />
-          </Suspense>
-        </div>
-      )}
       <div className="GatherArea-controlpanel">
         <ControlPanel />
       </div>

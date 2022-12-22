@@ -48,7 +48,7 @@ const MemberList = memo(() => {
           />
         </div>
         <div className="MemberList-name">{nickname}</div>
-        <div className="MemberList-item">{statusMesg}</div>
+        <div className="MemberList-mesg">{statusMesg}</div>
       </div>
       {roomImages.map((item) => (
         <div key={item.userId} className="MemberList-item">
@@ -70,7 +70,7 @@ const MemberList = memo(() => {
             />
           </div>
           <div className="MemberList-name">{item.info.nickname}</div>
-          <div className="MemberList-item">{item.info.message}</div>
+          <div className="MemberList-mesg">{item.info.message}</div>
         </div>
       ))}
       {!roomImages.length && (
