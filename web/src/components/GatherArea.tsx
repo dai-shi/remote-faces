@@ -28,7 +28,7 @@ import { SuspenseFallback } from "./reusable/SuspenseFallback";
 import { rand4 } from "../utils/crypto";
 import { encodeBase64Async } from "../utils/base64";
 
-const FaceList = lazy(() => import("./FaceList"));
+const MemberList = lazy(() => import("./MemberList"));
 const MomentaryChat = lazy(() => import("./reusable/MomentaryChat"));
 const MediaShare = lazy(() => import("./reusable/MediaShare"));
 const MeetingScreen = lazy(() => import("./reusable/MeetingScreen"));
@@ -374,7 +374,7 @@ export const GatherArea = memo(() => {
     userId,
     statusMesg,
     config: { avatar, nickname, takePhoto, videoDeviceId, audioDeviceId },
-    preference: { photoSize, hideFaceList },
+    preference: { photoSize, hideMemberList },
   } = useSnapshot(globalState);
   const { myImage, roomImages } = useFaceImages(
     roomId,
@@ -572,10 +572,10 @@ export const GatherArea = memo(() => {
           micOn={activeMeetingMicOn}
         />
       </div>
-      {!hideFaceList && (
+      {!hideMemberList && (
         <div className="GatherArea-facelist">
           <Suspense fallback={<SuspenseFallback />}>
-            <FaceList />
+            <MemberList />
           </Suspense>
         </div>
       )}

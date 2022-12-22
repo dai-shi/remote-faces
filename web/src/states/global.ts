@@ -22,6 +22,7 @@ type Preference = {
   photoSize?: number;
   controlPanelPosition?: readonly [number, number];
   hideFaceList?: boolean;
+  hideMemberList?: boolean;
 };
 
 const isPreferenceType = (x: unknown): x is Preference => {
@@ -36,7 +37,9 @@ const isPreferenceType = (x: unknown): x is Preference => {
           typeof obj.controlPanelPosition[0] === "number" &&
           typeof obj.controlPanelPosition[1] === "number")) &&
       (typeof obj.hideFaceList === "undefined" ||
-        typeof obj.hideFaceList === "boolean")
+        typeof obj.hideFaceList === "boolean") &&
+      (typeof obj.hideMemberList === "undefined" ||
+        typeof obj.hideMemberList === "boolean")
     ) {
       return true;
     }

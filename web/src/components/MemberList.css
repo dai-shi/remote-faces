@@ -1,0 +1,23 @@
+.MemberList-container {
+  width: 260px;
+  overflow: scroll;
+  background: #222222;
+}
+
+.MemberList-container::-webkit-scrollbar {
+  display: none;
+}
+
+.MemberList-item {
+  padding: 16px;
+  display: grid;
+}
+
+.MemberList-face {
+}
+
+.MemberList-name {
+}
+
+.MemberList-mesg {
+}
