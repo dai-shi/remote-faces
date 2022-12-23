@@ -11,6 +11,7 @@
 
 .MeetingScreen-toolbar > button, select {
   margin: 2px;
+  font-size: 0.7rem;
 }
 
 .MeetingScreen-body {
@@ -19,4 +20,8 @@
 .MeetingScreen-opener {
   float: left;
   margin: 2px;
+}
+
+.MeetingScreen-opener > button {
+  font-size: 0.7rem;
 }

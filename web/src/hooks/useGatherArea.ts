@@ -6,8 +6,8 @@ import { roomPresets } from "../states/roomPresets";
 import { getRoomPresetFromUrl } from "../utils/url";
 
 const getInitialPosition = (uid: string): [number, number] => [
-  parseInt(uid.slice(0, 2), 16) / 2 + 50,
-  parseInt(uid.slice(2, 4), 16) / 2 + 30,
+  parseInt(uid.slice(0, 2), 16) / 2 + 10,
+  parseInt(uid.slice(2, 4), 16) / 2 + 10,
 ];
 
 export type AvatarData = {
