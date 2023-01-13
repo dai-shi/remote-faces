@@ -498,6 +498,95 @@ const office5: Record<string, RegionData> = {
   },
 };
 
+const office6: Record<string, RegionData> = {
+  background: {
+    type: "default",
+    position: [0, 0],
+    size: [260, 1920],
+    zIndex: -100,
+    background:
+      "url(https://user-images.githubusercontent.com/17561803/212223780-c4625634-009c-4976-bcae-07c696bb2a35.png) left top / contain no-repeat",
+  },
+  ...createMeeting(1, 480, 10, 200, 100),
+  ...createMeeting(2, 690, 10, 200, 100),
+  ...createMeeting(3, 900, 10, 200, 100),
+  ...createMeeting(4, 270, 200, 200, 100),
+  ...createMeeting(5, 480, 200, 200, 100),
+  ...createMeeting(6, 690, 200, 200, 100),
+  ...createMeeting(7, 900, 200, 200, 100),
+  chat: {
+    type: "chat",
+    position: [270, 10],
+    size: [200, 180],
+    zIndex: 0,
+    background: "rgba(135, 206, 235, 0.2)",
+  },
+  talky1: {
+    type: "talky",
+    position: [270, 390],
+    size: [200, 100],
+    zIndex: 0,
+    background: "rgba(0, 240, 0, 0.2)",
+  },
+  talky2: {
+    type: "talky",
+    position: [480, 390],
+    size: [200, 100],
+    zIndex: 0,
+    background: "rgba(0, 240, 0, 0.2)",
+  },
+  talky3: {
+    type: "talky",
+    position: [690, 390],
+    size: [200, 100],
+    zIndex: 0,
+    background: "rgba(0, 240, 0, 0.2)",
+  },
+  talky4: {
+    type: "talky",
+    position: [900, 390],
+    size: [200, 100],
+    zIndex: 0,
+    background: "rgba(0, 240, 0, 0.2)",
+  },
+
+  hiroba: {
+    type: "meeting",
+    position: [2, 324],
+    size: [209, 271],
+  },
+  kaigi01: {
+    type: "meeting",
+    position: [3, 1700],
+    size: [223, 190],
+  },
+  kaigi02: {
+    type: "meeting",
+    position: [0, 0],
+    size: [0, 0],
+  },
+  koshitsu02: {
+    type: "meeting",
+    position: [4, 984],
+    size: [100, 64],
+  },
+  koshitsu03: {
+    type: "meeting",
+    position: [3, 1054],
+    size: [100, 64],
+  },
+  koshitsu07: {
+    type: "meeting",
+    position: [158, 1200],
+    size: [100, 64],
+  },
+  koshitsu11: {
+    type: "meeting",
+    position: [158, 1269],
+    size: [100, 70],
+  },
+};
+
 export const roomPresets: Record<string, Record<string, RegionData>> = {
   intro,
   phone,
@@ -507,4 +596,5 @@ export const roomPresets: Record<string, Record<string, RegionData>> = {
   office3,
   office4,
   office5,
+  office6,
 };
