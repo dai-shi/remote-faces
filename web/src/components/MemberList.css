@@ -2,7 +2,7 @@
   width: 260px;
   overflow: scroll;
   background: #222222;
-  min-height: calc(100vh + 120px);
+  padding-bottom: 120px;
 }
 
 .MemberList-container::-webkit-scrollbar {
