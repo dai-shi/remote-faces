@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
+import { polyfillNode } from "esbuild-plugin-polyfill-node";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -10,12 +10,7 @@ export default defineConfig({
       define: {
         global: "window",
       },
-      plugins: [
-        NodeGlobalsPolyfillPlugin({
-          process: true,
-          buffer: true,
-        }),
-      ],
+      plugins: [polyfillNode()],
       target: "es2020",
     },
   },
