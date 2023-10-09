@@ -74,6 +74,7 @@
           const stream = await navigator.mediaDevices.getDisplayMedia({
             video: true,
           });
+          $("startHost").disabled = true;
           const conn = peer.call(id, stream, { metadata: { secret } });
           $("hostMessage").textContent = "Streaming...";
           conn.on("error", (err) => {
