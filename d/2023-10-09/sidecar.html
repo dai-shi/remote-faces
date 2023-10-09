@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Sidecar</title>
+    <style>
+      .hidden {
+        display: none;
+      }
+      video {
+        width: 100%;
+      }
+    </style>
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+  </head>
+  <body>
+    <div id="setup" class="hidden">
+      <h3>Setup</h3>
+      <ul>
+        <li>
+          Install
+          <a href="https://github.com/waydabber/BetterDisplay">BetterDisplay</a>
+        </li>
+        <li><a href="#" id="openHost">Open Host</a></li>
+        <li><a href="#" id="openViewer">Open Viewer</a></li>
+      </ul>
+    </div>
+    <div id="host" class="hidden">
+      <h3>Host</h3>
+      <p id="hostMessage">Starting up...</p>
+      <button id="startHost" class="hidden">Start Host</button>
+    </div>
+    <div id="viewer" class="hidden">
+      <h3>Viewer</h3>
+      <p id="viewerMessage">Starting up...</p>
+      <button id="fullscreen" class="hidden">Fullscreen</button>
+      <video id="video" autoplay muted></video>
+    </div>
+    <script>
+      const secureRandomId = (len) => {
+        const buf = window.crypto.getRandomValues(new Uint8Array(len));
+        const arr = Array.from(buf);
+        const hex = arr.map((b) => b.toString(16).padStart(2, "0")).join("");
+        return hex;
+      };
+      const $ = (id) => document.getElementById(id);
+      const show = (id) => $(id).classList.remove("hidden");
+      for (const a of document.querySelectorAll("a")) {
+        a.setAttribute("target", "_blank");
+        a.setAttribute("rel", "noopener noreferrer");
+      }
+      const params = new URLSearchParams(location.hash.slice(1));
+      const type = params.get("type");
+      const id = params.get("id") || secureRandomId(16);
+      const secret = params.get("secret") || secureRandomId(16);
+      const peerOptions = {};
+      if (params.has("host")) {
+        peerOptions.host = params.get("host");
+      }
+      params.set("id", id);
+      params.set("secret", secret);
+      $("openHost").setAttribute("href", "#type=host&" + params);
+      $("openViewer").setAttribute("href", "#type=viewer&" + params);
+      if (type === "host") {
+        const peer = new Peer(secureRandomId(16), peerOptions);
+        peer.on("open", () => {
+          $("hostMessage").textContent = "Open Viewer and then start Host";
+          show("startHost");
+        });
+        peer.on("error", (err) => {
+          $("hostMessage").textContent = "Failed to start up: " + err;
+        });
+        $("startHost").addEventListener("click", async () => {
+          const stream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+          });
+          const conn = peer.call(id, stream, { metadata: { secret } });
+          $("hostMessage").textContent = "Streaming...";
+          conn.on("error", (err) => {
+            $("hostMessage").textContent = "Failed to stream: " + err;
+          });
+        });
+      }
+      if (type === "viewer") {
+        const peer = new Peer(id, peerOptions);
+        peer.on("open", () => {
+          $("viewerMessage").textContent = "Waiting for host to connect...";
+        });
+        peer.on("error", (err) => {
+          $("viewerMessage").textContent = "Failed to start up: " + err;
+        });
+        peer.on("call", (conn) => {
+          if (conn.metadata.secret !== secret) {
+            return;
+          }
+          conn.answer();
+          conn.on("stream", function (stream) {
+            $("viewerMessage").textContent = "Streaming...";
+            $("video").srcObject = stream;
+            show("fullscreen");
+          });
+        });
+        $("fullscreen").addEventListener("click", () => {
+          $("video").requestFullscreen();
+        });
+      }
+      show(type || "setup");
+    </script>
+  </body>
+</html>
