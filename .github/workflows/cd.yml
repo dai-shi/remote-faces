@@ -23,7 +23,7 @@ jobs:
 
       - name: Copy to dist (web)
         run: |
-          (cd web; CI=false npm build)
+          (cd web; CI=false npm run build)
           mkdir -p web/dist/d
           cp -r web/build web/dist/d/`date '+%Y-%m-%d'`
 
