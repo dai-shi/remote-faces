@@ -1,5 +1,4 @@
 import { create } from "ipfs";
-import type { Message } from "ipfs-core/dist/src/components/pubsub";
 import IpfsPubSubRoom from "ipfs-pubsub-room";
 
 import { sleep } from "../utils/sleep";
@@ -13,6 +12,7 @@ import { getWebrtcStarFromUrl } from "../utils/url";
 import { isObject, hasStringProp, hasObjectProp } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./ipfsUtils";
+import type { Message } from "./ipfsUtils";
 import { setupTrackStopOnLongMute } from "./trackUtils";
 
 export const createRoom: CreateRoom = async (
