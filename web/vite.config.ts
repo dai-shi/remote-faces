@@ -5,12 +5,20 @@ import { polyfillNode } from "esbuild-plugin-polyfill-node";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: [
+      {
+        find: /^node:(.*)/,
+        replacement: "./node_modules/@jspm/core/src-browser/$1.js",
+      },
+    ],
+  },
   optimizeDeps: {
     esbuildOptions: {
       define: {
         global: "window",
       },
-      plugins: [polyfillNode()],
+      plugins: [polyfillNode({ polyfills: { fs: true } })],
       target: "es2020",
     },
   },

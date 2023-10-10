@@ -179,6 +179,9 @@ importers:
         specifier: ^13.5.42
         version: 13.5.42
     devDependencies:
+      '@jspm/core':
+        specifier: ^2.0.1
+        version: 2.0.1
       '@testing-library/jest-dom':
         specifier: ^5.16.5
         version: 5.16.5
@@ -215,6 +218,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.1.0
         version: 4.1.0(vite@4.4.11)
+      buffer:
+        specifier: ^6.0.3
+        version: 6.0.3
       esbuild-plugin-polyfill-node:
         specifier: ^0.3.0
         version: 0.3.0(esbuild@0.19.4)
@@ -5001,7 +5007,6 @@ packages:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
-    dev: false
 
   /builder-util-runtime@9.1.1:
     resolution: {integrity: sha512-azRhYLEoDvRDR8Dhis4JatELC/jUvYjm4cVSj7n9dauGTOM2eeNn9KS0z6YA6oDsjI1xphjNbY6PZZeHPzzqaw==}
