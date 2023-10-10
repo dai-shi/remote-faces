@@ -20,6 +20,7 @@
     "dompurify": "^2.4.0",
     "emoji-mart": "3.0.1",
     "ipfs": "^0.65.0",
+    "ipfs-core": "^0.17.0",
     "ipfs-pubsub-room": "^3.0.0",
     "pako": "^2.0.4",
     "peerjs": "^1.4.7",
@@ -31,7 +32,7 @@
     "yjs": "^13.5.42"
   },
   "devDependencies": {
-    "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
+    "@jspm/core": "^2.0.1",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
@@ -43,7 +44,9 @@
     "@types/react": "^18.0.25",
     "@types/react-dom": "^18.0.8",
     "@types/w3c-image-capture": "^1.0.7",
-    "@vitejs/plugin-react": "^2.2.0",
+    "@vitejs/plugin-react": "^4.1.0",
+    "buffer": "^6.0.3",
+    "esbuild-plugin-polyfill-node": "^0.3.0",
     "eslint": "^8.26.0",
     "eslint-config-airbnb-typescript-prettier": "^5.0.0",
     "identity-obj-proxy": "^3.0.0",
@@ -54,7 +57,7 @@
     "stream-browserify": "^3.0.0",
     "ts-jest": "^29.0.3",
     "typescript": "^4.8.4",
-    "vite": "^3.2.2"
+    "vite": "^4.4.11"
   },
   "jest": {
     "preset": "ts-jest/presets/js-with-ts",

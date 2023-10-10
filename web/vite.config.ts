@@ -1,25 +1,28 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
+import { polyfillNode } from "esbuild-plugin-polyfill-node";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: [
+      {
+        find: /^node:(.*)/,
+        replacement: "./node_modules/@jspm/core/src-browser/$1.js",
+      },
+    ],
+  },
   optimizeDeps: {
     esbuildOptions: {
       define: {
         global: "window",
       },
-      plugins: [
-        NodeGlobalsPolyfillPlugin({
-          process: true,
-          buffer: true,
-        }),
-      ],
+      plugins: [polyfillNode({ polyfills: { fs: true } })],
       target: "es2020",
     },
   },
-  base: './',
+  base: "./",
   build: {
     target: "es2020",
     outDir: "build",
