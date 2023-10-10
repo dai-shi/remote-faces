@@ -1,4 +1,5 @@
 import { create } from "ipfs";
+import type { Message } from "ipfs-core/dist/src/components/pubsub";
 
 import { sleep } from "../utils/sleep";
 import {
@@ -14,7 +15,6 @@ import { getWebrtcStarFromUrl } from "../utils/url";
 import { isObject } from "../utils/types";
 import { ROOM_ID_PREFIX_LEN, PeerInfo, CreateRoom } from "./common";
 import { Connection, createConnectionMap } from "./pubsubUtils";
-import type { Message } from "./ipfsUtils";
 import {
   loopbackPeerConnection,
   videoTrackToImageConverter,

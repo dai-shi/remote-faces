@@ -173,19 +173,3 @@ export const createConnectionMap = () => {
     registerRemoteMediaType,
   };
 };
-
-interface SignedMessage {
-  type: "signed";
-  from: { toString: () => string };
-  topic: string;
-  data: Uint8Array;
-  sequenceNumber: bigint;
-  signature: Uint8Array;
-  key: Uint8Array;
-}
-interface UnsignedMessage {
-  type: "unsigned";
-  topic: string;
-  data: Uint8Array;
-}
-export type Message = SignedMessage | UnsignedMessage;
