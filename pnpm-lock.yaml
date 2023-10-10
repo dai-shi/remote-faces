@@ -148,6 +148,9 @@ importers:
       ipfs:
         specifier: ^0.65.0
         version: 0.65.0(uint8arraylist@2.4.3)
+      ipfs-core:
+        specifier: ^0.17.0
+        version: 0.17.0(uint8arraylist@2.4.3)
       ipfs-pubsub-room:
         specifier: ^3.0.0
         version: 3.0.0
